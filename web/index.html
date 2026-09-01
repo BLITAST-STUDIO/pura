@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080c" />
+    <title>PURA</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #07080c;
+        color: #eceef2;
+        overflow: hidden;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+      }
+      .boot {
+        min-height: 360px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 48px 24px;
+        font-family: sans-serif;
+        box-sizing: border-box;
+      }
+      .boot h1 {
+        margin: 8px 0 0;
+        font-size: 64px;
+        font-weight: 600;
+        color: #eceef2;
+      }
+      .boot p {
+        margin: 0;
+        color: #8b90a0;
+        font-size: 13px;
+      }
+      .boot .hint { margin-top: 28px; font-size: 15px; color: #5ee4f2; }
+      #pura-err {
+        display: none;
+        position: fixed;
+        left: 16px; right: 16px; bottom: 16px;
+        background: #1a0e10;
+        color: #ff8a8a;
+        padding: 12px 16px;
+        font: 13px/1.4 monospace;
+        z-index: 99999;
+        white-space: pre-wrap;
+        border: 1px solid #5a2020;
+      }
+    </style>
+        <link rel="stylesheet" href="./game.css" />
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot">
+        <p>LIQUID CORE</p>
+        <h1>PURA</h1>
+        <p class="hint">読み込み中…</p>
+      </div>
+    </div>
+    <pre id="pura-err"></pre>
+    <script>
+      window.__puraIntent = window.__puraIntent || null;
+      window.__puraGo = window.__puraGo || function (a) { window.__puraIntent = a; };
+      function __puraFail(msg) {
+        var el = document.getElementById("pura-err");
+        if (!el) return;
+        el.style.display = "block";
+        el.textContent = String(msg || "load error");
+      }
+      window.addEventListener("error", function (e) {
+        var m = e && e.message ? e.message : "";
+        if (!m || /ResizeObserver/i.test(m)) return;
+        __puraFail(m + "\n" + (e.filename || "") + ":" + (e.lineno || ""));
+      });
+      window.addEventListener("unhandledrejection", function (e) {
+        __puraFail(e && e.reason ? e.reason : "promise error");
+      });
+    </script>
+      <script src="./game.js" defer onerror="__puraFail('game.js を読み込めません')"></script>
+  </body>
+</html>
