@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-17",
+  "url": "https://blitast-studio.github.io/pura/?lab=droplets&feel=refined",
+  "sourceCommit": "be10791af9e51bd88ab164bf0dc9981b46dfc1bf",
+  "deployCommit": "c725205e98fd75a44c21ac5a47d3177af91b494f",
+  "assets": [
+    {
+      "path": "assets/DropletLab-BY2B33VU.js",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-Cl67DvGA.js",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-DqYYqswZ.css",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "favicon.svg",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "og.jpg",
+      "status": 200,
+      "matchesLocal": true
+    }
+  ],
+  "browser": {
+    "viewport": "390x844",
+    "drag": "passed with mouse; position and release velocity changed",
+    "reset": "passed",
+    "consoleWarningsAndErrors": 0,
+    "mass": 7744,
+    "limitation": "Physical smartphone touch and performance require user trial."
+  }
+}
