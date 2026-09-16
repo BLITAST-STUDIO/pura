@@ -1,4 +1,46 @@
-# PURA
+# PURA FLOW
+
+透明な水滴をつかみ、滑らせる質感と触り心地を磨く、PURAの昇華版プロジェクトです。現在はM1「触れる一滴」のローカル試作。実際に触ったユーザーの評価を受けて、融合へ進みます。
+
+仕様と承認範囲は [要件定義](docs/pura-v1/REQUIREMENTS.md) と [判断記録](docs/pura-v1/DECISIONS.md)、実装・検証結果と現在の描画方式は [開発状態](docs/pura-v1/STATUS.md) を参照してください。
+
+## ローカル開発
+
+このリポジトリのルートで実行します。
+
+```sh
+npm install
+npm run dev -- --host 127.0.0.1
+```
+
+`package-lock.json` を追加済みです。ロックされた依存を再現して導入する場合は、`npm install` の代わりに `npm ci` を使えます。
+
+- [一滴の実験画面](http://127.0.0.1:8080/?lab=droplets): `?lab=droplets` で開きます。
+- [PURAオリジナル](http://127.0.0.1:8080/): 通常の `/` は既存ゲームの入口を維持しています。
+
+ポートが使用中の場合は、Viteが表示するURLに合わせてください。この手順はローカル起動です。新版の公開・デプロイは行っていません。
+
+## 一滴の試し方
+
+- 水滴をつかんで動かし、離して滑らせる。壁での変形と、止まるまでの感触を確認できます。
+- シアン・ローズ・アンバーと、スタジオ／自然光を切り替えて見比べます。
+- 「屈折を見る」で模様入りの検査盤面に切り替え、水滴越しの歪みを確認します。
+- リセットボタンまたは `R` で元の位置へ戻します。`Esc` で一時停止／再開。設定を開いている場合は、先に設定を閉じます。
+- 設定では揺れの抑制、画質、動作情報表示、一時停止を選べます。
+
+M1は一滴の見た目と操作を評価する試作です。融合・混色・分離はこの実験画面の対象に含まれません。ビジュアルと触り心地の最終判断は、ユーザーの実際の試遊待ちです。
+
+## 検証
+
+```sh
+npm run typecheck
+npm test
+npm run build
+```
+
+型検査、対象テスト、配信用ビルドは別々の検証です。ビルド成功だけで画質や実機性能を合格とは扱いません。実施済みの結果と未検証事項は [開発状態](docs/pura-v1/STATUS.md) に記録します。
+
+## PURAオリジナル
 
 散らばる雫を集め、ひとつの核にする。同色は融け合い、混色は純度を削る。
 
@@ -6,7 +48,7 @@
 
 **プレイ:** [blitastxyz.itch.io/pura](https://blitastxyz.itch.io/pura)
 
-## 操作
+### 操作
 
 - ドラッグで雫を掴む
 - ダブルタップで分離
@@ -15,20 +57,9 @@
 
 ステージは 8 本。サンドボックスはエンドレス。
 
-## 開発
+### 配信用ZIP生成
 
-```bash
-npm install
-npm run dev
-```
-
-itch.io 用 ZIP:
-
-```bash
-npm run pack:itch
-```
-
-`artifacts/pura-html.zip` ができます。Uploads で「This file will be played in the browser」にチェック。
+`npm run pack:itch` でビルドし、`artifacts/pura-html.zip` を生成できます。Viteの入口HTML・分割JavaScript・CSS・素材を相対パスのまま収録します。通常入口と `?lab=droplets` の両方を含みます。ZIP生成はローカルで確認済みですが、アップロード・公開は行っていません。
 
 `web/` は書き出し済みの静的ファイルです。フォルダをそのまま静的サーバーに置けば遊べます。
 
@@ -36,6 +67,8 @@ npm run pack:itch
 
 本番 CSS に `.absolute` などが入っていること。Vite の root を変えると Tailwind v4 のソース検出が外れ、canvas が巨大化して真っ暗になる。`src/styles.css` の `@source` を外さない。
 
-```bash
-grep -c '\.absolute' dist/game.css   # 0 なら失敗
+```sh
+rg --count '\.absolute' dist --glob '*.css'
 ```
+
+一致がなければ、CSSの生成内容とTailwindの設定を確認してください。

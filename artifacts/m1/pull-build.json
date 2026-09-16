@@ -1,0 +1,37 @@
+{
+  "url": "https://shirt-constantly-soldier-anthropology.trycloudflare.com/?lab=droplets",
+  "build": "DropletLab-B7KPVD9c.js",
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "6be3408d775278044683a863f2602c1bc565155686670abdd384e1eff950e139",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/DropletLab-B7KPVD9c.js",
+      "status": 200,
+      "sha256": "d9a5a739306dc0f6e40ebf5ec84ac6e125fd0a011b5ea9cdf5e4cdee27025702",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-P3E5e_wz.js",
+      "status": 200,
+      "sha256": "656c629f1b9906121bf620f0ce3ea34028ed17cac4e070c205a79a391342844c",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-_KO3YiYp.css",
+      "status": 200,
+      "sha256": "85495f05905ddd866a20772d46daca48d2088dc97f3bcf396a084eb2f4f327d3",
+      "matchesLocal": true
+    }
+  ],
+  "typecheck": "passed",
+  "tests": {
+    "passed": 24,
+    "failed": 0
+  },
+  "pack": "passed, 305.1 KB / 6 files",
+  "warning": "experimental chunk exceeds 500 kB"
+}

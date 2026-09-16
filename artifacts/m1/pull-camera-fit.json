@@ -1,0 +1,171 @@
+{
+  "checkedAt": "2026-09-16T13:05:56.850Z",
+  "source": "src/experiments/droplet-lab/renderer.ts",
+  "sourceSha256": "01e758479a2aec4f3ec8f55f14466d2de9253f1e4465094877b36f4748c0bf0f",
+  "pullSourceSha256": "eb469388c2ab971eb07a3b96f4c94be52b372e52f3051df60561019ccc739d94",
+  "method": "Independently reproduce the camera support-function fit and affine leading-edge pull, then project every actual Three.js SphereGeometry vertex at sampled wobble and independently varied pull angles and all four legal center corners. Numerical geometry/code-review evidence; not browser, frame-rate, touch or perception evidence.",
+  "assumptions": {
+    "radiusLogical": 88,
+    "worldScale": 0.01,
+    "cameraTiltRadians": 0.47,
+    "cameraVerticalFovDegrees": 34,
+    "safeMaxAbsNdc": 0.97,
+    "stretchSamples": [
+      -0.26,
+      0,
+      0.26
+    ],
+    "squashSamples": [
+      0,
+      0.25
+    ],
+    "wobbleRotationDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "pullRotationDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "pullStrength": 0.24,
+    "geometry": "SphereGeometry(1,96,64); clipped z=max(.007,(sphereZ+.64)*.62), with renderer taper, then wobble rotation/scale, then pull affine, then legal body translation.",
+    "maxXYScale": 1.3696,
+    "maxPullScale": 1.12,
+    "maxPullShiftWorld": 0.1056,
+    "minZScale": 0.7023214285714284,
+    "maxZScale": 1.0884,
+    "continuousBound": "The pull XY block I+e*n*nT has singular values (1+e,1), so independent pull and wobble directions lie inside the XY radius multiplied by maxPullScale. Pull translation length is <=r*MAX_PULL/2. Z scale is positive 1/(1+e), making minZScale the smallest possible Z scale. The circular XY ellipsoid support plus taper XY/Z and translation bounds every angle and pull strength in [0,MAX_PULL]. Samples validate representative shapes at full pull.",
+    "limitations": "The support argument assumes enforced stretch, squash and pull limits. Samples are finite and do not validate optical perception, browser update timing, touch input, contact shadow extent or subjective weight."
+  },
+  "codeReview": {
+    "affineDeterminant": 1,
+    "volumeInterpretation": "Added pull affine determinant is 1: XY extension cancels Z reduction. Existing wobble/taper volume approximation is unchanged.",
+    "matrixOrder": "world = bodyTranslation * pullAffine * wobbleRotation * wobbleScale * taperedLocalVertex",
+    "opticalMatrices": "dropGroup.updateMatrixWorld(true) propagates the manual pullGroup matrix before uDropToWorld/uWorldToDrop are copied from drop.matrixWorld. Inverse-transpose normals and unnormalized local rays in findExit incorporate the complete affine.",
+    "contact": "contactGroup uses bodyTranslation * pullAffine, with matching wobble angle and XY scales on children. Contact and caustic remain registered with the pulled body.",
+    "reset": "reset() clears simulation, motion and pull, then deform(0) writes an identity pull affine. Reduced-motion option clears both visual helpers before deform(0).",
+    "finding": "No correctness issue identified in pull transform, optical matrix propagation, contact alignment, reset path or camera envelope. The analytic interior ellipsoid remains an approximation to the small taper, as before."
+  },
+  "results": [
+    {
+      "canvasCssPixels": [
+        348,
+        412
+      ],
+      "logicalBoard": [
+        550,
+        651.1494252873564
+      ],
+      "cameraDistance": 14.036873253084142,
+      "maxAbsNdc": 0.9419910807712242,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9853244504219906,
+        0.9891141222526041
+      ],
+      "projectedVertices": 9684480,
+      "worstCase": {
+        "corner": [
+          1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "wobbleAngleDegrees": 270,
+        "pullAngleDegrees": 0,
+        "pullStrength": 0.24,
+        "vertex": 229,
+        "ndc": [
+          0.9419910807712242,
+          -0.46274305711311,
+          0.9862943421989809
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        502,
+        382
+      ],
+      "logicalBoard": [
+        550,
+        418.5258964143426
+      ],
+      "cameraDistance": 9.027473907120466,
+      "maxAbsNdc": 0.9344729734228413,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9753850603966139,
+        0.9819776387308401
+      ],
+      "projectedVertices": 9684480,
+      "worstCase": {
+        "corner": [
+          1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "wobbleAngleDegrees": 270,
+        "pullAngleDegrees": 0,
+        "pullStrength": 0.24,
+        "vertex": 326,
+        "ndc": [
+          0.9344729734228413,
+          -0.30831577853789366,
+          0.9777007678664228
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        1194,
+        343
+      ],
+      "logicalBoard": [
+        1200,
+        344.7236180904523
+      ],
+      "cameraDistance": 7.265823958258462,
+      "maxAbsNdc": 0.929285469168824,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9682243579869309,
+        0.9771911592729385
+      ],
+      "projectedVertices": 9684480,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "wobbleAngleDegrees": 0,
+        "pullAngleDegrees": 270,
+        "pullStrength": 0.24,
+        "vertex": 6179,
+        "ndc": [
+          -0.7569310570570111,
+          -0.929285469168824,
+          0.9690574931506821
+        ]
+      }
+    }
+  ]
+}

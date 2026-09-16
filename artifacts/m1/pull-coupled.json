@@ -1,0 +1,194 @@
+{
+  "recordedAt": "2026-09-16T13:04:06.197Z",
+  "method": "Node.js deterministic actual DropletSimulation + DropletPull, each advanced at 1/60 s. A centered finger moves once by 0.8 radius then remains held for two seconds.",
+  "limitation": "This is a coupled physics/presentation trace. It is not a browser timing measurement, screen recording, touch-device test, or a human assessment of weight.",
+  "initial": {
+    "x": 500,
+    "y": 325,
+    "vx": 0,
+    "vy": 0,
+    "r": 88,
+    "mass": 7744,
+    "grabbed": false,
+    "pointer": null,
+    "wallImpulse": {
+      "x": 0,
+      "y": 0
+    },
+    "hue": "cyan"
+  },
+  "target": {
+    "x": 570.4,
+    "y": 325
+  },
+  "samples": [
+    {
+      "frame": 1,
+      "seconds": 0.016666666666666666,
+      "bodyX": 500.698368,
+      "bodyVelocityX": 41.90207999999999,
+      "fingerGap": 69.70163199999996,
+      "pull": {
+        "x": 0.0742851478854938,
+        "y": 0,
+        "strength": 0.0742851478854938
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 2,
+      "seconds": 0.03333333333333333,
+      "bodyX": 501.9671257361067,
+      "bodyVelocityX": 76.12546416639998,
+      "fingerGap": 68.43287426389327,
+      "pull": {
+        "x": 0.12557744911944724,
+        "y": 0,
+        "strength": 0.12557744911944724
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 3,
+      "seconds": 0.05,
+      "bodyX": 503.6948195773194,
+      "bodyVelocityX": 103.66163047275992,
+      "fingerGap": 66.7051804226806,
+      "pull": {
+        "x": 0.16099368292610267,
+        "y": 0,
+        "strength": 0.16099368292610267
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 4,
+      "seconds": 0.06666666666666667,
+      "bodyX": 505.7847618758482,
+      "bodyVelocityX": 125.39653791172769,
+      "fingerGap": 64.6152381241518,
+      "pull": {
+        "x": 0.1854478327082805,
+        "y": 0,
+        "strength": 0.1854478327082805
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 6,
+      "seconds": 0.1,
+      "bodyX": 510.7290161769598,
+      "bodyVelocityX": 154.53513032817497,
+      "fingerGap": 59.67098382304016,
+      "pull": {
+        "x": 0.213991674426745,
+        "y": 0,
+        "strength": 0.213991674426745
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 9,
+      "seconds": 0.15,
+      "bodyX": 519.1280519795683,
+      "bodyVelocityX": 171.81445136716496,
+      "fingerGap": 51.27194802043164,
+      "pull": {
+        "x": 0.2243069153568815,
+        "y": 0,
+        "strength": 0.2243069153568815
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 12,
+      "seconds": 0.2,
+      "bodyX": 527.6752426267408,
+      "bodyVelocityX": 168.8341144213085,
+      "fingerGap": 42.724757373259195,
+      "pull": {
+        "x": 0.20260128897409765,
+        "y": 0,
+        "strength": 0.20260128897409765
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 18,
+      "seconds": 0.3,
+      "bodyX": 542.7654181969481,
+      "bodyVelocityX": 135.13767856261447,
+      "fingerGap": 27.6345818030519,
+      "pull": {
+        "x": 0.13764356002132971,
+        "y": 0,
+        "strength": 0.13764356002132971
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 30,
+      "seconds": 0.5,
+      "bodyX": 561.131021020993,
+      "bodyVelocityX": 59.3075000205386,
+      "fingerGap": 9.268978979006988,
+      "pull": {
+        "x": 0.04225549006995657,
+        "y": 0,
+        "strength": 0.04225549006995657
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 60,
+      "seconds": 1,
+      "bodyX": 570.3361768722224,
+      "bodyVelocityX": 1.8996654863069025,
+      "fingerGap": 0.0638231277775958,
+      "pull": {
+        "x": 0.000036039927875458425,
+        "y": 0,
+        "strength": 0.000036039927875458425
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 90,
+      "seconds": 1.5,
+      "bodyX": 570.4286420063074,
+      "bodyVelocityX": -0.13549838764804364,
+      "fingerGap": -0.028642006307450174,
+      "pull": {
+        "x": 1.6445880464788232e-8,
+        "y": 0,
+        "strength": 1.6445880464788232e-8
+      },
+      "grabbed": true,
+      "mass": 7744
+    },
+    {
+      "frame": 120,
+      "seconds": 2,
+      "bodyX": 570.4011287216042,
+      "bodyVelocityX": -0.010629239541728766,
+      "fingerGap": -0.0011287216042319415,
+      "pull": {
+        "x": 7.50464832218155e-12,
+        "y": 0,
+        "strength": 7.50464832218155e-12
+      },
+      "grabbed": true,
+      "mass": 7744
+    }
+  ]
+}

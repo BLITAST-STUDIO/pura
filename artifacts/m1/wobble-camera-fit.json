@@ -1,0 +1,163 @@
+{
+  "checkedAt": "2026-09-16T12:31:31.573Z",
+  "source": "src/experiments/droplet-lab/renderer.ts",
+  "sourceSha256": "66e6573c987259f3c0556ee97b0357db77c44f5076a7ff459bc374b3911f975f",
+  "method": "Independently reproduce camera support-function fit, then project every actual Three.js SphereGeometry vertex at each sampled shape, rotation and legal center corner. This is numerical geometry evidence, not browser, jiggle-quality or frame-rate evidence.",
+  "assumptions": {
+    "radiusLogical": 88,
+    "worldScale": 0.01,
+    "cameraTiltRadians": 0.47,
+    "cameraVerticalFovDegrees": 34,
+    "safeMaxAbsNdc": 0.97,
+    "canvasEdgeMarginFraction": 0.015,
+    "stretchRange": [
+      -0.26,
+      0.26
+    ],
+    "stretchSamples": [
+      -0.26,
+      -0.13,
+      0,
+      0.13,
+      0.26
+    ],
+    "squashRange": [
+      0,
+      0.25
+    ],
+    "squashSamples": [
+      0,
+      0.125,
+      0.25
+    ],
+    "rotationSamplesDegrees": [
+      0,
+      22.5,
+      45,
+      67.5,
+      90,
+      112.5,
+      135,
+      157.5,
+      180,
+      202.49999999999997,
+      225,
+      247.49999999999997,
+      270,
+      292.50000000000006,
+      315,
+      337.49999999999994
+    ],
+    "legalCenterCorners": 4,
+    "geometry": "SphereGeometry(1,96,64), clipped z=max(.007,(sphereZ+.64)*.62); taper and x/y/z scales match renderer. Baseline XY scale is now (1,1).",
+    "maxXYScale": 1.3696,
+    "maxZScale": 1.0884,
+    "minZScale": 0.7866,
+    "fitBound": "All rotations are bounded by a circular XY ellipsoid of radius r*maxXYScale. Maximum taper displacement is added in XY and Z. Four perspective-frustum support inequalities select the worst legal center corner. The vertex samples validate representative combinations including all stretch/squash endpoints; the analytic envelope bounds the continuous range.",
+    "limitations": "Declared stretch/squash limits must remain enforced in motion.ts. This check does not test motion timing, browser matrix updates, physical input, touch devices, caustics or perception."
+  },
+  "results": [
+    {
+      "canvasCssPixels": [
+        502,
+        382
+      ],
+      "logicalBoard": [
+        550,
+        418.5258964143426
+      ],
+      "cameraDistance": 8.362784960532512,
+      "maxAbsNdc": 0.9395144620149368,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9729118521922843,
+        0.9803118285782592
+      ],
+      "projectedVertices": 6052800,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "angleDegrees": 270,
+        "vertex": 5854,
+        "ndc": [
+          -0.9395144620149368,
+          -0.3306248935481672,
+          0.9753406414050476
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        1194,
+        343
+      ],
+      "logicalBoard": [
+        1200,
+        344.7236180904523
+      ],
+      "cameraDistance": 6.831544790183925,
+      "maxAbsNdc": 0.9482514091820577,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9657203199697539,
+        0.9754207616392204
+      ],
+      "projectedVertices": 6052800,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "angleDegrees": 112.5,
+        "vertex": 703,
+        "ndc": [
+          -0.9482514091820577,
+          -0.39914072463992883,
+          0.9680149213327944
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        348,
+        368
+      ],
+      "logicalBoard": [
+        550,
+        581.6091954022988
+      ],
+      "cameraDistance": 11.61650365803254,
+      "maxAbsNdc": 0.9440589386395992,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.981503315630936,
+        0.9864258624127135
+      ],
+      "projectedVertices": 6052800,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": -0.26,
+        "squash": 0.25,
+        "angleDegrees": 270,
+        "vertex": 5951,
+        "ndc": [
+          -0.9440589386395992,
+          -0.46413906248095466,
+          0.9827884224143975
+        ]
+      }
+    }
+  ]
+}

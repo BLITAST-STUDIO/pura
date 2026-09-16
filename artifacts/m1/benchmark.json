@@ -1,0 +1,61 @@
+{
+  "date": "2026-09-16",
+  "baseHead": "067d45b9d7eb42f0bbccdb43405aa70f41d952b1",
+  "branch": "feat/droplet-lab",
+  "bundle": "DropletLab-B-oJj1ml.js",
+  "bundleSha256": "cc0914d662ed10815ff0d3ad64d38320d3dddf6239b3a2a493eb346d3a9664d2",
+  "build": "production preview",
+  "hardware": "MacBookAir10,1; Apple M1; 8GB; macOS26.6.2",
+  "scene": "One stationary cyan droplet, studio, regular floor. No interactions, recording or options changes during the measurement.",
+  "window": "Codex in-app browser; 1280x720 viewport; document remained active; physical refresh rate and power state unmeasured",
+  "benchmark": {
+    "warmupSeconds": 30,
+    "measurementSeconds": 120,
+    "samples": 7200,
+    "medianMs": 16.69999999999709,
+    "p95Ms": 18.60000000000582,
+    "over50ms": 0,
+    "quality": "high",
+    "lighting": "studio",
+    "inspection": false,
+    "dpr": 2,
+    "drawingBuffer": {
+      "width": 2388,
+      "height": 687
+    },
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "source": "requestAnimationFrame intervals; not GPU time or input latency"
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "color": "linear render targets / ACES / sRGB output"
+  },
+  "canvasCss": {
+    "bottom": 530.9375,
+    "height": 343.59375,
+    "left": 43,
+    "right": 1237,
+    "top": 187.34375,
+    "width": 1194,
+    "x": 43,
+    "y": 187.34375
+  },
+  "postMeasurementStats": {
+    "medianMs": 16.699999999982538,
+    "p95Ms": 18.60000000000582,
+    "calls": 9,
+    "triangles": 12108,
+    "textures": 4,
+    "geometries": 5,
+    "width": 2388,
+    "height": 687,
+    "quality": "high"
+  },
+  "limitations": [
+    "CPU requestAnimationFrame intervals; not GPU timings or end-to-end input latency",
+    "Stationary single drop only; glide and many-drop load not represented",
+    "Not a physical touch-device benchmark"
+  ]
+}
