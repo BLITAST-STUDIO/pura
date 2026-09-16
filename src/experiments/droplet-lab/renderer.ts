@@ -370,6 +370,14 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   function up(e: PointerEvent) {
     if (activePointer === e.pointerId) cancelPointer();
   }
+  function preventCanvasScroll(e: TouchEvent) {
+    // Reserve gestures that begin on the board, including a near-miss on a
+    // moving drop. Native non-passive listeners also cover touch browsers that
+    // otherwise start scrolling before the Pointer Events drag is established.
+    // Touch events keep their initial target when a finger leaves the canvas.
+    // Outside controls and page margins retain their normal scrolling behavior.
+    if (e.cancelable) e.preventDefault();
+  }
   function visibility() {
     cancelPointer(); last = 0; resetMeasurement();
     if (document.hidden) cancelAnimationFrame(raf);
@@ -527,6 +535,8 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   canvas.addEventListener('pointerup', up);
   canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('lostpointercapture', up);
+  canvas.addEventListener('touchstart', preventCanvasScroll, { passive: false });
+  canvas.addEventListener('touchmove', preventCanvasScroll, { passive: false });
   canvas.addEventListener('webglcontextlost', lost);
   canvas.addEventListener('webglcontextrestored', restored);
   window.addEventListener('blur', cancelPointer);
@@ -583,6 +593,8 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       canvas.removeEventListener('pointerup', up);
       canvas.removeEventListener('pointercancel', up);
       canvas.removeEventListener('lostpointercapture', up);
+      canvas.removeEventListener('touchstart', preventCanvasScroll);
+      canvas.removeEventListener('touchmove', preventCanvasScroll);
       canvas.removeEventListener('webglcontextlost', lost);
       canvas.removeEventListener('webglcontextrestored', restored);
       window.removeEventListener('blur', cancelPointer);

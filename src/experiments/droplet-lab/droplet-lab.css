@@ -39,6 +39,8 @@
 .dl-study-number > span { color: #57676c; font-size: 11px; }
 .dl-stage { position: relative; isolation: isolate; height: clamp(320px, 48vh, 540px); min-height: 320px; overflow: hidden; border: 1px solid #26363b; border-radius: 18px; background: #121c20; box-shadow: 0 12px 70px rgba(0, 0, 0, .12); }
 .dl-canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.dl-stage { touch-action: none; overscroll-behavior: contain; }
+.dl-stage, .dl-canvas { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .dl-canvas.is-grabbed { cursor: grabbing; }
 .dl-canvas:focus-visible { outline-offset: -5px !important; }
 .dl-stage-top, .dl-stage-bottom { position: absolute; right: 26px; left: 26px; display: flex; justify-content: space-between; align-items: center; gap: 12px; pointer-events: none; z-index: 2; user-select: none; }

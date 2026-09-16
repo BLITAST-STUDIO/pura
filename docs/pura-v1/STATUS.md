@@ -1,6 +1,15 @@
 # PURA FLOW — 開発状態
 
-更新日: 2026-09-16 / 仕様基準: 要件定義v1.0.1と最新のユーザー指示
+更新日: 2026-09-17 / 仕様基準: 要件定義v1.0.1と最新のユーザー指示
+
+## 最新修正 — スマホのドラッグとページスクロール
+
+ユーザーから「スマホで雫を動かそうとすると高確率で画面がスクロールする」と報告。canvasには既に `touch-action: none` があったため、実機固有の原因を断定せず、盤面のタッチ開始・移動にnativeの非passive listenerを追加して既定スクロールを抑止した。掴みに失敗した場合もcanvasから始めた操作は対象。親のプレイエリアにも `touch-action: none`、選択・長押し抑制を指定した。ページ全体にはイベントを登録せず、設定・盤面外のスクロールを維持。描画破棄時にlistenerを解除する。
+
+- 型検査、既存38テスト、`npm run pack:itch` 成功。チャンク `DropletLab-BY2B33VU.js`、ZIP307.2 KB。500 kB超の既存警告は継続。
+- 同じHTTPSプレビューへ反映し、index・全JS/CSSのHTTP200とローカルSHA-256一致を確認。記録: `artifacts/m1/touch-scroll-build.json`。
+- 公開版390×844でマウスによるドラッグ・解放・リセットを確認。ドラッグ前後のcanvas上端212.09375は不変、盤面外のスクロールで124.09375へ変化。質量7744、ログの警告・エラー0。これは実タッチのスクロール再現試験ではない。実機での解消はユーザーの再確認待ち。
+- 参照: [MDN touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action)、[MDN TouchEvent](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent)。ブラウザの既定ジェスチャーと明示的な `passive: false` の扱いを確認した。
 
 **好評のM1をGitHubへ復元点として保存し、添付リサーチを基に一滴の追加調整を実装した。体積の整合、触れた瞬間の微小な圧縮、接地部を残した上面の先行変形と屈折の同期、新旧比較・不透明表示を追加。スマホ用HTTPSプレビューは更新済み。今回の変更がより気持ちよいかはRYOの比較試遊待ち。**
 

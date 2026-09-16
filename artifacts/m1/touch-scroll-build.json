@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-17",
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/DropletLab-BY2B33VU.js",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-Cl67DvGA.js",
+      "status": 200,
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-DqYYqswZ.css",
+      "status": 200,
+      "matchesLocal": true
+    }
+  ],
+  "typecheck": "passed",
+  "tests": 38,
+  "pack": "passed",
+  "limitation": "Touch scroll on physical phone requires user confirmation; prior mouse drags do not reproduce touch scrolling."
+}
