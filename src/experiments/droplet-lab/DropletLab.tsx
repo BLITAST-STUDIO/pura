@@ -7,6 +7,14 @@ import "./droplet-lab.css";
 type Experience = ReturnType<typeof createDropletExperience>;
 type Status = "loading" | "ready" | "error";
 type Stats = { fps: number; frameP95: number; grabbed: boolean };
+type Refinement = "baseline" | "refined";
+
+function updateComparisonQuery(key: "feel" | "view", value: string | null) {
+  const url = new URL(window.location.href);
+  if (value === null) url.searchParams.delete(key);
+  else url.searchParams.set(key, value);
+  window.history.replaceState(window.history.state, "", url);
+}
 
 const colors: { id: HueId; label: string; name: string }[] = [
   { id: "cyan", label: "CYAN", name: "シアン" },
@@ -19,9 +27,14 @@ export function DropletLab() {
   const experienceRef = useRef<Experience | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const settingsCloseRef = useRef<HTMLButtonElement>(null);
   const [hue, setHue] = useState<HueId>("cyan");
   const [lighting, setLighting] = useState<"studio" | "daylight">("studio");
   const [inspection, setInspection] = useState(false);
+  const [refinement, setRefinement] = useState<Refinement>(() =>
+    new URLSearchParams(window.location.search).get("feel") === "baseline" ? "baseline" : "refined",
+  );
+  const [clay, setClay] = useState(() => new URLSearchParams(window.location.search).get("view") === "clay");
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -64,8 +77,8 @@ export function DropletLab() {
   }, [restart]);
 
   useEffect(() => {
-    experienceRef.current?.setOptions({ hue, lighting, inspection, reducedMotion, quality, paused });
-  }, [hue, lighting, inspection, reducedMotion, quality, paused, restart]);
+    experienceRef.current?.setOptions({ hue, lighting, inspection, refinement, clay, reducedMotion, quality, paused });
+  }, [hue, lighting, inspection, refinement, clay, reducedMotion, quality, paused, restart]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -94,6 +107,7 @@ export function DropletLab() {
 
   useEffect(() => {
     if (!settingsOpen) return;
+    settingsCloseRef.current?.focus();
     const dismiss = (event: PointerEvent) => {
       if (event.target instanceof Node && !settingsRef.current?.contains(event.target)) setSettingsOpen(false);
     };
@@ -194,11 +208,24 @@ export function DropletLab() {
                 <button className={`dl-icon-button${settingsOpen ? " is-active" : ""}`} ref={settingsButtonRef} aria-label="表示と動きの設定" aria-expanded={settingsOpen} aria-controls="dl-settings-panel" onClick={() => setSettingsOpen((value) => !value)}><SlidersHorizontal size={17} /></button>
                 {settingsOpen && (
                   <div className="dl-settings-panel" id="dl-settings-panel" role="dialog" aria-label="表示と動きの設定">
-                    <div className="dl-settings-heading"><span>表示と動き</span><button className="dl-icon-button" aria-label="設定を閉じる" onClick={() => { setSettingsOpen(false); settingsButtonRef.current?.focus(); }}><X size={15} /></button></div>
+                    <div className="dl-settings-heading"><span>表示と動き</span><button className="dl-icon-button" ref={settingsCloseRef} aria-label="設定を閉じる" onClick={() => { setSettingsOpen(false); settingsButtonRef.current?.focus(); }}><X size={15} /></button></div>
+                    <div className="dl-comparison-settings">
+                      <label className="dl-setting-row dl-select-setting"><span>触り心地</span><select value={refinement} onChange={(event) => {
+                        const next = event.target.value as Refinement;
+                        setRefinement(next);
+                        updateComparisonQuery("feel", next);
+                      }} aria-describedby="dl-feel-description"><option value="refined">今回の調整</option><option value="baseline">保存した感触</option></select></label>
+                      <p className="dl-setting-description" id="dl-feel-description">いつでも保存した感触に戻せます。</p>
+                      <label className="dl-setting-row"><span>形だけを見る</span><input type="checkbox" checked={clay} onChange={(event) => {
+                        setClay(event.target.checked);
+                        updateComparisonQuery("view", event.target.checked ? "clay" : null);
+                      }} aria-describedby="dl-shape-description" /><span className="dl-switch" aria-hidden="true" /></label>
+                      <p className="dl-setting-description" id="dl-shape-description">透明感を隠して、輪郭と揺れを確かめる。</p>
+                    </div>
                     <label className="dl-setting-row"><span>揺れを控えめに</span><input type="checkbox" checked={reducedMotion} onChange={(event) => setReducedMotion(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
-                    <label className="dl-setting-row dl-quality"><span>画質</span><select value={quality} onChange={(event) => setQuality(event.target.value as "high" | "balanced")}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
+                    <label className="dl-setting-row dl-select-setting"><span>画質</span><select value={quality} onChange={(event) => setQuality(event.target.value as "high" | "balanced")}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
                     <label className="dl-setting-row"><span>動作情報を表示</span><input type="checkbox" checked={showStats} onChange={(event) => setShowStats(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
-                    <button className="dl-pause-setting" disabled={status !== "ready"} onClick={() => { setPaused((value) => !value); setSettingsOpen(false); }}>{paused ? <Play size={14} /> : <Pause size={14} />}<span>{paused ? "再開する" : "一時停止"}</span><kbd>Esc</kbd></button>
+                    <button className="dl-pause-setting" disabled={status !== "ready"} onClick={() => { setPaused((value) => !value); setSettingsOpen(false); settingsButtonRef.current?.focus(); }}>{paused ? <Play size={14} /> : <Pause size={14} />}<span>{paused ? "再開する" : "一時停止"}</span><kbd>Esc</kbd></button>
                   </div>
                 )}
               </div>

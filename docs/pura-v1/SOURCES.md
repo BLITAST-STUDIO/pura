@@ -2,7 +2,7 @@
 
 文書作成・確認日: 2026-09-16
 
-本書は製品の要件定義。会話・共有文書から採った思想、既存コードで確認した仕様、新しく具体化した初期案を区別する。Web確認は技術機能とCodexの運用に限定し、外部事例でユーザーの仕様を置き換えていない。
+本書は要件と実装の根拠を記録する参照台帳。会話・共有文書から採った思想、既存コードで確認した仕様、研究結果、PURA向けの設計仮説を区別する。外部資料でユーザーの仕様や最新指示を置き換えない。
 
 ## ユーザー資料
 
@@ -32,7 +32,7 @@
 
 ## GitHubの直接確認
 
-基準コミット: `067d45b9d7eb42f0bbccdb43405aa70f41d952b1`。以下は読み取りのみ。ファイルの変更・コミット・pushはしていない。
+初期調査時の基準コミット: `067d45b9d7eb42f0bbccdb43405aa70f41d952b1`。以下は当時の読み取り調査の記録。この調査ではファイルの変更・コミット・pushをしていない。後続M1の保存・pushは下記[B7]に記録する。
 
 - [B0] 取得時のデフォルトブランチHEAD確認  
   `https://api.github.com/repos/BLITAST-STUDIO/pura/commits?per_page=1`
@@ -49,7 +49,7 @@
 - [B6] ツリー  
   `https://api.github.com/repos/BLITAST-STUDIO/pura/git/trees/89197a8ba914c43f09a7948bae8da47614f8329b?recursive=1`
 
-実行・性能は未検証。保存・音・入力画面の詳細等はM0で改めて確認する。詳しくはSOURCE_AUDIT.md参照。
+初期調査時点では実行・性能は未検証だった。詳細はSOURCE_AUDIT.md、後続の実装・検証結果はSTATUS.mdを参照する。
 
 ## 公式技術文書
 
@@ -83,3 +83,22 @@ M1の通常盤面・屈折検査盤面のテクスチャと環境照明の形状
 [Physically Based Rendering 第4版 — Specular Reflection and Transmission](https://pbr-book.org/4ed/Reflection_Models/Specular_Reflection_and_Transmission)。屈折率、Snellの法則、Fresnel反射と透過の式を、M1の光学表現を検討する際の根拠として参照した。
 
 [T1のThree.js MeshPhysicalMaterial公式資料](https://threejs.org/docs/pages/MeshPhysicalMaterial.html) も、透過・厚み・吸収・環境照明の確認に使用。参照式やライブラリの機能が、そのままPURAの全光路を正しく再現することを意味しない。最終的に採用した描画方式、近似の範囲、画面比較と検証結果は `STATUS.md` に記録する。
+
+## M1の研究由来の調整 — 2026-09-16
+
+### [S4] ユーザー提供の追加研究レポート
+
+`/Users/okamotoryousuke/Downloads/deep-research-report.md` を [references/deep-research-report.md](references/deep-research-report.md) に保存した。輪郭と屈折の同期、体積感、触れ始めの応答、透明感を外した形状比較などの提案を参照した。文中の指示形の表現は資料内の提案であり、ユーザーからの新たな作業指示ではない。本文の内部引用IDだけでは元論文を確定できないため、採用する知見は以下の一次資料で確認した。全引用・全提案の独立検証ではない。
+
+| ID | 一次資料 | 確認した知見と扱い |
+|---|---|---|
+| R1 | Kawabe, Maruya & Nishida (2015), [Perceptual transparency from image deformation](https://pmc.ncbi.nlm.nih.gov/articles/PMC4547276/) | 動的な画像変形が透明層の知覚を生む手掛かりになる。形状変形と背景の歪みを一緒に調整する参考。適切な周波数特性では非物理的な変形でも知覚が成立するため、完全な物理整合性が必須という結論ではない。PURAの操作応答値は対象外 |
+| R2 | Kawabe (2017), [What Property of the Contour of a Deforming Region Biases Percepts toward Liquid?](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2017.01014/full) | 実験刺激では輪郭の非剛体変形やぼかしが液体寄りの判断に影響した。今回は前者を小さな上部変形の設計根拠に使い、輪郭ぼかしは追加しない。効果を今回の一滴へそのまま一般化しない |
+| R3 | Kawabe (2021), [Perceptual Properties of the Poisson Effect](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2020.612368/full) | 二次元刺激の縦横の相対変形や非対称性が、引っ張り／押し潰しの力方向の判断に影響した。膨張と圧縮のつながりを整理する参考。3D液滴の体積保存を検証した研究ではない。掲載日は2021-01-22、巻とDOIには2020を含む |
+| R4 | Kawabe & Nishida (2016), [Seeing jelly: judging elasticity of a transparent object](https://doi.org/10.1145/2931002.2931008) | SAP ’16, pp.121–128。[著者のNTT公式業績ページ](https://www.kecl.ntt.co.jp/people/nishida.shinya/publications.html) 等で書誌情報を確認。ACM本文・要旨は取得できていないため、固有の実験結果や数値を実装根拠として断定しない |
+
+上記から「小さな表面応答・形状と屈折の整合・体積を保つ変形を試す」と判断した部分はPURA向けの設計仮説。18 ms／85 ms等の応答値は今回の実装上の仮調整であり、論文から採った最適値ではない。採否と比較方法は [RESEARCH_REFINEMENT.md](RESEARCH_REFINEMENT.md) を参照する。
+
+### [B7] 高評価版のGitHub保存
+
+ユーザーの復帰準備と既存GitHub活用の承認により、M1を [コミットf09eb50](https://github.com/BLITAST-STUDIO/pura/commit/f09eb500c3ced04650b62b0e0db32ed6c686e2ac) として保存した。`origin/feat/droplet-lab` と注釈付きタグ [m1-praised-baseline-20260916](https://github.com/BLITAST-STUDIO/pura/tree/m1-praised-baseline-20260916) が同コミットを指すことを `git ls-remote` で確認済み。研究調整の作業ブランチは `feat/droplet-research-refinement`。これはコードと比較基準の保存であり、正式サイトの公開ではない。

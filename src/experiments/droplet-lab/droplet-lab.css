@@ -94,7 +94,7 @@
 .dl-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 38px; border-radius: 7px; background: transparent; color: #91a2a8 !important; }
 .dl-icon-button:hover, .dl-icon-button.is-active { background: #213139; color: #e1ecee !important; }
 .dl-settings { position: relative; }
-.dl-settings-panel { position: absolute; z-index: 5; width: 276px; right: 0; bottom: calc(100% + 12px); border: 1px solid #3a5057; border-radius: 12px; padding: 8px 17px 10px; background: #172329; box-shadow: 0 12px 45px rgba(0, 0, 0, .3); }
+.dl-settings-panel { position: absolute; z-index: 5; width: min(304px, calc(100vw - 40px)); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; right: 0; bottom: calc(100% + 12px); border: 1px solid #3a5057; border-radius: 12px; padding: 8px 17px 10px; background: #172329; box-shadow: 0 12px 45px rgba(0, 0, 0, .3); }
 .dl-settings-heading { display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px; border-bottom: 1px solid var(--dl-line); font-size: 11px; color: #d9e5e7; }
 .dl-settings-heading .dl-icon-button { margin-right: -8px; }
 .dl-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: relative; min-height: 49px; font-size: 11px; color: #bbcccf; cursor: pointer; }
@@ -104,8 +104,10 @@
 .dl-setting-row input:checked + .dl-switch { border-color: #729da5; background: #35575f; }
 .dl-setting-row input:checked + .dl-switch::after { transform: translateX(11px); background: #c8e5e7; }
 .dl-setting-row input:focus-visible + .dl-switch { outline: 2px solid #a5e5e7; outline-offset: 4px; }
-.dl-quality { cursor: default; }
-.dl-quality select { padding: 7px 4px 7px 9px; width: 128px; border: 1px solid #395059; border-radius: 6px; background: #20343c; color: #cbdcdf; font-size: 10px; }
+.dl-comparison-settings { padding-bottom: 13px; border-bottom: 1px solid var(--dl-line); }
+.dl-setting-description { margin: -3px 0 0; color: #81989f; font-size: 9px; line-height: 1.7; }
+.dl-select-setting { cursor: default; }
+.dl-select-setting select { padding: 7px 4px 7px 9px; width: 138px; min-height: 34px; flex-shrink: 0; border: 1px solid #395059; border-radius: 6px; background: #20343c; color: #cbdcdf; font-size: 10px; }
 .dl-pause-setting { display: flex; align-items: center; gap: 9px; min-height: 43px; width: 100%; padding: 0; border-top: 1px solid var(--dl-line) !important; background: transparent; color: #b8cbd0 !important; font-size: 11px !important; }
 .dl-pause-setting:hover { color: #f0f6f6 !important; }
 .dl-pause-setting kbd { margin-left: auto; padding: 2px 4px; border: 1px solid #41545b; border-radius: 3px; font-family: inherit; font-size: 9px; color: #8eabb3; }

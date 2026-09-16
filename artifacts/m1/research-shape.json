@@ -1,0 +1,63 @@
+{
+  "description": "Independent numeric geometry checks; not a GPU benchmark or perceptual evaluation.",
+  "bendLimit": 0.065,
+  "geometry": "SphereGeometry(1, 96, 64); z = max(0.007, (z + 0.64) * 0.62)",
+  "limitations": [
+    "CPU double-precision reference validates the 16-step algorithm; GPU float precision and shader compilation need browser verification.",
+    "Signed volume covers the local nonlinear shear on the actual Float32 mesh; world-space scaling is outside these tests.",
+    "A finite ray set includes grazing rays and one TIR reflection; this does not test unlimited internal bounces.",
+    "No smartphone timing, input latency, or human material/touch judgment is inferred."
+  ],
+  "inverseAndJacobian": {
+    "maxRoundtrip": 1.110321213474181e-16,
+    "maxDeterminantError": 1.3653411734537713e-11,
+    "sampledPoints": 1872
+  },
+  "normals": {
+    "maxGradientError": 2.7064624871279228e-11,
+    "maxNormalAngleRadians": 2.9802322387695312e-8,
+    "sampledPoints": 1584
+  },
+  "meshVolume": {
+    "baseline": 2.3586601229912936,
+    "maxRelativeVolumeError": 2.0799395539228271e-10,
+    "vertices": 6305,
+    "triangles": 12096
+  },
+  "convexity": {
+    "sufficientCondition": "2 * |bend| < 1 / height^2",
+    "curvatureMargin": 2.4714568158168575,
+    "largestSampledSegmentField": 0
+  },
+  "opticalExits": {
+    "count": 2358,
+    "reflectionCount": 738,
+    "bottomCount": 312,
+    "maxPositionError": 0.00001561252614993161,
+    "oracle": "70-iteration quartic root with independent physical-distance bracket plus exact plane intersection"
+  },
+  "contactRim": {
+    "regression": "Fixed: floor proximity previously selected a bottom normal for a curved exit.",
+    "target": {
+      "x": 0.7776727090170172,
+      "y": 0,
+      "z": 0.007025
+    },
+    "expectedPoint": {
+      "x": 0.7776727090170172,
+      "y": 0,
+      "z": 0.007025
+    },
+    "measuredPoint": {
+      "x": 0.7776724992086677,
+      "y": 0,
+      "z": 0.007025010490417479
+    },
+    "bottom": false
+  },
+  "result": {
+    "expectedChecks": 6,
+    "completedChecks": 6,
+    "status": "passed"
+  }
+}

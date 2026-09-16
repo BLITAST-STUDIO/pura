@@ -4,6 +4,8 @@ import { DropletSimulation } from './simulation';
 import { createLiquidMaterial } from './liquid-material';
 import { DropletMotion } from './motion';
 import { DropletPull, MAX_PULL } from './pull-response';
+import { DropletSurface, MAX_SURFACE_BEND, MAX_PRESS, volumeScales } from './surface-response';
+import { SURFACE_BOTTOM, SURFACE_TOP } from './surface-shape';
 
 export type ExperienceOptions = {
   hue: HueId;
@@ -12,6 +14,8 @@ export type ExperienceOptions = {
   reducedMotion: boolean;
   paused: boolean;
   quality: 'high' | 'balanced';
+  refinement: 'baseline' | 'refined';
+  clay: boolean;
 };
 type Callbacks = {
   onReady?: () => void;
@@ -158,9 +162,11 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const sim = new DropletSimulation({ radius: 88 });
   const motion = new DropletMotion();
   const pull = new DropletPull();
+  const surface = new DropletSurface();
   const options: ExperienceOptions = {
     hue: 'cyan', lighting: 'studio', inspection: false,
     reducedMotion: false, paused: false, quality: 'high',
+    refinement: 'refined', clay: false,
   };
   const textures = [floorTexture(false), floorTexture(true)];
   for (const t of textures) t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -182,7 +188,12 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     attr.setZ(i, Math.max(0.007, (z + 0.64) * 0.62));
   }
   geometry.computeVertexNormals();
+  // Ray picking must include every deformed vertex even after the first pick
+  // caches a bound. This local sphere covers both the saved taper and new shear.
+  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0.5), 1.16);
   const originalVertices = new Float32Array(attr.array);
+  const normalAttr = geometry.getAttribute('normal') as THREE.BufferAttribute;
+  const originalNormals = new Float32Array(normalAttr.array);
   const material = new THREE.MeshPhysicalMaterial({
     color: '#ffffff', metalness: 0, roughness: LOOK.roughness,
     transmission: 1, thickness: LOOK.thickness, ior: LOOK.ior,
@@ -192,8 +203,10 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const backgroundTarget = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
   backgroundTarget.texture.colorSpace = THREE.NoColorSpace;
   const liquidMaterial = createLiquidMaterial(backgroundTarget.texture);
+  const clayMaterial = new THREE.MeshStandardMaterial({ color: '#aab6b5', roughness: 0.7, metalness: 0,
+    envMapIntensity: 0.45 });
   const referenceMaterial = new URLSearchParams(location.search).get('material') === 'physical';
-  const drop = new THREE.Mesh(geometry, referenceMaterial ? material : liquidMaterial);
+  const drop = new THREE.Mesh<THREE.SphereGeometry, THREE.Material>(geometry, referenceMaterial ? material : liquidMaterial);
   drop.frustumCulled = false;
   const dropGroup = new THREE.Group();
   const pullGroup = new THREE.Group();
@@ -222,6 +235,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const point = new THREE.Vector3();
   let activePointer: number | null = null;
   let grabOffset = new THREE.Vector2();
+  const grabPoint = new THREE.Vector2();
   let disposed = false;
   let contextLost = false;
   let raf = 0;
@@ -232,6 +246,9 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   let benchmarkSamples: number[] = [];
   let completedBenchmark = false;
   let previousTaper = Number.NaN;
+  let previousBendX = Number.NaN;
+  let previousBendY = Number.NaN;
+  let previousRefinement = '';
 
   function resize() {
     if (disposed || contextLost) return;
@@ -256,14 +273,19 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     const pad = Math.max(22, Math.min(sim.width, sim.height) * 0.04) * WORLD;
     const maxLocalZ = (1 + 0.64) * 0.62;
     const maxTaper = LOOK.maxStretch * LOOK.taperRatio;
+    // The same camera envelope serves both comparison modes. Include reciprocal
+    // height compensation, the touch press and the contact-anchored upper shear.
     const maxXYScale = Math.max(1 + LOOK.maxStretch,
-      1 + LOOK.maxStretch * 0.46 + LOOK.maxSquash);
-    const maxTaperOffset = maxTaper * Math.hypot(maxLocalZ * maxLocalZ, 0.4);
+      1 + LOOK.maxStretch * 0.46 + LOOK.maxSquash) * Math.sqrt(1 + MAX_PRESS);
+    const maxTaperOffset = Math.max(maxTaper * Math.hypot(maxLocalZ * maxLocalZ, 0.4),
+      MAX_SURFACE_BEND * (SURFACE_TOP - SURFACE_BOTTOM) ** 2);
     const maxPullScale = 1 + MAX_PULL * 0.5;
     const maxPullShift = radius * MAX_PULL * 0.5;
     const maxXYRadius = radius * maxXYScale * maxPullScale;
-    const maxZScale = 1 + LOOK.maxStretch * 0.34;
-    const minZScale = (1 - LOOK.maxStretch * 0.34 - LOOK.maxSquash * 0.5) / maxPullScale;
+    const maxZScale = Math.max(1 + LOOK.maxStretch * 0.34,
+      volumeScales(-LOOK.maxStretch, 0, 0).z);
+    const minZScale = Math.min(1 - LOOK.maxStretch * 0.34 - LOOK.maxSquash * 0.5,
+      volumeScales(LOOK.maxStretch, LOOK.maxSquash, MAX_PRESS).z) / maxPullScale;
     const taperXY = maxXYRadius * maxTaperOffset;
     const taperZ = radius * maxZScale * maxLocalZ * maxLocalZ * maxTaper * 0.3;
     const cornerX = sim.width * WORLD * 0.5 - pad - radius;
@@ -322,10 +344,17 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     if (!p) return;
     // Ray picking includes the visible top of the droplet in a slightly inclined camera.
     dropGroup.updateMatrixWorld(true);
-    const hit = raycaster.intersectObject(drop, false).length > 0;
+    const hit = raycaster.intersectObject(drop, false)[0];
     const s = sim.snapshot;
     if (!hit && Math.hypot(p.x - s.x, p.y - s.y) > s.r + 14) return;
     grabOffset.set(p.x - s.x, p.y - s.y);
+    if (hit) {
+      grabPoint.set((hit.point.x - dropGroup.position.x) / (s.r * WORLD),
+        (hit.point.y - dropGroup.position.y) / (s.r * WORLD));
+    } else {
+      grabPoint.set((p.x - s.x) / s.r, -(p.y - s.y) / s.r);
+    }
+    grabPoint.clampLength(0, 1);
     if (!sim.pointerDown(s.x, s.y)) return;
     activePointer = e.pointerId;
     canvas.setPointerCapture(e.pointerId);
@@ -358,10 +387,14 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     const s = sim.snapshot;
     const { stretch, squash, angle } = motion.update(s, dt, options.reducedMotion);
     const tension = pull.update(s, dt, options.reducedMotion);
+    const refined = options.refinement === 'refined';
+    const response = surface.update({ ...s, grabPoint }, dt, options.reducedMotion || !refined);
+    const scales = refined ? volumeScales(stretch, squash, response.press)
+      : { x: 1 + stretch, y: 1 - stretch * .46 + squash, z: 1 - stretch * .34 - squash * .5 };
     const r = s.r * WORLD;
     dropGroup.position.set((s.x - sim.width / 2) * WORLD, (sim.height / 2 - s.y) * WORLD, 0);
     drop.rotation.z = angle;
-    drop.scale.set(r * (1 + stretch), r * (1 - stretch * .46 + squash), r * (1 - stretch * .34 - squash * .5));
+    drop.scale.set(r * scales.x, r * scales.y, r * scales.z);
     // The front responds to the finger/body gap before the physical body catches
     // up. Half extension + half forward shift approximately anchors the rear.
     // This affine deformation also reaches the optical inverse matrices, so the
@@ -375,36 +408,62 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       0, 0, 1 / (1 + extension), 0,
       0, 0, 0, 1,
     );
-    // A small taper in the moving silhouette, with normals recomputed from that same surface.
-    const taper = options.reducedMotion ? 0 : stretch * LOOK.taperRatio;
-    if (!Number.isFinite(previousTaper) || Math.abs(taper - previousTaper) > 0.00001) {
+    // Keep the small upper-surface response aligned with the actual finger even
+    // when the existing wobble's principal axis is still turning. The affine
+    // pull can then carry both as before. The new shear leaves the bottom fixed.
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    const bendX = refined ? (cos * response.bendX + sin * response.bendY) / scales.x : 0;
+    const bendY = refined ? (-sin * response.bendX + cos * response.bendY) / scales.y : 0;
+    // Normalizing through the scale can enlarge local shear. Keep the enforced
+    // optical convexity bound in local coordinates; only direction is critical.
+    const bendLength = Math.hypot(bendX, bendY);
+    const bendClamp = bendLength < 0.000001 ? 0 : bendLength > MAX_SURFACE_BEND ? MAX_SURFACE_BEND / bendLength : 1;
+    const bx = bendX * bendClamp, by = bendY * bendClamp;
+    const taper = refined || options.reducedMotion ? 0 : stretch * LOOK.taperRatio;
+    if (previousRefinement !== options.refinement || !Number.isFinite(previousTaper)
+      || Math.abs(taper - previousTaper) > 0.00001
+      || Math.abs(bx - previousBendX) + Math.abs(by - previousBendY) > 0.000001
+      || (bx === 0 && by === 0 && (previousBendX !== 0 || previousBendY !== 0))) {
       previousTaper = taper;
+      previousBendX = bx; previousBendY = by; previousRefinement = options.refinement;
       for (let i = 0; i < attr.count; i++) {
         const j = i * 3;
         const x = originalVertices[j], y = originalVertices[j + 1], z = originalVertices[j + 2];
-        const shoulder = Math.max(0, z) * x;
-        attr.setXYZ(i, x + taper * z * z, y * (1 - taper * x * .4), z * (1 + taper * shoulder * .3));
+        if (refined) {
+          const h = z - SURFACE_BOTTOM;
+          attr.setXYZ(i, x + bx * h * h, y + by * h * h, z);
+          const nx = originalNormals[j], ny = originalNormals[j + 1];
+          const nz = originalNormals[j + 2] - 2 * h * (bx * nx + by * ny);
+          const length = Math.hypot(nx, ny, nz) || 1;
+          normalAttr.setXYZ(i, nx / length, ny / length, nz / length);
+        } else {
+          const shoulder = Math.max(0, z) * x;
+          attr.setXYZ(i, x + taper * z * z, y * (1 - taper * x * .4), z * (1 + taper * shoulder * .3));
+        }
       }
       attr.needsUpdate = true;
-      geometry.computeVertexNormals();
+      if (refined) normalAttr.needsUpdate = true; else geometry.computeVertexNormals();
+      liquidMaterial.uniforms.uSurfaceBend.value.set(bx, by);
     }
     contactGroup.matrix.makeTranslation(dropGroup.position.x, dropGroup.position.y, 0).multiply(pullGroup.matrix);
     contact.rotation.z = caustic.rotation.z = angle;
-    contact.scale.set(r * (1 + stretch), r * (1 - stretch * .46 + squash), 1);
+    contact.scale.set(r * scales.x, r * scales.y, 1);
     caustic.scale.copy(contact.scale);
-    material.thickness = LOOK.thickness * (s.r / 68) * (1 - squash * .5);
+    material.thickness = LOOK.thickness * (s.r / 68) * (refined ? scales.z : 1 - squash * .5);
     const screen = new THREE.Vector3(0, 0, r * .48).applyMatrix4(pullGroup.matrix).add(dropGroup.position).project(camera);
     const rect = canvas.getBoundingClientRect();
     canvas.dataset.drop = JSON.stringify({ x: s.x, y: s.y, vx: s.vx, vy: s.vy, mass: s.mass, grabbed: s.grabbed,
       screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2, radius: s.r,
       stretch, squash, hue: s.hue, pullX: tension.x, pullY: tension.y, pullStrength: tension.strength,
-      pointerGap: s.pointer ? Math.hypot(s.pointer.x - s.x, s.pointer.y - s.y) : 0 });
+      pointerGap: s.pointer ? Math.hypot(s.pointer.x - s.x, s.pointer.y - s.y) : 0,
+      refinement: options.refinement, clay: options.clay, bendX: bx, bendY: by, press: response.press,
+      scaleX: scales.x, scaleY: scales.y, scaleZ: scales.z, affineVolume: scales.x * scales.y * scales.z });
   }
 
   function renderScene() {
     renderer.info.autoReset = false;
     renderer.info.reset();
-    if (!referenceMaterial) {
+    if (!referenceMaterial && !options.clay) {
       dropGroup.updateMatrixWorld(true);
       camera.updateMatrixWorld(true);
       liquidMaterial.uniforms.uDropToWorld.value.copy(drop.matrixWorld);
@@ -483,12 +542,16 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       if (disposed) return;
       const lightingChanged = next.lighting !== undefined && next.lighting !== options.lighting;
       const qualityChanged = next.quality !== undefined && next.quality !== options.quality;
+      const refinementChanged = next.refinement !== undefined && next.refinement !== options.refinement;
+      const clayChanged = next.clay !== undefined && next.clay !== options.clay;
       Object.assign(options, next);
       sim.setHue(options.hue);
       material.attenuationColor.set(COLORS[options.hue]);
       liquidMaterial.uniforms.uTint.value.set(COLORS[options.hue]);
       liquidMaterial.uniforms.uDaylight.value = options.lighting === 'daylight' ? 1 : 0;
       caustic.material.uniforms.color.value.set(COLORS[options.hue]);
+      drop.material = options.clay ? clayMaterial : referenceMaterial ? material : liquidMaterial;
+      caustic.visible = !options.clay;
       floorMaterial.map = textures[options.inspection ? 1 : 0];
       floorMaterial.bumpMap = options.inspection ? null : textures[0];
       floorMaterial.needsUpdate = true;
@@ -503,11 +566,13 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       }
       if (qualityChanged) resize();
       if (options.paused) cancelPointer();
-      if (options.reducedMotion) { motion.reset(); pull.reset(); deform(0); }
+      if (refinementChanged) { surface.reset(); deform(0); }
+      else if (clayChanged) deform(0);
+      if (options.reducedMotion) { motion.reset(); pull.reset(); surface.reset(); deform(0); }
       last = 0; resetMeasurement();
     },
     reset() {
-      cancelPointer(); sim.reset(); motion.reset(); pull.reset();
+      cancelPointer(); sim.reset(); motion.reset(); pull.reset(); surface.reset();
       deform(0); resetMeasurement(); last = 0;
     },
     dispose() {
@@ -531,6 +596,9 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       });
       textures.forEach(t => t.dispose()); environment.dispose(); backgroundTarget.dispose();
       if (referenceMaterial) liquidMaterial.dispose(); else material.dispose();
+      clayMaterial.dispose();
+      // A comparison switch may leave either liquid material outside the scene.
+      if (options.clay) { liquidMaterial.dispose(); material.dispose(); }
       renderer.dispose();
     },
   };

@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { SURFACE_GLSL } from './surface-shape';
 
-// The first interface uses the rendered, deformed mesh. Its interior is an
-// analytic clipped ellipsoid: the tiny moving taper is deliberately approximate.
+// The refined surface and its optical interior use the same height shear.
+// The saved comparison retains its analytic ellipsoid / tiny taper approximation.
 // The opaque background target must contain linear light, without tone mapping.
 export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
@@ -14,6 +15,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uTint: { value: new THREE.Color('#5dd7e7') },
       uDaylight: { value: 0 },
       uIor: { value: 1.333 },
+      uSurfaceBend: { value: new THREE.Vector2() },
     },
     depthWrite: true,
     toneMapped: true,
@@ -41,6 +43,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uniform vec3 uTint;
       uniform float uDaylight;
       uniform float uIor;
+      uniform vec2 uSurfaceBend;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
 
@@ -49,6 +52,8 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       const float BOTTOM = 0.007;
       const float FLOOR = -0.012;
       const float EPSILON = 0.00015;
+
+      ${SURFACE_GLSL}
 
       vec3 worldNormal(vec3 n) {
         return normalize(vec3(dot(uWorldToDrop[0].xyz, n),
@@ -105,6 +110,15 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
         travel = 0.0;
         vec3 localOrigin = (uWorldToDrop * vec4(origin, 1.0)).xyz;
         vec3 localRay = (uWorldToDrop * vec4(ray, 0.0)).xyz;
+        if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12) {
+          vec3 localPoint;
+          vec3 localNormal;
+          bool hit = findSurfaceExit(localOrigin, localRay, localPoint, localNormal, travel);
+          if (!hit) return false;
+          point = (uDropToWorld * vec4(localPoint, 1.0)).xyz;
+          normal = worldNormal(localNormal);
+          return true;
+        }
         vec3 o = (localOrigin - CENTER) / RADII;
         vec3 d = localRay / RADII;
         float a = dot(d, d);
