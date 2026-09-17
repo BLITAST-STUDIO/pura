@@ -39,6 +39,7 @@ export function createFusionMaterial(background: THREE.Texture) {
     vec3 dye(vec3 p) {
       if (uMix > .999) return uAbsorption;
       vec2 q=p.xy;
+      float bloomSoftness=0.;
       if(uInternalFlow>.5) {
         // A smooth fold of the dye field, independent of the surface and simulation.
         // A slight initial fold avoids a perfectly flat seam; no frame-random noise.
@@ -49,6 +50,20 @@ export function createFusionMaterial(background: THREE.Texture) {
         float direction=sin(phase)>.0?1.:-1.;
         float turn=(.22+1.05*(1.-exp(-uAge*4.)))*exp(-uAge*.65);
         float depth=p.z-.48;
+        if(uInternalFlow>1.5) {
+          // A brief, rounded billow of dye grows from the contact region.
+          // Depth-dependent lobes stay coherent over time, like ink opening in water.
+          float puff=(1.-exp(-uAge*8.))*exp(-uAge*1.5);
+          float width=.15+.29*(1.-exp(-uAge*3.));
+          float y=local.y+.09*sin(phase)+depth*.24;
+          float upper=exp(-pow((y-.18)/width,2.));
+          float lower=exp(-pow((y+.29)/(width*.85),2.));
+          float seam=exp(-local.x*local.x*4.5);
+          local.x+=direction*.52*puff*(upper-.8*lower)*seam;
+          local.y*=1.-.18*puff*seam;
+          local.x+=.085*puff*sin(y*8.+depth*5.+phase-uAge*1.7)*seam;
+          bloomSoftness=.2*puff*seam;
+        }
         local=eddy(local,vec2(.035*sin(phase),.22+.06*cos(phase)),direction*turn,3.2);
         local=eddy(local,vec2(-.08,-.27),-direction*turn*.42,5.);
         local.x+=.04*sin(local.y*5.+depth*3.+phase+uAge*1.4)
@@ -68,7 +83,8 @@ export function createFusionMaterial(background: THREE.Texture) {
         float w=exp(-dot(q-s.xy,q-s.xy)/(s.z*s.z*.4+.03))*s.w;
         pigment+=uDyes[i]*w; sum+=w;
       }
-      return mix(sum>.00001?pigment/sum:uAbsorption,uAbsorption,uMix);
+      return mix(sum>.00001?pigment/sum:uAbsorption,uAbsorption,
+        uMix+(1.-uMix)*bloomSoftness);
     }
     const vec3 CENTER`);
   material.fragmentShader = material.fragmentShader.replace('if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12) {', `

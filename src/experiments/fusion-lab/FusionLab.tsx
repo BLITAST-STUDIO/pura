@@ -5,14 +5,19 @@ import type { FusionPreset } from './simulation';
 import '../droplet-lab/droplet-lab.css';
 import './fusion-lab.css';
 
+function initialDyeFlow(): FusionOptions['dyeFlow'] {
+  const value = new URLSearchParams(window.location.search).get('mixing');
+  return value === 'bloom' || value === 'swirl' ? value : 'classic';
+}
+
 export default function FusionLab() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const experience = useRef<ReturnType<typeof createFusionExperience> | null>(null);
   const settingsButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
-  const [preset, setPreset] = useState<FusionPreset>(() => new URLSearchParams(window.location.search).get('mixing') === 'swirl' ? 'mix' : 'pair');
+  const [preset, setPreset] = useState<FusionPreset>(() => initialDyeFlow() !== 'classic' ? 'mix' : 'pair');
   const [ratio, setRatio] = useState(1);
-  const [options, setOptions] = useState<FusionOptions>({ lighting: 'studio', inspection: false, paused: false, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches, quality: 'high', clay: false, dyeFlow: new URLSearchParams(window.location.search).get('mixing') === 'swirl' ? 'swirl' : 'classic' });
+  const [options, setOptions] = useState<FusionOptions>({ lighting: 'studio', inspection: false, paused: false, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches, quality: 'high', clay: false, dyeFlow: initialDyeFlow() });
   const [stats, setStats] = useState<FusionStats>({ count: 2, cyan: 1, rose: 0, merged: false, fps: 0, p95: 0 });
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -74,7 +79,7 @@ export default function FusionLab() {
         {settings && <div className="dl-settings-panel" id="fusion-settings" role="dialog" aria-label="表示と動きの設定"><div className="dl-settings-heading"><span>表示と動き</span><button ref={closeButton} className="dl-icon-button" aria-label="設定を閉じる" onClick={() => { setSettings(false); settingsButton.current?.focus(); }}><X size={15}/></button></div>
           <label className="dl-setting-row"><span>形だけを見る</span><input type="checkbox" checked={options.clay} onChange={e => change({ clay: e.target.checked })}/><span className="dl-switch"/></label>
           <label className="dl-setting-row"><span>揺れを控えめに</span><input type="checkbox" checked={options.reducedMotion} onChange={e => change({ reducedMotion: e.target.checked })}/><span className="dl-switch"/></label>
-          <label className="dl-setting-row dl-select-setting"><span>色のなじみ方</span><select value={options.dyeFlow} onChange={e => change({ dyeFlow: e.target.value as FusionOptions['dyeFlow'] })}><option value="swirl">ゆるやかな渦（試作）</option><option value="classic">これまでの混ざり方</option></select></label>
+          <label className="dl-setting-row dl-select-setting"><span>色のなじみ方</span><select value={options.dyeFlow} onChange={e => change({ dyeFlow: e.target.value as FusionOptions['dyeFlow'] })}><option value="bloom">ふわっと広がる（試作）</option><option value="swirl">ゆるやかな渦（試作）</option><option value="classic">これまでの混ざり方</option></select></label>
           <label className="dl-setting-row dl-select-setting"><span>画質</span><select value={options.quality} onChange={e => change({ quality: e.target.value as FusionOptions['quality'] })}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
           <label className="dl-setting-row"><span>動作情報を表示</span><input type="checkbox" checked={showStats} onChange={e => setShowStats(e.target.checked)}/><span className="dl-switch"/></label>
           <button className="dl-pause-setting" onClick={() => { change({ paused: !options.paused }); setSettings(false); }}>{options.paused ? '再開する' : '一時停止'}</button>

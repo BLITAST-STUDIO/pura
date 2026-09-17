@@ -9,7 +9,7 @@ import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
 import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
 
-export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' };
+export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2 };
@@ -119,7 +119,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const scales = volumeScales(m.stretch + ring, m.squash, response.press);
     const bend = new THREE.Vector2(response.bendX, response.bendY).clampLength(0, .065);
     b.material.uniforms.uSurfaceBend.value.copy(bend);
-    b.material.uniforms.uInternalFlow.value = options.dyeFlow === 'swirl' && !options.reducedMotion ? 1 : 0;
+    b.material.uniforms.uInternalFlow.value = options.reducedMotion ? 0 : options.dyeFlow === 'bloom' ? 2 : options.dyeFlow === 'swirl' ? 1 : 0;
     if (b.source.length) {
       const progress = 1 - Math.exp(-b.age * 7);
       b.lobes = b.source.map(l => ({ ...l, x: l.x * (1 - progress), y: l.y * (1 - progress), r: l.r + (1 - l.r) * progress }));
