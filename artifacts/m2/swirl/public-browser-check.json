@@ -1,0 +1,37 @@
+{
+  "url": "https://blitast-studio.github.io/pura/?lab=fusion&mixing=swirl",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "input": "mouse drag; not physical touch",
+  "drops": [
+    {
+      "age": 0.09920000000000072,
+      "correction": 0.9340927762835975,
+      "fractions": {
+        "amber": 0,
+        "cyan": 0.5,
+        "rose": 0.5
+      },
+      "grabbed": false,
+      "id": 1,
+      "lobes": 2,
+      "mass": 9248,
+      "pigment": {
+        "amber": 0,
+        "cyan": 4624,
+        "rose": 4624
+      },
+      "r": 96.16652224137046,
+      "screenX": 202.4265408840143,
+      "screenY": 194.36220399636915,
+      "vx": 135.06645727582696,
+      "vy": 6.446213502358734,
+      "x": 329.58548601205115,
+      "y": 321.34989818908286
+    }
+  ],
+  "flow": "swirl",
+  "logs": []
+}

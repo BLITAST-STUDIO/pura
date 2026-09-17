@@ -2,6 +2,8 @@
 
 融合の試遊URL: https://blitast-studio.github.io/pura/?lab=fusion
 
+内部の渦の比較: https://blitast-studio.github.io/pura/?lab=fusion&mixing=swirl
+
 一粒の保存比較: https://blitast-studio.github.io/pura/?lab=droplets&feel=refined
 
 GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配信。HTTPS有効。Mac・トンネル・ローカルプロセスは不要。通常の `/pura/` は旧ゲームを維持し、新版はクエリ `lab=fusion`、一粒の比較は `lab=droplets` で開く。
@@ -29,3 +31,10 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース: `d71e027a0567222a68e004fbf689fb95c3468d03`、配信: `9e7e76a971c53cdddce765b011e2f3f0f6600104`。
 - Pages built、全8配信ファイルがHTTP200・ローカルSHA-256一致。公開版390×844で二滴と1:4混色のドラッグ確認、警告・エラー0。実機タッチは未検証。
 - 証拠: `artifacts/m2/pages-build.json`、`artifacts/m2/public-browser-check.json`。一粒の入口と旧ゲームの入口も維持。
+
+## 内部の渦の比較配信（2026-09-17）
+
+- ソース: `582f8787784e6de1b1d706ad4db9f5c06294df78`、配信: `2c4af394e5d851a96e93dbdcbb22eef11c2e0f0d`。
+- 標準URLは従来表示を継続。`mixing=swirl` を付けたURLは色の混合から開始し、内部の弱い渦を有効にする。設定でも切替可能。
+- 戻す基準はタグ `m2-approved-20260917`（d8686f3）。配信を戻す場合の直前commitは `9e7e76a`。
+- Pages built、全8ファイルがHTTP200・ローカルSHA-256一致。公開試作URLで融合操作、成分量9248、警告・エラー0を確認。証拠は `artifacts/m2/swirl/pages-build.json` と `public-browser-check.json`。
