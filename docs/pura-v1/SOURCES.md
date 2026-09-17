@@ -102,3 +102,22 @@ M1の通常盤面・屈折検査盤面のテクスチャと環境照明の形状
 ### [B7] 高評価版のGitHub保存
 
 ユーザーの復帰準備と既存GitHub活用の承認により、M1を [コミットf09eb50](https://github.com/BLITAST-STUDIO/pura/commit/f09eb500c3ced04650b62b0e0db32ed6c686e2ac) として保存した。`origin/feat/droplet-lab` と注釈付きタグ [m1-praised-baseline-20260916](https://github.com/BLITAST-STUDIO/pura/tree/m1-praised-baseline-20260916) が同コミットを指すことを `git ls-remote` で確認済み。研究調整の作業ブランチは `feat/droplet-research-refinement`。これはコードと比較基準の保存であり、正式サイトの公開ではない。
+
+## 色の混合設計 — 2026-09-17
+
+### [U2] 今回のユーザーフィードバック
+
+大小の液量に応じた混色、純度を守るゲーム性と自由混色の併存、モード設計の判断を委ねる旨を受領。身内の試遊から「美術館や博物館の体験ブースにありそう」との感想が報告された。定性評価として記録し、統計調査や実機性能の保証にはしない。
+
+### [S5] ユーザー提供の混色研究
+
+`/Users/okamotoryousuke/Downloads/deep-research-report (1).md` を [references/deep-research-color-mixing.md](references/deep-research-color-mixing.md) へ原文保存。全文を確認。資料内の内部引用IDはそのまま検証済み出典とせず、採用する主張を一次資料と照合した。実装例・具体秒数は資料の提案。
+
+| ID | 一次資料 | 確認した範囲と限界 |
+|---|---|---|
+| C1 | [Khronos KHR_materials_volume](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_volume/README.md) | 指数減衰、光路長依存、表面色と吸収の区別。散乱を扱わない均質媒質の仕様であり、今回の局所混合演出を自動的に実現するものではない |
+| C2 | [IUPAC Beer–Lambert law](https://goldbook.iupac.org/terms/view/B00626/pdf) | 吸光度と濃度・光路長の関係。PURAのRGB吸収係数は実測された色素スペクトルではない |
+| C3 | [Physical Review Fluids (2026), DOI 10.1103/q4tr-jknx](https://journals.aps.org/prfluids/abstract/10.1103/q4tr-jknx) | 固体面で合体する滴の混合を扱う2026-07-21論文の書誌・要旨を確認。インクジェット相当の条件をPURAの混合秒数の直接根拠にはしない |
+| C4 | [Physical Review Fluids (2017), DOI 10.1103/PhysRevFluids.2.113607](https://journals.aps.org/prfluids/abstract/10.1103/PhysRevFluids.2.113607) | 不等径滴の合体と内部渦。サイズ差と流れの表現の参考であり「衝突速度が高いほど常に早く均一化する」普遍則の証明とはしない |
+
+設計への反映は [COLOR_MIXING_DESIGN.md](COLOR_MIXING_DESIGN.md)。色素の原液量保存・純色ごとの吸収係数の混合を採用方針とし、スペクトルLUTや本格流体は後段とする。
