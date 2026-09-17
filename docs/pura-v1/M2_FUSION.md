@@ -45,7 +45,7 @@ https://blitast-studio.github.io/pura/?lab=fusion
 - Macの実ブラウザ、390×844で同色二滴、各混合比、五滴から一滴への連続操作、照明変更、Clayと透明の切替、揺れ抑制、軽量画質、Escのフォーカス復帰を確認。質量9248を保持し、1:4でシアン20%、10:1で約90.91%となった。
 - 一粒の入口でもドラッグ後の質量7744、体積倍率1、揺れ・表面応答、警告・エラーなしを確認した。
 - スマホ幅の設定パネルに横はみ出しなし。実スマートフォンの指操作・性能・長時間120秒の規定計測は未実施。短いブラウザ確認を実機性能保証へ読み替えない。
-- 証拠は `artifacts/m2/browser-checks.json`、`shape-checks.json`、`mixing-in-motion.png`。画像は動作中の一枚で動画の代替ではない。公開版のHTTP/hash検証は `pages-build.json`。
+- 証拠は `artifacts/m2/browser-checks.json`、`shape-checks.json`、`mixing-in-motion.png`。画像は動作中の一枚で動画の代替ではない。公開版のHTTP/hash検証は `pages-build.json`。配信commit `9e7e76a` の全8ファイルがHTTP200・hash一致。公開版での二滴・1:4混色も確認し、警告・エラー0（`public-browser-check.json`）。
 
 ## 今回の先に残ること
 

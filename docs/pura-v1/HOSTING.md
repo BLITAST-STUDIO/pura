@@ -23,3 +23,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - 今回はユーザー依頼による試遊配信。新規有料契約なし。
 
 [GitHub Pages REST API](https://docs.github.com/en/rest/pages/pages)
+
+## M2配信（2026-09-17）
+
+- ソース: `d71e027a0567222a68e004fbf689fb95c3468d03`、配信: `9e7e76a971c53cdddce765b011e2f3f0f6600104`。
+- Pages built、全8配信ファイルがHTTP200・ローカルSHA-256一致。公開版390×844で二滴と1:4混色のドラッグ確認、警告・エラー0。実機タッチは未検証。
+- 証拠: `artifacts/m2/pages-build.json`、`artifacts/m2/public-browser-check.json`。一粒の入口と旧ゲームの入口も維持。
