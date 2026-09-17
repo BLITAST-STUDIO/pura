@@ -1,0 +1,466 @@
+{
+  "input": "Mac in-app browser mouse gestures; physical phone untested",
+  "mobile": {
+    "width": 390,
+    "height": 844
+  },
+  "desktop": {
+    "width": 1100,
+    "height": 850
+  },
+  "completed": {
+    "drops": [
+      {
+        "age": 74.99760000000042,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1003,
+        "lobes": 0,
+        "mass": 3025,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 3025
+        },
+        "r": 55,
+        "screenX": 186.2273218683277,
+        "screenY": 220.28081465563753,
+        "vx": 2.4132654106860903e-12,
+        "vy": -4.035409397662205e-12,
+        "x": 297.99590198938205,
+        "y": 376.9680924921389
+      },
+      {
+        "age": 74.99760000000042,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      },
+      {
+        "age": 43.81500000000008,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 2,
+        "lobes": 0,
+        "mass": 5808,
+        "pigment": {
+          "amber": 0,
+          "cyan": 5808,
+          "rose": 0
+        },
+        "r": 76.2102355330306,
+        "screenX": 116.50780788837822,
+        "screenY": 108.72169032962644,
+        "vx": 0.0004968652926888256,
+        "vy": -0.0007192538361243912,
+        "x": 157.05320416338336,
+        "y": 123.03842680857892
+      }
+    ],
+    "scene": {
+      "canUndo": true,
+      "completed": true,
+      "contaminated": false,
+      "gathered": 1,
+      "inGoal": true,
+      "purity": 1,
+      "ready": true
+    }
+  },
+  "contaminated": {
+    "drops": [
+      {
+        "age": 39.7802000000003,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1000,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 93.04877730045526,
+        "screenY": 287.21996016457956,
+        "vx": 0,
+        "vy": 0,
+        "x": 130,
+        "y": 510
+      },
+      {
+        "age": 39.7802000000003,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      },
+      {
+        "age": 6.081099999999999,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0.5614035087719298,
+          "rose": 0.43859649122807015
+        },
+        "grabbed": false,
+        "id": 2,
+        "lobes": 0,
+        "mass": 6897,
+        "pigment": {
+          "amber": 0,
+          "cyan": 3872,
+          "rose": 3025
+        },
+        "r": 83.04817878797824,
+        "screenX": 121.98445393947024,
+        "screenY": 167.9798568423526,
+        "vx": -0.9747442991660684,
+        "vy": -1.2139488645635523,
+        "x": 173.20031598639858,
+        "y": 263.40020774803077
+      }
+    ],
+    "scene": {
+      "canUndo": true,
+      "completed": false,
+      "contaminated": true,
+      "gathered": 0.6666666666666666,
+      "inGoal": false,
+      "purity": 0.6575342465753424,
+      "ready": false
+    }
+  },
+  "undo": {
+    "drops": [
+      {
+        "age": 10.399999999999997,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1000,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 93.04877730045526,
+        "screenY": 287.21996016457956,
+        "vx": 0,
+        "vy": 0,
+        "x": 130,
+        "y": 510
+      },
+      {
+        "age": 10.399999999999997,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1001,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 96.05382601176636,
+        "screenY": 189.85287161716073,
+        "vx": 0,
+        "vy": 0,
+        "x": 125,
+        "y": 312
+      },
+      {
+        "age": 10.399999999999997,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1002,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 249.51018070046857,
+        "screenY": 289.86654119683715,
+        "vx": 0,
+        "vy": 0,
+        "x": 410,
+        "y": 515
+      },
+      {
+        "age": 10.399999999999997,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1003,
+        "lobes": 0,
+        "mass": 3025,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 3025
+        },
+        "r": 55,
+        "screenX": 186.2296404360052,
+        "screenY": 220.29610607055793,
+        "vx": 0,
+        "vy": 0,
+        "x": 298,
+        "y": 377
+      },
+      {
+        "age": 10.399999999999997,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      }
+    ],
+    "scene": {
+      "canUndo": false,
+      "completed": false,
+      "contaminated": false,
+      "gathered": 0.3333333333333333,
+      "inGoal": false,
+      "purity": 1,
+      "ready": false
+    }
+  },
+  "settings": {
+    "drops": [
+      {
+        "age": 31.64550000000001,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1000,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 93.04877730045526,
+        "screenY": 287.21996016457956,
+        "vx": 0,
+        "vy": 0,
+        "x": 130,
+        "y": 510
+      },
+      {
+        "age": 31.64550000000001,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1001,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 96.05382601176636,
+        "screenY": 189.85287161716073,
+        "vx": 0,
+        "vy": 0,
+        "x": 125,
+        "y": 312
+      },
+      {
+        "age": 31.64550000000001,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1002,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 249.51018070046857,
+        "screenY": 289.86654119683715,
+        "vx": 0,
+        "vy": 0,
+        "x": 410,
+        "y": 515
+      },
+      {
+        "age": 31.64550000000001,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1003,
+        "lobes": 0,
+        "mass": 3025,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 3025
+        },
+        "r": 55,
+        "screenX": 186.2296404360052,
+        "screenY": 220.29610607055793,
+        "vx": 0,
+        "vy": 0,
+        "x": 298,
+        "y": 377
+      },
+      {
+        "age": 31.64550000000001,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      }
+    ],
+    "scene": {
+      "canUndo": false,
+      "completed": false,
+      "contaminated": false,
+      "gathered": 0.3333333333333333,
+      "inGoal": false,
+      "purity": 1,
+      "ready": false
+    },
+    "width": 390
+  },
+  "pauseResume": true,
+  "logs": []
+}

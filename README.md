@@ -82,3 +82,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ```
 
 一致がなければ、CSSの生成内容とTailwindの設定を確認してください。
+
+## 最初の一面
+
+[澄んだ道を遊ぶ](https://blitast-studio.github.io/pura/?play=first) — 三滴のシアンを集め、純度を守って輪へ運ぶ短い課題。時間制限なし、一手戻せます。実装・検証の範囲は [FIRST_SCENE.md](docs/pura-v1/FIRST_SCENE.md)。

@@ -1,0 +1,46 @@
+.purity-scene .dl-shell { max-width: 1060px; }
+.purity-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(250px, 1fr); gap: 42px; align-items: center; }
+.purity-scene .purity-stage { aspect-ratio: 550 / 650; min-height: 0; height: auto; }
+.purity-stage .dl-stage-bottom { font-size: 8px; letter-spacing: .08em; }
+.purity-companion { color: #c0d0d0; }
+.purity-chapter { display: flex; align-items: center; gap: 14px; color: #a3c9c6; font-size: 12px; letter-spacing: .08em; }
+.purity-chapter span { color: #7f989c; font-size: 10px; border-left: 1px solid #3b5156; padding-left: 14px; }
+.purity-guidance { min-height: 117px; padding-top: 22px; }
+.purity-guidance h2 { margin: 0 0 12px; font-size: 19px; font-weight: 400; letter-spacing: .025em; line-height: 1.6; }
+.purity-guidance p { margin: 0; font-size: 11px; line-height: 1.9; color: #91a8ac; }
+.purity-progress { padding: 22px 0 20px; border-bottom: 1px solid #293d43; }
+.purity-progress > div:first-child { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+.purity-progress strong,.purity-measure strong { font-size: 25px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.purity-progress small,.purity-measure strong small { font-size: 12px; color: #829da3; }
+.purity-dots { display: flex; gap: 6px; margin-top: 14px; }
+.purity-dots i { height: 3px; flex: 1; border-radius: 4px; background: #263b41; }
+.purity-dots .is-filled { background: #90c9c7; }
+.purity-measure { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; font-size: 11px; }
+.purity-measure > span small { display: block; font-size: 9px; color: #758d94; margin-top: 6px; }
+.purity-measure.is-mixed strong { color: #d5adbc; }
+.purity-target { color: #91a8ac; font-size: 10px; line-height: 1.8; margin: 14px 0 24px; }
+.purity-actions { display: flex; gap: 7px; margin-top: 12px; }
+.purity-actions button { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px 9px; border: 1px solid #3a5359; background: #1c3035; color: #c7e0df; border-radius: 8px; cursor: pointer; font-size: 11px; }
+.purity-actions button:first-child { flex: 1; }
+.purity-actions button:disabled { opacity: .35; cursor: default; }
+.purity-actions button:focus-visible,.purity-details summary:focus-visible,.purity-details select:focus-visible,.purity-details input:focus-visible { outline: 2px solid #b2e4df; outline-offset: 3px; }
+.purity-notice { min-height: 26px; color: #81989d; font-size: 9px; line-height: 1.7; margin: 12px 0 10px; }
+.purity-details { border-top: 1px solid #293d43; padding-top: 16px; color: #94aeb1; font-size: 11px; }
+.purity-details summary { cursor: pointer; }
+.purity-details p { color: #819a9f; font-size: 10px; line-height: 1.9; margin: 14px 0; }
+.purity-details label { display: flex; justify-content: space-between; align-items: center; min-height: 40px; gap: 16px; }
+.purity-details select { border: 1px solid #395059; border-radius: 6px; background: #20343c; color: #cbdcdf; padding: 7px; font-size: 10px; }
+.purity-lab-link { display: inline-flex; align-items: center; gap: 8px; color: #a3babc; font-size: 10px; text-decoration: none; }
+.purity-companion.is-complete .purity-guidance h2 { color: #bbede0; }
+@media (min-width: 721px) {
+  .purity-scene .purity-stage { height: clamp(400px, calc(100svh - 300px), 640px); aspect-ratio: auto; }
+}
+@media (max-width: 720px) {
+  .purity-layout { display: flex; flex-direction: column; gap: 24px; }
+  .purity-board,.purity-stage,.purity-companion { width: 100%; }
+  .purity-guidance { min-height: 0; padding-top: 12px; }
+  .purity-progress { padding-top: 18px; }
+  .purity-scene .dl-intro { margin: 0; padding: 20px 0 18px; }
+  .purity-scene .dl-intro h1 { font-size: clamp(23px, 6.4vw, 34px); }
+  .purity-scene .dl-header { margin-bottom: 0; }
+}

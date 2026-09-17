@@ -5,7 +5,14 @@ import "@/styles.css";
 async function boot() {
   const el = document.getElementById("root");
   if (!el) return;
-  if (new URLSearchParams(window.location.search).get('lab') === 'fusion') {
+  if (new URLSearchParams(window.location.search).get('play') === 'first') {
+    try {
+      const { default: PurityScene } = await import('./experiments/purity-scene/PurityScene');
+      createRoot(el).render(<PurityScene />);
+    } catch {
+      el.textContent = '水滴の準備ができませんでした。ページを再読み込みしてください。';
+    }
+  } else if (new URLSearchParams(window.location.search).get('lab') === 'fusion') {
     try {
       const { default: FusionLab } = await import('./experiments/fusion-lab/FusionLab');
       createRoot(el).render(<FusionLab />);

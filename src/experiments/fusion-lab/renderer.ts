@@ -29,7 +29,8 @@ function footprint(material: THREE.ShaderMaterial) {
   return material;
 }
 
-export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}) {
+type SceneAdapter = { simulation?: FusionSimulation; goal?: () => { x: number; y: number; r: number; ready: boolean; completed: boolean }; onUpdate?: () => void };
+export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
   if (!context) throw Error('WebGL 2に対応したブラウザでお試しください。');
   const renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true });
@@ -50,7 +51,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   for (let i = 0; i < pos.count; i++) pos.setZ(i, Math.max(.007, (pos.getZ(i) + .64) * .62));
   sphere.computeVertexNormals(); sphere.computeBoundingSphere();
   const clay = new THREE.MeshStandardMaterial({ color: '#aab6b5', roughness: .7, envMapIntensity: .45 });
-  const sim = new FusionSimulation();
+  const sim = adapter.simulation ?? new FusionSimulation();
+  const goalRing = adapter.goal ? new THREE.Mesh(new THREE.RingGeometry(.972, 1, 96), new THREE.MeshBasicMaterial({ color: '#bdede3', transparent: true, opacity: .55, depthWrite: false })) : null;
+  const goalFill = adapter.goal ? new THREE.Mesh(new THREE.CircleGeometry(.98, 96), new THREE.MeshBasicMaterial({ color: '#a6e5d5', transparent: true, opacity: .055, depthWrite: false })) : null;
+  if (goalRing && goalFill) { scene.add(goalRing, goalFill); goalRing.position.z = -.008; goalFill.position.z = -.009; }
   const bodies = new Map<number, Body>();
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
@@ -181,6 +185,18 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt);
     for (const id of bodies.keys()) if (!sim.core.drops.some(d => d.id === id)) removeBody(id);
     const rect = canvas.getBoundingClientRect();
+    const goal = adapter.goal?.();
+    if (goal && goalRing && goalFill) {
+      for (const mesh of [goalRing, goalFill]) {
+        mesh.position.x = (goal.x - sim.width / 2) * W; mesh.position.y = (sim.height / 2 - goal.y) * W;
+        mesh.scale.setScalar(goal.r * W);
+      }
+      goalRing.material.color.set(goal.ready || goal.completed ? '#bdede3' : '#527479');
+      goalRing.material.opacity = goal.completed ? .9 : goal.ready ? .8 : .7;
+      goalFill.material.opacity = goal.completed ? .12 : goal.ready ? .09 : .035;
+      const screen = goalRing.position.clone().project(camera);
+      canvas.dataset.goal = JSON.stringify({ ...goal, screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2 });
+    }
     canvas.dataset.drops = JSON.stringify(sim.core.drops.map(d => {
       const b = bodies.get(d.id)!;
       const screen = new THREE.Vector3(0, 0, .48).applyMatrix4(b.mesh.matrixWorld).project(camera);
@@ -266,6 +282,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       const sorted = [...samples].sort((a, b) => a - b);
       const stats = { count: sim.core.drops.length, cyan: f.cyan, rose: f.rose, merged: !!selected && f.rose > 0 && f.cyan > 0, fps: sorted.length ? 1000 / sorted[Math.floor(sorted.length * .5)] : 0, p95: sorted[Math.floor(sorted.length * .95)] ?? 0 };
       canvas.dataset.stats = JSON.stringify(stats); callbacks.onStats?.(stats);
+      adapter.onUpdate?.();
     }
     raf = requestAnimationFrame(loop);
   }
@@ -278,6 +295,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const observer = new ResizeObserver(resize); observer.observe(canvas);
   resize(); sim.reset(); refresh(0); render(); raf = requestAnimationFrame(loop); callbacks.onReady?.();
   return {
+    restoreState(restore: () => void) { cancel(); restore(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = next.lighting !== undefined && next.lighting !== options.lighting;
@@ -300,6 +318,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', visibility);
       for (const id of [...bodies.keys()]) removeBody(id);
       sphere.dispose(); clay.dispose(); floor.geometry.dispose(); floorMaterial.dispose(); textures.forEach(t => t.dispose()); background.dispose(); env.dispose(); renderer.dispose();
+      goalRing?.geometry.dispose(); goalRing?.material.dispose(); goalFill?.geometry.dispose(); goalFill?.material.dispose();
     },
   };
 }
