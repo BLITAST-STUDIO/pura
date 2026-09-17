@@ -38,3 +38,10 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - 標準URLは従来表示を継続。`mixing=swirl` を付けたURLは色の混合から開始し、内部の弱い渦を有効にする。設定でも切替可能。
 - 戻す基準はタグ `m2-approved-20260917`（d8686f3）。配信を戻す場合の直前commitは `9e7e76a`。
 - Pages built、全8ファイルがHTTP200・ローカルSHA-256一致。公開試作URLで融合操作、成分量9248、警告・エラー0を確認。証拠は `artifacts/m2/swirl/pages-build.json` と `public-browser-check.json`。
+
+## 柔らかい膨らみの比較（2026-09-17）
+
+- 試遊: https://blitast-studio.github.io/pura/?lab=fusion&mixing=bloom
+- ソース `b8e2ad411620cfede739523b95d6efbf63db192c`、配信 `0d9bca35f028cb1edbe947ccd1d578d1d7c0ef6e`。
+- 前の渦は `mixing=swirl` で継続。復元タグ `m2-swirl-v1-20260917`、直前配信 `2c4af39`。
+- Pages built、全8ファイルHTTP200・hash一致。公開版の融合操作で成分量維持・警告エラー0。証拠: `artifacts/m2/bloom/pages-build.json` と `public-browser-check.json`。
