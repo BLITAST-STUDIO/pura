@@ -1,0 +1,193 @@
+{
+  "chain": [
+    {
+      "age": 31.949999999999772,
+      "correction": 1,
+      "fractions": {
+        "amber": 0,
+        "cyan": 1,
+        "rose": 0
+      },
+      "grabbed": false,
+      "id": 4,
+      "lobes": 0,
+      "mass": 9248,
+      "pigment": {
+        "amber": 0,
+        "cyan": 9248,
+        "rose": 0
+      },
+      "r": 96.16652224137046,
+      "screenX": 98.36867483978706,
+      "screenY": 251.29796516350316,
+      "vx": 4.052313916537801e-06,
+      "vy": -7.107854324933611e-06,
+      "x": 135.9821046321579,
+      "y": 440.5267627946917
+    }
+  ],
+  "checks": [
+    {
+      "case": "1:1 during merge",
+      "drops": [
+        {
+          "age": 0.16619999999998253,
+          "correction": 0.9435804866761506,
+          "fractions": {
+            "amber": 0,
+            "cyan": 0.5,
+            "rose": 0.5
+          },
+          "grabbed": false,
+          "id": 1,
+          "lobes": 2,
+          "mass": 9248,
+          "pigment": {
+            "amber": 0,
+            "cyan": 4624,
+            "rose": 4624
+          },
+          "r": 96.16652224137046,
+          "screenX": 208.72971615025463,
+          "screenY": 192.84809675207163,
+          "vx": 159.5462758992568,
+          "vy": 7.499786608519969e-14,
+          "x": 341.6933515440835,
+          "y": 318.7183571300287
+        }
+      ]
+    },
+    {
+      "case": "ratio 4",
+      "drops": [
+        {
+          "age": 0.13330000000001746,
+          "correction": 0.9453281948931714,
+          "fractions": {
+            "amber": 0,
+            "cyan": 0.7999999999999999,
+            "rose": 0.2
+          },
+          "grabbed": false,
+          "id": 1,
+          "lobes": 2,
+          "mass": 9248,
+          "pigment": {
+            "amber": 0,
+            "cyan": 7398.4,
+            "rose": 1849.6
+          },
+          "r": 96.16652224137046,
+          "screenX": 189.7057615729722,
+          "screenY": 192.9935620259301,
+          "vx": 205.5349658825961,
+          "vy": 2.9001691593675283e-13,
+          "x": 305.1729929024596,
+          "y": 318.7183571300287
+        }
+      ]
+    },
+    {
+      "case": "ratio 10",
+      "drops": [
+        {
+          "age": 0.08339999999999417,
+          "correction": 0.9542774420877536,
+          "fractions": {
+            "amber": 0,
+            "cyan": 0.9090909090909092,
+            "rose": 0.09090909090909093
+          },
+          "grabbed": false,
+          "id": 1,
+          "lobes": 2,
+          "mass": 9248,
+          "pigment": {
+            "amber": 0,
+            "cyan": 8407.272727272728,
+            "rose": 840.7272727272727
+          },
+          "r": 96.16652224137046,
+          "screenX": 183.3750903240466,
+          "screenY": 193.1853704036714,
+          "vx": 289.1448088394366,
+          "vy": 1.3575775906822287e-14,
+          "x": 293.02062206137134,
+          "y": 318.7183571300287
+        }
+      ]
+    },
+    {
+      "case": "ratio 0.1",
+      "drops": [
+        {
+          "age": 0.15000000000000002,
+          "correction": 0.9587577422677236,
+          "fractions": {
+            "amber": 0,
+            "cyan": 0.09090909090909093,
+            "rose": 0.9090909090909092
+          },
+          "grabbed": false,
+          "id": 1,
+          "lobes": 2,
+          "mass": 9247.999999999998,
+          "pigment": {
+            "amber": 0,
+            "cyan": 840.7272727272727,
+            "rose": 8407.272727272726
+          },
+          "r": 96.16652224137046,
+          "screenX": 227.54809474226937,
+          "screenY": 192.81325046312415,
+          "vx": 28.28639236481528,
+          "vy": 2.4756838269967142e-14,
+          "x": 377.82120357464345,
+          "y": 318.7183571300288
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "drops": [
+      {
+        "age": 27.96669999999961,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0.09090909090909093,
+          "rose": 0.9090909090909092
+        },
+        "grabbed": false,
+        "id": 1,
+        "lobes": 0,
+        "mass": 9247.999999999998,
+        "pigment": {
+          "amber": 0,
+          "cyan": 840.7272727272727,
+          "rose": 8407.272727272726
+        },
+        "r": 96.16652224137046,
+        "screenX": 254.80340522960512,
+        "screenY": 192.79385546637857,
+        "vx": -1.619354689093089e-05,
+        "vy": 3.729718071775936e-20,
+        "x": 430.14743053719315,
+        "y": 318.7183571300288
+      }
+    ],
+    "stats": {
+      "count": 1,
+      "cyan": 0.09090909090909093,
+      "fps": 59.880239521125056,
+      "merged": true,
+      "p95": 17.79999999998836,
+      "rose": 0.9090909090909092
+    }
+  },
+  "logs": [],
+  "date": "2026-09-17",
+  "environment": "Mac Codex in-app browser, 390x844 CSS viewport; mouse input",
+  "limitations": "Not a physical phone touch/performance test. Rolling short windows are not the 120-second benchmark.",
+  "checksAfterFinalChanges": "Diagonal pair fusion and shader logs checked again after contact-axis and footprint adjustment; public build will be checked separately."
+}

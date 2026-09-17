@@ -1,8 +1,10 @@
 # 常設の試遊プレビュー
 
-試遊URL: https://blitast-studio.github.io/pura/?lab=droplets&feel=refined
+融合の試遊URL: https://blitast-studio.github.io/pura/?lab=fusion
 
-GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配信。HTTPS有効。Mac・トンネル・ローカルプロセスは不要。通常の `/pura/` は旧ゲームを維持し、新版はクエリ `lab=droplets` で開く。
+一粒の保存比較: https://blitast-studio.github.io/pura/?lab=droplets&feel=refined
+
+GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配信。HTTPS有効。Mac・トンネル・ローカルプロセスは不要。通常の `/pura/` は旧ゲームを維持し、新版はクエリ `lab=fusion`、一粒の比較は `lab=droplets` で開く。
 
 ## 更新
 

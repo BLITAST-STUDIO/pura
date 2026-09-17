@@ -121,3 +121,7 @@ M1の通常盤面・屈折検査盤面のテクスチャと環境照明の形状
 | C4 | [Physical Review Fluids (2017), DOI 10.1103/PhysRevFluids.2.113607](https://journals.aps.org/prfluids/abstract/10.1103/PhysRevFluids.2.113607) | 不等径滴の合体と内部渦。サイズ差と流れの表現の参考であり「衝突速度が高いほど常に早く均一化する」普遍則の証明とはしない |
 
 設計への反映は [COLOR_MIXING_DESIGN.md](COLOR_MIXING_DESIGN.md)。色素の原液量保存・純色ごとの吸収係数の混合を採用方針とし、スペクトルLUTや本格流体は後段とする。
+
+### [L4] M2のMarchingCubes
+
+導入済みThree.js 0.186.0の [MarchingCubes addon](https://github.com/mrdoob/three.js/blob/r186/examples/jsm/objects/MarchingCubes.js) を使用。今回のAPI確認はローカル `node_modules/three/examples/jsm/objects/MarchingCubes.js` と型定義を直接読んだ。ライブラリのMITライセンスを継続して配布物へ含める。形状場・体積補正・成分による吸収・内部模様はPURA側で実装した。

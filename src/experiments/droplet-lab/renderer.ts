@@ -39,7 +39,7 @@ const LOOK = {
   taperRatio: 0.16,
 };
 
-function floorTexture(inspection: boolean) {
+export function floorTexture(inspection: boolean) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 1024;
   const ctx = canvas.getContext('2d')!;
@@ -79,7 +79,7 @@ function floorTexture(inspection: boolean) {
   return texture;
 }
 
-function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boolean) {
+export function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boolean) {
   const studio = new THREE.Scene();
   studio.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30),
     new THREE.MeshBasicMaterial({ color: daylight ? '#83949a' : '#343d49', side: THREE.BackSide })));
@@ -104,7 +104,7 @@ function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boolean) {
   return target;
 }
 
-function contactMaterial() {
+export function contactMaterial() {
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 1 } },
@@ -121,7 +121,7 @@ function contactMaterial() {
   });
 }
 
-function causticMaterial() {
+export function causticMaterial() {
   // Artistic, local light footprint. This is not a traced caustic solver.
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,

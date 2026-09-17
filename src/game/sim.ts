@@ -106,6 +106,8 @@ export class PuraSim {
   time = 0;
   reducedMotion = false;
   sandboxTotal: number = SANDBOX_COUNT.fallback;
+  /** Opt-in material study; normal gameplay keeps its original collision rules. */
+  fusionPolicy: 'legacy' | 'all-colors' = 'legacy';
   private nextId = 1;
   private acc = 0;
   private last: Drop[] = [];
@@ -115,6 +117,8 @@ export class PuraSim {
   private seeded = false;
   onWin: ((stars: number, time: number, purity: number) => void) | null = null;
   onMerge: ((mass: number, mixed: boolean) => void) | null = null;
+  /** Detached snapshots for presentation; observers cannot alter the simulation. */
+  onFusion: ((a: Drop, b: Drop, result: Drop) => void) | null = null;
   onGrab: (() => void) | null = null;
   onSplit: (() => void) | null = null;
   onBounce: (() => void) | null = null;
@@ -480,10 +484,11 @@ export class PuraSim {
         const grabbedPair = this.grabbedId === a.id || this.grabbedId === b.id;
         const rel = Math.hypot(b.vx - a.vx, b.vy - a.vy);
 
-        const swept = sameDom && this.closestApproach(a, b, dt) < min + 1.5;
+        const canContactMerge = sameDom || this.fusionPolicy === 'all-colors';
+        const swept = canContactMerge && this.closestApproach(a, b, dt) < min + 1.5;
         const touching = dist < min + 2.2;
 
-        if (sameDom && (touching || swept || dist2 < 1e-6)) {
+        if (canContactMerge && (touching || swept || dist2 < 1e-6)) {
           this.merge(a, b, merged);
           continue;
         }
@@ -571,6 +576,10 @@ export class PuraSim {
     this.burst(drop.x, drop.y, mixRgb(pigment), mixed ? 10 : 14);
     this.trauma = Math.min(1, this.trauma + (mixed ? 0.18 : 0.28) * Math.min(1, r / 50));
     this.onMerge?.(mass, mixed);
+    if (this.onFusion) {
+      const copy = (d: Drop): Drop => ({ ...d, pigment: { ...d.pigment } });
+      this.onFusion(copy(a), copy(b), copy(drop));
+    }
   }
 
   private burst(x: number, y: number, rgb: [number, number, number], n: number) {

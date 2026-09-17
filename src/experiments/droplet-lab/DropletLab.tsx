@@ -235,9 +235,10 @@ export function DropletLab() {
         </main>
 
         <footer className="dl-footer">
-          <div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>一滴の質感と動きの試作。融合は、次のステップで。</p></div>
+          <div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>一滴の質感と動きの試作。融合の実験も試せます。</p></div>
           <div className="dl-footer-right">
             {showStats && <output className="dl-stats" aria-label="描画の動作情報">{Math.round(stats.fps)} fps<span>p95 {stats.frameP95.toFixed(1)} ms</span></output>}
+            <a href="?lab=fusion">融合の実験へ<ArrowUpRight size={14} /></a>
             <a href="./">PURA オリジナル<ArrowUpRight size={14} /></a>
           </div>
         </footer>

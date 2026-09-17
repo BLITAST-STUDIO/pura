@@ -1,0 +1,10 @@
+.fusion-presets { display:flex; gap:8px; padding:20px 0 0; }
+.fusion-presets button { flex:1; padding:13px 10px; color:#8d9b9e; background:transparent; border:1px solid #354347; border-radius:10px; font-size:12px; letter-spacing:.07em; cursor:pointer; }
+.fusion-presets button.is-active { background:#223538; color:#d6ece8; border-color:#608078; }
+.fusion-presets button:focus-visible,.fusion-ratio select:focus-visible { outline:2px solid #a9d7d0; outline-offset:3px; }
+.fusion-ratio { display:flex; align-items:center; gap:16px; padding-top:16px; color:#b0bdbb; font-size:12px; flex-wrap:wrap; }
+.fusion-ratio label span { font-size:10px; margin-left:12px; color:#91aaa7; }
+.fusion-ratio select { background:#203133; border:1px solid #4c6562; color:#e0eeeb; border-radius:7px; padding:8px 16px; }
+.fusion-ratio > span { font-size:10px; color:#83918e; }
+.fusion-lab .dl-stage-bottom output { font-size:9px; letter-spacing:.05em; }
+@media(max-width:600px) { .fusion-presets {gap:6px;} .fusion-presets button {padding:12px 4px;font-size:11px;} .fusion-lab .dl-controls {gap:12px;} .fusion-lab .dl-control-actions {justify-content:flex-end;} }

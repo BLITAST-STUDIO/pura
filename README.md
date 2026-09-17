@@ -1,14 +1,16 @@
 # PURA FLOW
 
-透明な水滴をつかみ、滑らせる質感と触り心地を磨く、PURAの昇華版プロジェクトです。現在はM1「触れる一滴」の試作。実際に触ったユーザーの評価を受けて、融合へ進みます。
+透明な水滴をつかみ、滑らせる質感と触り心地を磨く、PURAの昇華版プロジェクトです。現在はM1「触れる一滴」の承認を受け、M2「融合」の試作を進めています。融合の感触は、実際に触ったユーザーの評価を受けて磨きます。
 
 仕様と承認範囲は [要件定義](docs/pura-v1/REQUIREMENTS.md) と [判断記録](docs/pura-v1/DECISIONS.md)、実装・検証結果と現在の描画方式は [開発状態](docs/pura-v1/STATUS.md) を参照してください。
 
 ## スマホで試遊
 
-[水滴のプレビューを開く](https://blitast-studio.github.io/pura/?lab=droplets&feel=refined)
+[一粒の実験を開く](https://blitast-studio.github.io/pura/?lab=droplets&feel=refined)
 
 GitHub Pagesで配信しています。開発Macやローカルサーバーの起動は不要です。ネット接続のあるスマホから開けます。更新・復元手順は [HOSTING.md](docs/pura-v1/HOSTING.md) を参照してください。
+
+[融合の実験を開く](https://blitast-studio.github.io/pura/?lab=fusion) — 同色二滴、量比を変えた混色、五滴の連続融合。詳細と現在の近似は [M2_FUSION.md](docs/pura-v1/M2_FUSION.md)。
 
 ## ローカル開発
 

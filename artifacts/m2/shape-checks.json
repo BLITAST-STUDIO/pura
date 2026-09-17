@@ -1,0 +1,233 @@
+{
+  "date": "2026-09-17",
+  "analyticUnitVolume": 2.3617671209265048,
+  "staticMeshVolume": 2.3586601229912936,
+  "staticRelativeError": 0.001315539499081697,
+  "rows": [
+    {
+      "ratio": 1,
+      "age": 0,
+      "triangles": 7880,
+      "rawVolume": 2.347513423788199,
+      "xyCorrection": 1.003031319423773,
+      "normalizedVolume": 2.3617671209265043,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 1,
+      "age": 0.05,
+      "triangles": 7136,
+      "rawVolume": 2.68384085573286,
+      "xyCorrection": 0.9380806035455537,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 1,
+      "age": 0.15,
+      "triangles": 7480,
+      "rawVolume": 2.672263493388464,
+      "xyCorrection": 0.9401104859728485,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 1,
+      "age": 0.4,
+      "triangles": 7904,
+      "rawVolume": 2.442491829720209,
+      "xyCorrection": 0.9833360845301806,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 1,
+      "age": 0.8,
+      "triangles": 7832,
+      "rawVolume": 2.4008748487922156,
+      "xyCorrection": 0.991822086385627,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 4,
+      "age": 0,
+      "triangles": 6796,
+      "rawVolume": 2.34645167607848,
+      "xyCorrection": 1.0032582249621305,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.01647646180933875
+    },
+    {
+      "ratio": 4,
+      "age": 0.05,
+      "triangles": 6468,
+      "rawVolume": 2.6235893368065644,
+      "xyCorrection": 0.948791111816036,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 4,
+      "age": 0.15,
+      "triangles": 7232,
+      "rawVolume": 2.621030711290382,
+      "xyCorrection": 0.9492540993301486,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 4,
+      "age": 0.4,
+      "triangles": 7860,
+      "rawVolume": 2.4344761271465614,
+      "xyCorrection": 0.9849536095540398,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 4,
+      "age": 0.8,
+      "triangles": 7804,
+      "rawVolume": 2.4002600775703704,
+      "xyCorrection": 0.9919490944218924,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.25,
+      "age": 0,
+      "triangles": 6796,
+      "rawVolume": 2.3464677309879507,
+      "xyCorrection": 1.0032547927292221,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.016476461809338764
+    },
+    {
+      "ratio": 0.25,
+      "age": 0.05,
+      "triangles": 6468,
+      "rawVolume": 2.6235518081458222,
+      "xyCorrection": 0.9487978977945529,
+      "normalizedVolume": 2.3617671209265043,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.25,
+      "age": 0.15,
+      "triangles": 7232,
+      "rawVolume": 2.620991283037237,
+      "xyCorrection": 0.9492612392413748,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.25,
+      "age": 0.4,
+      "triangles": 7860,
+      "rawVolume": 2.4344365958262073,
+      "xyCorrection": 0.9849616065498692,
+      "normalizedVolume": 2.3617671209265043,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.25,
+      "age": 0.8,
+      "triangles": 7804,
+      "rawVolume": 2.4002635571000615,
+      "xyCorrection": 0.9919483754346864,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 10,
+      "age": 0,
+      "triangles": 6924,
+      "rawVolume": 2.350164874184541,
+      "xyCorrection": 1.002465350978532,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.020959847951130883
+    },
+    {
+      "ratio": 10,
+      "age": 0.05,
+      "triangles": 6680,
+      "rawVolume": 2.5569671520410657,
+      "xyCorrection": 0.9610720820183609,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 10,
+      "age": 0.15,
+      "triangles": 7364,
+      "rawVolume": 2.5655553662090145,
+      "xyCorrection": 0.9594621358725027,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 10,
+      "age": 0.4,
+      "triangles": 7848,
+      "rawVolume": 2.425275191640291,
+      "xyCorrection": 0.9868201844649346,
+      "normalizedVolume": 2.3617671209265043,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 10,
+      "age": 0.8,
+      "triangles": 7800,
+      "rawVolume": 2.399526059298393,
+      "xyCorrection": 0.9921008021067301,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.1,
+      "age": 0,
+      "triangles": 6924,
+      "rawVolume": 2.3502667156960584,
+      "xyCorrection": 1.0024436313813696,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.020959847951130883
+    },
+    {
+      "ratio": 0.1,
+      "age": 0.05,
+      "triangles": 6680,
+      "rawVolume": 2.556995913457984,
+      "xyCorrection": 0.9610666768723408,
+      "normalizedVolume": 2.3617671209265043,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.1,
+      "age": 0.15,
+      "triangles": 7364,
+      "rawVolume": 2.56550243571319,
+      "xyCorrection": 0.9594720334551222,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.1,
+      "age": 0.4,
+      "triangles": 7848,
+      "rawVolume": 2.425239948759395,
+      "xyCorrection": 0.9868273545307045,
+      "normalizedVolume": 2.361767120926505,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    },
+    {
+      "ratio": 0.1,
+      "age": 0.8,
+      "triangles": 7800,
+      "rawVolume": 2.3995310008541693,
+      "xyCorrection": 0.9920997805479398,
+      "normalizedVolume": 2.3617671209265048,
+      "maxVertexFieldResidual": 0.0055000178813934325
+    }
+  ]
+}
