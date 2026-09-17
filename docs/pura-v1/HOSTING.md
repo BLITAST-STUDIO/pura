@@ -1,5 +1,7 @@
 # 常設の試遊プレビュー
 
+三つの道: https://blitast-studio.github.io/pura/?play=chapters
+
 最初の一面: https://blitast-studio.github.io/pura/?play=first
 
 融合の試遊URL: https://blitast-studio.github.io/pura/?lab=fusion
@@ -54,3 +56,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - `?play=first` は純度を守って運ぶ一面。M1、M2、bloomの比較入口と旧標準入口は継続。
 - 復元点は `m2-bloom-approved-20260917`（38235e5）。直前配信 `0d9bca3`。
 - Pages built、全11ファイルHTTP200・ローカルSHA-256一致。公開版の融合と取り消し確認、警告・エラー0。証拠: `artifacts/first-scene/pages-build.json` と `public-browser-check.json`。
+
+## 三つの道（2026-09-17）
+
+- ソース `c54195d9d0944972cfde9c03fc3b24ad2a427f49`、配信 `bd7d161a41b15df529bc606fcd66c8eb4494e10c`。
+- Pages built、全11ファイルHTTP200・SHA-256一致、build-info一致。公開版390×844で融合と取り消し、警告・エラー0を確認。証拠: `artifacts/chapters/`。
+- 復元タグ `first-scene-approved-20260917`、直前の配信 `5855eb2`。既存比較URLと旧標準入口を保持。

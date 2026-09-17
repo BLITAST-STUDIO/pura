@@ -1,0 +1,32 @@
+{
+  "url": "https://api.github.com/repos/BLITAST-STUDIO/pura/pages/builds/1220806658",
+  "status": "built",
+  "error": {
+    "message": null
+  },
+  "pusher": {
+    "login": "BLITAST-STUDIO",
+    "id": 64897298,
+    "node_id": "MDQ6VXNlcjY0ODk3Mjk4",
+    "avatar_url": "https://avatars.githubusercontent.com/u/64897298?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/BLITAST-STUDIO",
+    "html_url": "https://github.com/BLITAST-STUDIO",
+    "followers_url": "https://api.github.com/users/BLITAST-STUDIO/followers",
+    "following_url": "https://api.github.com/users/BLITAST-STUDIO/following{/other_user}",
+    "gists_url": "https://api.github.com/users/BLITAST-STUDIO/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/BLITAST-STUDIO/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/BLITAST-STUDIO/subscriptions",
+    "organizations_url": "https://api.github.com/users/BLITAST-STUDIO/orgs",
+    "repos_url": "https://api.github.com/users/BLITAST-STUDIO/repos",
+    "events_url": "https://api.github.com/users/BLITAST-STUDIO/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/BLITAST-STUDIO/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "commit": "bd7d161a41b15df529bc606fcd66c8eb4494e10c",
+  "duration": 22579,
+  "created_at": "2026-09-17T07:55:38Z",
+  "updated_at": "2026-09-17T07:56:00Z"
+}
