@@ -9,7 +9,7 @@ import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
 import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
 
-export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean };
+export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2 };
@@ -52,7 +52,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const clay = new THREE.MeshStandardMaterial({ color: '#aab6b5', roughness: .7, envMapIntensity: .45 });
   const sim = new FusionSimulation();
   const bodies = new Map<number, Body>();
-  const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false };
+  const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
   let active: number | null = null;
   let pointerPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -63,6 +63,16 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function makeBody(d: Drop, source: Lobe[] = []) {
     const material = createFusionMaterial(background.texture);
     material.uniforms.uAbsorption.value.fromArray(absorptionOf(d.pigment));
+    if (source.length > 1) {
+      const a = source[0], b = source[source.length - 1];
+      const axis = new THREE.Vector2(b.x - a.x, b.y - a.y);
+      if (axis.lengthSq() < 1e-8) axis.set(1, 0); else axis.normalize();
+      const radius = Math.max(a.r + b.r, .001);
+      material.uniforms.uFlowFrame.value.set((a.x * b.r + b.x * a.r) / radius, (a.y * b.r + b.y * a.r) / radius, axis.x, axis.y);
+      // Stable for this collision, varied by the contact location and incoming motion.
+      const seed = Math.sin(d.x * .127 + d.y * .173 + d.vx * .019 + d.vy * .023) * 43758.5453;
+      material.uniforms.uFlowPhase.value = (seed - Math.floor(seed)) * Math.PI * 2;
+    }
     const mesh = new THREE.Mesh<THREE.BufferGeometry, THREE.Material>(sphere, options.clay ? clay : material);
     mesh.frustumCulled = false;
     const group = new THREE.Group(), pullGroup = new THREE.Group(); pullGroup.matrixAutoUpdate = false;
@@ -109,6 +119,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const scales = volumeScales(m.stretch + ring, m.squash, response.press);
     const bend = new THREE.Vector2(response.bendX, response.bendY).clampLength(0, .065);
     b.material.uniforms.uSurfaceBend.value.copy(bend);
+    b.material.uniforms.uInternalFlow.value = options.dyeFlow === 'swirl' && !options.reducedMotion ? 1 : 0;
     if (b.source.length) {
       const progress = 1 - Math.exp(-b.age * 7);
       b.lobes = b.source.map(l => ({ ...l, x: l.x * (1 - progress), y: l.y * (1 - progress), r: l.r + (1 - l.r) * progress }));
@@ -165,6 +176,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     b.material.uniforms.uViewProjection.value.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
   }
   function refresh(dt: number) {
+    canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
     for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt);
     for (const id of bodies.keys()) if (!sim.core.drops.some(d => d.id === id)) removeBody(id);

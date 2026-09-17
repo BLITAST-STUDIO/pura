@@ -10,6 +10,8 @@ export function createFusionMaterial(background: THREE.Texture) {
     uSeedCount: { value: 0 }, uSeeds: { value: Array.from({ length: 5 }, () => new THREE.Vector4()) },
     uDyes: { value: Array.from({ length: 5 }, () => new THREE.Vector3()) },
     uMix: { value: 1 }, uAge: { value: 0 },
+    uInternalFlow: { value: 0 }, uFlowPhase: { value: 0 },
+    uFlowFrame: { value: new THREE.Vector4(0, 0, 1, 0) },
   });
   material.vertexShader = material.vertexShader.replace('uniform mat4 uWorldToDrop;', 'uniform mat4 uWorldToDrop; uniform vec2 uSurfaceBend;')
     .replace('vec4 world = modelMatrix * vec4(position, 1.0);', `
@@ -25,13 +27,40 @@ export function createFusionMaterial(background: THREE.Texture) {
     uniform vec3 uDyes[5];
     uniform float uMix;
     uniform float uAge;
+    uniform float uInternalFlow;
+    uniform float uFlowPhase;
+    uniform vec4 uFlowFrame;
+    vec2 eddy(vec2 p, vec2 center, float turn, float falloff) {
+      vec2 d=p-center;
+      float a=turn*exp(-dot(d,d)*falloff);
+      float c=cos(a), s=sin(a);
+      return center+vec2(c*d.x-s*d.y,s*d.x+c*d.y);
+    }
     vec3 dye(vec3 p) {
       if (uMix > .999) return uAbsorption;
       vec2 q=p.xy;
-      float spin=.45*sin(uAge*3.)*exp(-uAge*.8);
-      float angle=spin*(1.-clamp(length(q)*.4,0.,1.));
-      q=mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*q;
-      q+=vec2(sin(q.y*9.+uAge*3.),sin(q.x*7.-uAge*2.))*.07*sin(min(uAge*3.,3.14159));
+      if(uInternalFlow>.5) {
+        // A smooth fold of the dye field, independent of the surface and simulation.
+        // A slight initial fold avoids a perfectly flat seam; no frame-random noise.
+        vec2 axis=uFlowFrame.zw, tangent=vec2(-axis.y,axis.x);
+        vec2 offset=q-uFlowFrame.xy;
+        vec2 local=vec2(dot(offset,axis),dot(offset,tangent));
+        float phase=uFlowPhase;
+        float direction=sin(phase)>.0?1.:-1.;
+        float turn=(.22+1.05*(1.-exp(-uAge*4.)))*exp(-uAge*.65);
+        float depth=p.z-.48;
+        local=eddy(local,vec2(.035*sin(phase),.22+.06*cos(phase)),direction*turn,3.2);
+        local=eddy(local,vec2(-.08,-.27),-direction*turn*.42,5.);
+        local.x+=.04*sin(local.y*5.+depth*3.+phase+uAge*1.4)
+          *exp(-dot(local,local)*1.8)*exp(-uAge*.7);
+        local.x+=depth*.07*sin(phase+uAge*.9)*exp(-uAge*.7);
+        q=uFlowFrame.xy+axis*local.x+tangent*local.y;
+      } else {
+        float spin=.45*sin(uAge*3.)*exp(-uAge*.8);
+        float angle=spin*(1.-clamp(length(q)*.4,0.,1.));
+        q=mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*q;
+        q+=vec2(sin(q.y*9.+uAge*3.),sin(q.x*7.-uAge*2.))*.07*sin(min(uAge*3.,3.14159));
+      }
       vec3 pigment=vec3(0.); float sum=0.;
       for (int i=0;i<5;i++) {
         if(float(i)>=uSeedCount) break;
