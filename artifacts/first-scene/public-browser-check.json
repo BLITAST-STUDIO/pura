@@ -1,0 +1,260 @@
+{
+  "url": "https://blitast-studio.github.io/pura/?play=first",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "input": "Mac mouse, physical phone untested",
+  "fusion": {
+    "drops": [
+      {
+        "age": 34.465499999999814,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1001,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 96.05382601176636,
+        "screenY": 189.85287161716073,
+        "vx": 0,
+        "vy": 0,
+        "x": 125,
+        "y": 312
+      },
+      {
+        "age": 34.465499999999814,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1003,
+        "lobes": 0,
+        "mass": 3025,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 3025
+        },
+        "r": 55,
+        "screenX": 186.2226617800208,
+        "screenY": 220.28792683389656,
+        "vx": -0.000003387433314250069,
+        "vy": -0.00000445886319453205,
+        "x": 297.9870157404385,
+        "y": 376.9829330577804
+      },
+      {
+        "age": 34.465499999999814,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      },
+      {
+        "age": 15.149199999999984,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1,
+        "lobes": 0,
+        "mass": 3872,
+        "pigment": {
+          "amber": 0,
+          "cyan": 3872,
+          "rose": 0
+        },
+        "r": 62.22539674441618,
+        "screenX": 131.21740919292827,
+        "screenY": 308.387317286531,
+        "vx": 0.04910032512066141,
+        "vy": 0.009746066471835287,
+        "x": 199.50377952454255,
+        "y": 549.4712797774612
+      }
+    ],
+    "scene": {
+      "canUndo": true,
+      "completed": false,
+      "contaminated": false,
+      "gathered": 0.6666666666666666,
+      "inGoal": false,
+      "purity": 1,
+      "ready": false
+    }
+  },
+  "undo": {
+    "drops": [
+      {
+        "age": 10.448599999999995,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1000,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 93.04877730045526,
+        "screenY": 287.21996016457956,
+        "vx": 0,
+        "vy": 0,
+        "x": 130,
+        "y": 510
+      },
+      {
+        "age": 10.448599999999995,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1001,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 96.05382601176636,
+        "screenY": 189.85287161716073,
+        "vx": 0,
+        "vy": 0,
+        "x": 125,
+        "y": 312
+      },
+      {
+        "age": 10.448599999999995,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 1,
+          "rose": 0
+        },
+        "grabbed": false,
+        "id": 1002,
+        "lobes": 0,
+        "mass": 1936,
+        "pigment": {
+          "amber": 0,
+          "cyan": 1936,
+          "rose": 0
+        },
+        "r": 44,
+        "screenX": 249.51018070046857,
+        "screenY": 289.86654119683715,
+        "vx": 0,
+        "vy": 0,
+        "x": 410,
+        "y": 515
+      },
+      {
+        "age": 10.448599999999995,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1003,
+        "lobes": 0,
+        "mass": 3025,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 3025
+        },
+        "r": 55,
+        "screenX": 186.2296404360052,
+        "screenY": 220.29610607055793,
+        "vx": 0,
+        "vy": 0,
+        "x": 298,
+        "y": 377
+      },
+      {
+        "age": 10.448599999999995,
+        "correction": 1,
+        "fractions": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 1
+        },
+        "grabbed": false,
+        "id": 1004,
+        "lobes": 0,
+        "mass": 2500,
+        "pigment": {
+          "amber": 0,
+          "cyan": 0,
+          "rose": 2500
+        },
+        "r": 50,
+        "screenX": 232.9235309985706,
+        "screenY": 149.48499759450823,
+        "vx": 0,
+        "vy": 0,
+        "x": 392,
+        "y": 221
+      }
+    ],
+    "scene": {
+      "canUndo": false,
+      "completed": false,
+      "contaminated": false,
+      "gathered": 0.3333333333333333,
+      "inGoal": false,
+      "purity": 1,
+      "ready": false
+    }
+  },
+  "logs": []
+}

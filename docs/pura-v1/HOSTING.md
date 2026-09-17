@@ -1,5 +1,7 @@
 # 常設の試遊プレビュー
 
+最初の一面: https://blitast-studio.github.io/pura/?play=first
+
 融合の試遊URL: https://blitast-studio.github.io/pura/?lab=fusion
 
 内部の渦の比較: https://blitast-studio.github.io/pura/?lab=fusion&mixing=swirl
@@ -45,3 +47,10 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース `b8e2ad411620cfede739523b95d6efbf63db192c`、配信 `0d9bca35f028cb1edbe947ccd1d578d1d7c0ef6e`。
 - 前の渦は `mixing=swirl` で継続。復元タグ `m2-swirl-v1-20260917`、直前配信 `2c4af39`。
 - Pages built、全8ファイルHTTP200・hash一致。公開版の融合操作で成分量維持・警告エラー0。証拠: `artifacts/m2/bloom/pages-build.json` と `public-browser-check.json`。
+
+## 最初の一面（2026-09-17）
+
+- ソース `d9985f6ec5f671363ceaf0f7a07189920e427731`、配信 `5855eb2989ce73725bb75b3f5ce850019011524c`。
+- `?play=first` は純度を守って運ぶ一面。M1、M2、bloomの比較入口と旧標準入口は継続。
+- 復元点は `m2-bloom-approved-20260917`（38235e5）。直前配信 `0d9bca3`。
+- Pages built、全11ファイルHTTP200・ローカルSHA-256一致。公開版の融合と取り消し確認、警告・エラー0。証拠: `artifacts/first-scene/pages-build.json` と `public-browser-check.json`。
