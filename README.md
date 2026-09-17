@@ -86,3 +86,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 最初の一面
 
 [澄んだ道を遊ぶ](https://blitast-studio.github.io/pura/?play=first) — 三滴のシアンを集め、純度を守って輪へ運ぶ短い課題。時間制限なし、一手戻せます。実装・検証の範囲は [FIRST_SCENE.md](docs/pura-v1/FIRST_SCENE.md)。
+
+## 三つの道
+
+[3面の試遊版を遊ぶ](https://blitast-studio.github.io/pura/?play=chapters) — 純度を守って運ぶ、小さなまま隙間を通す、二色を別々に届ける。面選択とブラウザごとの達成記録付き。[実装・検証範囲](docs/pura-v1/THREE_CHAPTERS.md)。

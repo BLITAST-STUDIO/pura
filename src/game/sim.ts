@@ -108,6 +108,8 @@ export class PuraSim {
   sandboxTotal: number = SANDBOX_COUNT.fallback;
   /** Opt-in material study; normal gameplay keeps its original collision rules. */
   fusionPolicy: 'legacy' | 'all-colors' = 'legacy';
+  /** Optional solid circular islands, used only by the new chapter scenes. */
+  obstacles: ReadonlyArray<{ x: number; y: number; r: number }> = [];
   private nextId = 1;
   private acc = 0;
   private last: Drop[] = [];
@@ -427,6 +429,22 @@ export class PuraSim {
         this.clamp(d);
       }
       this.collide(sdt);
+      // Iterate shared contacts so a large drop cannot remain embedded between two islands.
+      if (this.obstacles.length) for (let pass = 0; pass < 12; pass++) {
+        let corrected = false;
+        for (const d of this.drops) for (const obstacle of this.obstacles) {
+        const dx = d.x - obstacle.x, dy = d.y - obstacle.y;
+        const distance = Math.hypot(dx, dy), reach = d.r + obstacle.r;
+        if (distance >= reach - 1e-8) continue;
+        corrected = true;
+        const nx = distance > 1e-8 ? dx / distance : 0;
+        const ny = distance > 1e-8 ? dy / distance : 1;
+        d.x = obstacle.x + nx * reach; d.y = obstacle.y + ny * reach;
+        const approach = d.vx * nx + d.vy * ny;
+        if (approach < 0) { d.vx -= (1 + REST) * approach * nx; d.vy -= (1 + REST) * approach * ny; }
+        }
+        if (!corrected) break;
+      }
     }
   }
 

@@ -5,7 +5,7 @@ import "@/styles.css";
 async function boot() {
   const el = document.getElementById("root");
   if (!el) return;
-  if (new URLSearchParams(window.location.search).get('play') === 'first') {
+  if (['first', 'chapters'].includes(new URLSearchParams(window.location.search).get('play') ?? '')) {
     try {
       const { default: PurityScene } = await import('./experiments/purity-scene/PurityScene');
       createRoot(el).render(<PurityScene />);

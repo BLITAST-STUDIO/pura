@@ -29,7 +29,8 @@ function footprint(material: THREE.ShaderMaterial) {
   return material;
 }
 
-type SceneAdapter = { simulation?: FusionSimulation; goal?: () => { x: number; y: number; r: number; ready: boolean; completed: boolean }; onUpdate?: () => void };
+type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: boolean; hue?: 'cyan' | 'rose' };
+type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void };
 export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
   if (!context) throw Error('WebGL 2に対応したブラウザでお試しください。');
@@ -52,9 +53,25 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   sphere.computeVertexNormals(); sphere.computeBoundingSphere();
   const clay = new THREE.MeshStandardMaterial({ color: '#aab6b5', roughness: .7, envMapIntensity: .45 });
   const sim = adapter.simulation ?? new FusionSimulation();
-  const goalRing = adapter.goal ? new THREE.Mesh(new THREE.RingGeometry(.972, 1, 96), new THREE.MeshBasicMaterial({ color: '#bdede3', transparent: true, opacity: .55, depthWrite: false })) : null;
-  const goalFill = adapter.goal ? new THREE.Mesh(new THREE.CircleGeometry(.98, 96), new THREE.MeshBasicMaterial({ color: '#a6e5d5', transparent: true, opacity: .055, depthWrite: false })) : null;
-  if (goalRing && goalFill) { scene.add(goalRing, goalFill); goalRing.position.z = -.008; goalFill.position.z = -.009; }
+  const goalViews = (adapter.goals?.() ?? []).map(goal => {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(.972, 1, 96), new THREE.MeshBasicMaterial({ transparent: true, opacity: .55, depthWrite: false }));
+    const fill = new THREE.Mesh(new THREE.CircleGeometry(.98, 96), new THREE.MeshBasicMaterial({ color: goal.hue === 'rose' ? '#deb5c5' : '#a6e5d5', transparent: true, opacity: .055, depthWrite: false }));
+    ring.position.z = -.008; fill.position.z = -.009; scene.add(ring, fill);
+    // Floor lettering also passes through the same refraction as the ring.
+    const labelCanvas = document.createElement('canvas'); labelCanvas.width = 256; labelCanvas.height = 64;
+    const ctx = labelCanvas.getContext('2d')!;
+    ctx.font = '24px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = goal.hue === 'rose' ? '#795d6c' : '#466469';
+    ctx.fillText(goal.hue === 'rose' ? 'R O S E' : 'C Y A N', 128, 41);
+    const texture = new THREE.CanvasTexture(labelCanvas); texture.colorSpace = THREE.SRGBColorSpace;
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(.8, .2), new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, opacity: .85 }));
+    label.position.z = -.006; scene.add(label);
+    return { ring, fill, label, texture };
+  });
+  const islands = (adapter.obstacles ?? []).map(o => {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ color: '#364649', roughness: .58, metalness: .12, envMapIntensity: .3 }));
+    mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005);
+    scene.add(mesh); return mesh;
+  });
   const bodies = new Map<number, Body>();
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
@@ -185,18 +202,22 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt);
     for (const id of bodies.keys()) if (!sim.core.drops.some(d => d.id === id)) removeBody(id);
     const rect = canvas.getBoundingClientRect();
-    const goal = adapter.goal?.();
-    if (goal && goalRing && goalFill) {
-      for (const mesh of [goalRing, goalFill]) {
+    const projectedGoals = (adapter.goals?.() ?? []).map((goal, i) => {
+      const { ring, fill, label } = goalViews[i];
+      for (const mesh of [ring, fill, label]) {
         mesh.position.x = (goal.x - sim.width / 2) * W; mesh.position.y = (sim.height / 2 - goal.y) * W;
-        mesh.scale.setScalar(goal.r * W);
       }
-      goalRing.material.color.set(goal.ready || goal.completed ? '#bdede3' : '#527479');
-      goalRing.material.opacity = goal.completed ? .9 : goal.ready ? .8 : .7;
-      goalFill.material.opacity = goal.completed ? .12 : goal.ready ? .09 : .035;
-      const screen = goalRing.position.clone().project(camera);
-      canvas.dataset.goal = JSON.stringify({ ...goal, screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2 });
-    }
+      ring.scale.setScalar(goal.r * W); fill.scale.copy(ring.scale);
+      label.position.y += goal.r * W * .65;
+      const rose = goal.hue === 'rose';
+      ring.material.color.set(goal.ready || goal.completed ? (rose ? '#f2c8dc' : '#bdede3') : (rose ? '#92697c' : '#527479'));
+      ring.material.opacity = goal.completed ? .9 : goal.ready ? .8 : .7;
+      fill.material.opacity = goal.completed ? .12 : goal.ready ? .09 : .035;
+      const screen = ring.position.clone().project(camera);
+      return { ...goal, screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2 };
+    });
+    canvas.dataset.goals = JSON.stringify(projectedGoals);
+    if (projectedGoals[0]) canvas.dataset.goal = JSON.stringify(projectedGoals[0]);
     canvas.dataset.drops = JSON.stringify(sim.core.drops.map(d => {
       const b = bodies.get(d.id)!;
       const screen = new THREE.Vector3(0, 0, .48).applyMatrix4(b.mesh.matrixWorld).project(camera);
@@ -318,7 +339,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', visibility);
       for (const id of [...bodies.keys()]) removeBody(id);
       sphere.dispose(); clay.dispose(); floor.geometry.dispose(); floorMaterial.dispose(); textures.forEach(t => t.dispose()); background.dispose(); env.dispose(); renderer.dispose();
-      goalRing?.geometry.dispose(); goalRing?.material.dispose(); goalFill?.geometry.dispose(); goalFill?.material.dispose();
+      for (const g of goalViews) { for (const mesh of [g.ring, g.fill, g.label]) { mesh.geometry.dispose(); mesh.material.dispose(); } g.texture.dispose(); }
+      for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
     },
   };
 }

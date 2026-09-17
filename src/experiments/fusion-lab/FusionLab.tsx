@@ -87,6 +87,6 @@ export default function FusionLab() {
       </div>
       <p className="dl-play-instructions" id="fusion-instructions">{preset === 'mix' ? '自由な混色の実験です。異なる色も、触れると混ざります。' : 'つかんで、同じ色へ。融合したあとも、そのまま動かせます。'}<span>R で並べ直す · Esc で一時停止</span></p>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>かたちがつながり、色がなじむ。融合の試作。</p></div><div className="dl-footer-right">{showStats && <output className="dl-stats">{Math.round(stats.fps)} fps <span>p95 {stats.p95.toFixed(1)} ms</span></output>}<a href="?play=first">最初の一面へ<ArrowUpRight size={14}/></a><a href="?lab=droplets">一粒の実験へ<ArrowUpRight size={14}/></a></div></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>かたちがつながり、色がなじむ。融合の試作。</p></div><div className="dl-footer-right">{showStats && <output className="dl-stats">{Math.round(stats.fps)} fps <span>p95 {stats.p95.toFixed(1)} ms</span></output>}<a href="?play=chapters">三つの道へ<ArrowUpRight size={14}/></a><a href="?lab=droplets">一粒の実験へ<ArrowUpRight size={14}/></a></div></footer>
   </div></div>;
 }
