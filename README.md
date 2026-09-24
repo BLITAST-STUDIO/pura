@@ -94,3 +94,5 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 音と手応え
 
 [3面を音つきで遊ぶ](https://blitast-studio.github.io/pura/?play=chapters) — つかむ・壁に当たる・融合・輪に届くを、合成音と振動で返します。消音は操作列のスピーカーボタン、または `?sound=off`。壁や石では、一粒の実験と同じように滴が潰れて戻ります。[実装・検証範囲](docs/pura-v1/SENSORY_FEEDBACK.md)。
+
+[縁が波打つ比較を試す](https://blitast-studio.github.io/pura/?play=chapters&ripple=on) — 承認済みの揺れに、当たった側から回る縁のさざ波と、壁に押し付けたまま潰れる動きを足した試作です。設定「縁が波打つ（試作）」でも切り替えられます。[しくみと検証](docs/pura-v1/RIM_RIPPLE.md)。

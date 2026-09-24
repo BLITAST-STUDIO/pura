@@ -69,3 +69,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - 3面・一粒・融合の全入口に音と振動、融合／3面に壁・石の手応えを追加。`?sound=off` で一時的に消音。
 - 復元タグ `chapters-approved-20260924`（2443937）、直前の配信 `bd7d161`。
 - Pages built、全12ファイルHTTP200・SHA-256一致。公開版をヘッドレスChromeで実操作し警告・エラー0。証拠: `artifacts/sensory/public-*.json`。
+
+## 縁が波打つ柔らかさ（2026-09-24）
+
+- ソース `70ef3f6a9ee06ad75b85e6c1fe8f2daf0bf8e0bf`、配信 `c7c0e7f3dda6e007f3e623e8cedce93238e84459`。
+- 比較は `?ripple=on`（一粒・融合・3面）。既定表示は直前の配信 `c4eee52` と静止画で画素差0。
+- Pages built、全12ファイルSHA-256一致。公開版をGPU描画のヘッドレスChromeで操作し、3画面とも警告・エラー0。証拠: `artifacts/ripple/public-check.json`。
