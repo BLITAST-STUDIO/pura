@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { createLiquidMaterial } from '../droplet-lab/liquid-material';
 import { FIELD_GLSL } from './shape';
 
+/** Shader patching must fail loudly: a silent miss would drop a whole feature. */
+function must(source: string, target: string, replacement: string): string {
+  if (!source.includes(target)) throw new Error(`Fusion material: shader anchor not found: ${target}`);
+  return source.replace(target, replacement);
+}
+
 export function createFusionMaterial(background: THREE.Texture) {
   const material = createLiquidMaterial(background);
   Object.assign(material.uniforms, {
@@ -13,14 +19,13 @@ export function createFusionMaterial(background: THREE.Texture) {
     uInternalFlow: { value: 0 }, uFlowPhase: { value: 0 },
     uFlowFrame: { value: new THREE.Vector4(0, 0, 1, 0) },
   });
-  material.vertexShader = material.vertexShader.replace('uniform mat4 uWorldToDrop;', 'uniform mat4 uWorldToDrop; uniform vec2 uSurfaceBend;')
-    .replace('vec4 world = modelMatrix * vec4(position, 1.0);', `
-      float h=position.z-.007;
-      vec3 p=position+vec3(uSurfaceBend*h*h,0.);
-      vec3 bentNormal=vec3(normal.xy,normal.z-2.*h*dot(uSurfaceBend,normal.xy));
-      vec4 world = modelMatrix * vec4(p, 1.0);`)
-    .replaceAll('.xyz, normal)', '.xyz, bentNormal)');
-  material.fragmentShader = material.fragmentShader.replace('const vec3 CENTER', `${FIELD_GLSL}
+  material.vertexShader = must(material.vertexShader, 'uniform mat4 uWorldToDrop;', 'uniform mat4 uWorldToDrop; uniform vec2 uSurfaceBend;');
+  material.vertexShader = must(material.vertexShader, 'vec3 shaped = position;', `
+        float h=position.z-.007;
+        vec3 shaped=position+vec3(uSurfaceBend*h*h,0.);`);
+  material.vertexShader = must(material.vertexShader, 'vec3 shapedNormal = normal;',
+    'vec3 shapedNormal=vec3(normal.xy,normal.z-2.*h*dot(uSurfaceBend,normal.xy));');
+  material.fragmentShader = must(material.fragmentShader, 'const vec3 CENTER', `${FIELD_GLSL}
     uniform vec3 uAbsorption;
     uniform float uSeedCount;
     uniform vec4 uSeeds[5];
@@ -87,7 +92,7 @@ export function createFusionMaterial(background: THREE.Texture) {
         uMix+(1.-uMix)*bloomSoftness);
     }
     const vec3 CENTER`);
-  material.fragmentShader = material.fragmentShader.replace('if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12) {', `
+  material.fragmentShader = must(material.fragmentShader, 'if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12 || uRimActive > 0.5) {', `
     if(uLobeCount>.5) {
       float speed=length(localRay);
       float t=0.0008/max(speed,.0001);
@@ -110,8 +115,8 @@ export function createFusionMaterial(background: THREE.Texture) {
       normal=worldNormal(fieldNormal(p));
       return true;
     }
-    if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12) {`);
-  material.fragmentShader = material.fragmentShader.replace('vec3 normal = normalize(vWorldNormal);', `vec3 normal = normalize(vWorldNormal);
+    if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12 || uRimActive > 0.5) {`);
+  material.fragmentShader = must(material.fragmentShader, 'vec3 normal = normalize(vWorldNormal);', `vec3 normal = normalize(vWorldNormal);
     if(uLobeCount>.5) normal=worldNormal(fieldNormal((uWorldToDrop*vec4(vWorldPosition,1.)).xyz));`);
   const start = material.fragmentShader.indexOf('        float peak =');
   const end = material.fragmentShader.indexOf('        vec3 color =', start);

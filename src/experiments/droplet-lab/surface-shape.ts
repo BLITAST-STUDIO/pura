@@ -68,21 +68,24 @@ export function surfaceExit(origin: Point3, ray: Point3, bend: Bend) {
 // Same inverse field and gradient as above. A small shear keeps the solid
 // convex at the enforced .065 bound; bisection therefore finds the unique exit.
 // Fixed work avoids an unbounded ray marcher on mobile GPUs.
+// The optional rim ripple (RIM_GLSL, applied after the shear) is budgeted to
+// keep every horizontal section convex; with it inactive this is unchanged.
 export const SURFACE_GLSL = /* glsl */ `
   vec3 unwarpSurface(vec3 p) {
     float h = p.z - ${SURFACE_BOTTOM};
     return vec3(p.xy - uSurfaceBend * h * h, p.z);
   }
   float surfaceField(vec3 p) {
-    vec3 q = unwarpSurface(p);
+    vec3 q = unwarpSurface(unrimPoint(p));
     vec3 e = (q - CENTER) / RADII;
     return dot(e, e) - 1.0;
   }
   vec3 surfaceGradient(vec3 p) {
-    vec3 q = unwarpSurface(p);
+    vec3 u = unrimPoint(p);
+    vec3 q = unwarpSurface(u);
     vec3 n = (q - CENTER) / (RADII * RADII);
-    n.z -= 2.0 * (p.z - BOTTOM) * dot(uSurfaceBend, n.xy);
-    return n;
+    n.z -= 2.0 * (u.z - BOTTOM) * dot(uSurfaceBend, n.xy);
+    return rimGradient(p, n);
   }
   bool findSurfaceExit(vec3 origin, vec3 ray, out vec3 point, out vec3 normal, out float travel) {
     if (ray.z < -1.0e-9) {
@@ -96,7 +99,7 @@ export const SURFACE_GLSL = /* glsl */ `
       }
     }
     float h2 = ${(SURFACE_TOP - SURFACE_BOTTOM) ** 2};
-    vec2 extent = vec2(1.0) + abs(uSurfaceBend) * h2;
+    vec2 extent = (vec2(1.0) + abs(uSurfaceBend) * h2) * rimExtent();
     float far = 1.0e8;
     if (abs(ray.x) > 1.0e-9) far = min(far, ((ray.x > 0.0 ? extent.x : -extent.x) - origin.x) / ray.x);
     if (abs(ray.y) > 1.0e-9) far = min(far, ((ray.y > 0.0 ? extent.y : -extent.y) - origin.y) / ray.y);

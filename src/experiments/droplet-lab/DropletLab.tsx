@@ -10,7 +10,7 @@ type Status = "loading" | "ready" | "error";
 type Stats = { fps: number; frameP95: number; grabbed: boolean };
 type Refinement = "baseline" | "refined";
 
-function updateComparisonQuery(key: "feel" | "view", value: string | null) {
+function updateComparisonQuery(key: "feel" | "view" | "ripple", value: string | null) {
   const url = new URL(window.location.href);
   if (value === null) url.searchParams.delete(key);
   else url.searchParams.set(key, value);
@@ -36,6 +36,7 @@ export function DropletLab() {
     new URLSearchParams(window.location.search).get("feel") === "baseline" ? "baseline" : "refined",
   );
   const [clay, setClay] = useState(() => new URLSearchParams(window.location.search).get("view") === "clay");
+  const [ripple, setRipple] = useState(() => new URLSearchParams(window.location.search).get("ripple") === "on");
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -79,8 +80,8 @@ export function DropletLab() {
   }, [restart]);
 
   useEffect(() => {
-    experienceRef.current?.setOptions({ hue, lighting, inspection, refinement, clay, reducedMotion, quality, paused });
-  }, [hue, lighting, inspection, refinement, clay, reducedMotion, quality, paused, restart]);
+    experienceRef.current?.setOptions({ hue, lighting, inspection, refinement, clay, ripple, reducedMotion, quality, paused });
+  }, [hue, lighting, inspection, refinement, clay, ripple, reducedMotion, quality, paused, restart]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -218,6 +219,11 @@ export function DropletLab() {
                         updateComparisonQuery("feel", next);
                       }} aria-describedby="dl-feel-description"><option value="refined">今回の調整</option><option value="baseline">保存した感触</option></select></label>
                       <p className="dl-setting-description" id="dl-feel-description">いつでも保存した感触に戻せます。</p>
+                      {refinement === "refined" && <label className="dl-setting-row"><span>縁が波打つ（試作）</span><input type="checkbox" checked={ripple} onChange={(event) => {
+                        setRipple(event.target.checked);
+                        updateComparisonQuery("ripple", event.target.checked ? "on" : null);
+                      }} aria-describedby="dl-ripple-description" /><span className="dl-switch" aria-hidden="true" /></label>}
+                      {refinement === "refined" && <p className="dl-setting-description" id="dl-ripple-description">当たった側から縁にさざ波が回り、壁に押し付けたまま潰れます。</p>}
                       <label className="dl-setting-row"><span>形だけを見る</span><input type="checkbox" checked={clay} onChange={(event) => {
                         setClay(event.target.checked);
                         updateComparisonQuery("view", event.target.checked ? "clay" : null);

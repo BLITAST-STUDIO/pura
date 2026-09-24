@@ -4,7 +4,8 @@ import { FusionSimulation, type FusionPreset, type FusionEvent } from './simulat
 import { absorptionOf, fractions } from './composition';
 import { FusionShape, type Lobe } from './shape';
 import { createFusionMaterial } from './material';
-import { floorTexture, studioEnvironment, contactMaterial, causticMaterial } from '../droplet-lab/renderer';
+import { floorTexture, studioEnvironment, contactMaterial, causticMaterial, setRim } from '../droplet-lab/renderer';
+import { contactAnchor, DropletRim } from '../droplet-lab/rim-response';
 import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
 import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
@@ -12,10 +13,10 @@ import { purityOf } from '../../game/palette';
 import type { ContactKind } from '../../game/sim';
 import type { SensoryFeedback } from '../sensory/feedback';
 
-export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom' };
+export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
-type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2 };
+type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim };
 const W = .01;
 const HEIGHT = .88; // Fixed height makes the enclosed volume proportional to r².
 const NO_IMPULSE: Readonly<{ x: number; y: number }> = Object.freeze({ x: 0, y: 0 });
@@ -107,7 +108,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     pullGroup.add(mesh); group.add(pullGroup); scene.add(group);
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), footprint(contactMaterial())); shadow.position.z = -.003; scene.add(shadow);
     const caustic = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), footprint(causticMaterial())); caustic.position.z = -.001; scene.add(caustic);
-    const body: Body = { mesh, material, group, pullGroup, shadow, caustic, source, lobes: [], age: source.length ? 0 : 10, correction: 1, shape: source.length ? new FusionShape() : null, motion: new DropletMotion(), pull: new DropletPull(), radius: d.r, surface: new DropletSurface(), grabPoint: new THREE.Vector2() };
+    const body: Body = { mesh, material, group, pullGroup, shadow, caustic, source, lobes: [], age: source.length ? 0 : 10, correction: 1, shape: source.length ? new FusionShape() : null, motion: new DropletMotion(), pull: new DropletPull(), radius: d.r, surface: new DropletSurface(), grabPoint: new THREE.Vector2(), rim: new DropletRim() };
     if (source.length) mesh.geometry = body.shape!.geometry;
     bodies.set(d.id, body);
     return body;
@@ -135,6 +136,9 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     removeBody(a.id); removeBody(b.id);
     feedback?.fusion(result.r, result.x, sim.width, purityOf(result.pigment));
     const view = makeBody(result, source);
+    const small = a.mass <= b.mass ? a : b;
+    // The smaller parent's liquid arrives from its side: that side bulges, then rings.
+    view.rim.excite(Math.atan2(-(small.y - result.y), small.x - result.x), -0.12 * Math.min(1, 2 * small.mass / result.mass));
     updateBody(result, view, 0);
   }
   function updateBody(d: Drop, b: Body, dt: number, wallImpulse = NO_IMPULSE) {
@@ -147,6 +151,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const response = b.surface.update({ ...s, grabPoint: b.grabPoint }, dt, options.reducedMotion);
     const ring = b.source.length && !options.reducedMotion ? .055 * Math.sin(b.age * 19) * Math.exp(-b.age * 4) : 0;
     const scales = volumeScales(m.stretch + ring, m.squash, response.press);
+    const rippling = !!options.ripple && !options.reducedMotion;
+    const ripple = rippling ? b.rim.update({ ...s, grabPoint: b.grabPoint }, dt) : (b.rim.reset(), b.rim.snapshot);
+    const coefficients = rippling ? ripple.coefficients : null;
+    for (const mat of [b.material, b.shadow.material, b.caustic.material]) setRim(mat, coefficients);
     const bend = new THREE.Vector2(response.bendX, response.bendY).clampLength(0, .065);
     b.material.uniforms.uSurfaceBend.value.copy(bend);
     b.material.uniforms.uInternalFlow.value = options.reducedMotion ? 0 : options.dyeFlow === 'bloom' ? 2 : options.dyeFlow === 'swirl' ? 1 : 0;
@@ -186,6 +194,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const xx = scales.x * cosine * cosine + scales.y * sine * sine;
     const yy = scales.x * sine * sine + scales.y * cosine * cosine;
     const xy = (scales.x - scales.y) * sine * cosine;
+    if (rippling) {
+      // Keep the side that hit a wall or island on it while the body is squashed.
+      const offset = contactAnchor(ripple.anchor, xx, xy, yy);
+      b.group.position.x += offset.x * d.r * W; b.group.position.y += offset.y * d.r * W;
+    }
     b.pullGroup.matrix.multiply(new THREE.Matrix4().set(xx, xy, 0, 0, xy, yy, 0, 0, 0, 0, scales.z, 0, 0, 0, 0, 1));
     b.shadow.position.x = b.caustic.position.x = b.group.position.x;
     b.shadow.position.y = b.caustic.position.y = b.group.position.y;

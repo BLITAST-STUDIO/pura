@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SURFACE_GLSL } from './surface-shape';
+import { RIM_GLSL } from './rim-response';
 
 // The refined surface and its optical interior use the same height shear.
 // The saved comparison retains its analytic ellipsoid / tiny taper approximation.
@@ -16,6 +17,9 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uDaylight: { value: 0 },
       uIor: { value: 1.333 },
       uSurfaceBend: { value: new THREE.Vector2() },
+      uRimA: { value: new THREE.Vector4() },
+      uRimB: { value: new THREE.Vector2() },
+      uRimActive: { value: 0 },
     },
     depthWrite: true,
     toneMapped: true,
@@ -23,14 +27,20 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uniform mat4 uWorldToDrop;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
+      ${RIM_GLSL}
       void main() {
-        vec4 world = modelMatrix * vec4(position, 1.0);
+        vec3 shaped = position;
+        vec3 shapedNormal = normal;
+        // Optional rim ripple after any shear; the identity when inactive.
+        vec3 rimmed = rimPoint(shaped);
+        vec3 rimmedNormal = rimGradient(rimmed, shapedNormal);
+        vec4 world = modelMatrix * vec4(rimmed, 1.0);
         vWorldPosition = world.xyz;
         // Inverse transpose preserves the normal under nonuniform squash.
         vWorldNormal = normalize(vec3(
-          dot(uWorldToDrop[0].xyz, normal),
-          dot(uWorldToDrop[1].xyz, normal),
-          dot(uWorldToDrop[2].xyz, normal)
+          dot(uWorldToDrop[0].xyz, rimmedNormal),
+          dot(uWorldToDrop[1].xyz, rimmedNormal),
+          dot(uWorldToDrop[2].xyz, rimmedNormal)
         ));
         gl_Position = projectionMatrix * viewMatrix * world;
       }
@@ -44,6 +54,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uniform float uDaylight;
       uniform float uIor;
       uniform vec2 uSurfaceBend;
+      ${RIM_GLSL}
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
 
@@ -110,7 +121,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
         travel = 0.0;
         vec3 localOrigin = (uWorldToDrop * vec4(origin, 1.0)).xyz;
         vec3 localRay = (uWorldToDrop * vec4(ray, 0.0)).xyz;
-        if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12) {
+        if (dot(uSurfaceBend, uSurfaceBend) > 1.0e-12 || uRimActive > 0.5) {
           vec3 localPoint;
           vec3 localNormal;
           bool hit = findSurfaceExit(localOrigin, localRay, localPoint, localNormal, travel);

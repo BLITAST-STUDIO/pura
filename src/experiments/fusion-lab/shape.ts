@@ -66,6 +66,7 @@ export const FIELD_GLSL = `
  uniform vec4 uLobes[5];
  uniform float uBlend;
  float field(vec3 p) {
+   p = unrimPoint(p);
    p.xy-=uSurfaceBend*pow(p.z-.007,2.);
    float d = 100000.0;
    for(int i=0; i<5; i++) {

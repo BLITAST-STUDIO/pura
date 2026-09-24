@@ -7,6 +7,7 @@ import { DropletPull, MAX_PULL } from './pull-response';
 import { DropletSurface, MAX_SURFACE_BEND, MAX_PRESS, volumeScales } from './surface-response';
 import { SURFACE_BOTTOM, SURFACE_TOP } from './surface-shape';
 import type { SensoryFeedback } from '../sensory/feedback';
+import { contactAnchor, DropletRim, RIM_GLSL, rotateRim, type RimCoefficients } from './rim-response';
 
 export type ExperienceOptions = {
   hue: HueId;
@@ -17,6 +18,8 @@ export type ExperienceOptions = {
   quality: 'high' | 'balanced';
   refinement: 'baseline' | 'refined';
   clay: boolean;
+  /** Comparison: rim ripples and contact anchoring on top of the refined feel. */
+  ripple: boolean;
 };
 type Callbacks = {
   onReady?: () => void;
@@ -105,15 +108,31 @@ export function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boole
   return target;
 }
 
+/** Uniforms shared by the drop and its floor footprints for the optional rim ripple. */
+export function rimUniforms() {
+  return { uRimA: { value: new THREE.Vector4() }, uRimB: { value: new THREE.Vector2() }, uRimActive: { value: 0 } };
+}
+export function setRim(material: THREE.ShaderMaterial, coefficients: RimCoefficients | null) {
+  const u = material.uniforms;
+  // A settled rim returns the drop to the cheaper analytic optical path.
+  const active = !!coefficients && coefficients.some(c => Math.abs(c) > 1e-5);
+  u.uRimActive.value = active ? 1 : 0;
+  if (coefficients && active) {
+    u.uRimA.value.set(coefficients[0], coefficients[1], coefficients[2], coefficients[3]);
+    u.uRimB.value.set(coefficients[4], coefficients[5]);
+  }
+}
+
 export function contactMaterial() {
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
-    uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 1 } },
+    uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 1 }, ...rimUniforms() },
     vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
     fragmentShader: `
       varying vec2 vUv; uniform vec3 color; uniform float gain;
+      ${RIM_GLSL}
       void main(){
-        vec2 p=(vUv-.5)*4.;
+        vec2 p=unrimPlane((vUv-.5)*4.);
         float r=length(p);
         float contact=exp(-pow((r-.73)*8.,2.))*.20;
         float shade=exp(-dot(p,p)*2.)*.13;
@@ -126,12 +145,13 @@ export function causticMaterial() {
   // Artistic, local light footprint. This is not a traced caustic solver.
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 0.34 } },
+    uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 0.34 }, ...rimUniforms() },
     vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
     fragmentShader: `
       varying vec2 vUv; uniform vec3 color; uniform float gain;
+      ${RIM_GLSL}
       void main(){
-        vec2 p=(vUv-.5)*4.; p.y*=1.1;
+        vec2 p=unrimPlane((vUv-.5)*4.); p.y*=1.1;
         float r=length(p); float a=atan(p.y,p.x);
         float arc=pow(max(0.,cos(a+1.7)),3.);
         float ring=exp(-pow((r-1.03)*19.,2.));
@@ -164,10 +184,11 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const motion = new DropletMotion();
   const pull = new DropletPull();
   const surface = new DropletSurface();
+  const rim = new DropletRim();
   const options: ExperienceOptions = {
     hue: 'cyan', lighting: 'studio', inspection: false,
     reducedMotion: false, paused: false, quality: 'high',
-    refinement: 'refined', clay: false,
+    refinement: 'refined', clay: false, ripple: false,
   };
   const textures = [floorTexture(false), floorTexture(true)];
   for (const t of textures) t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -404,6 +425,19 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       : { x: 1 + stretch, y: 1 - stretch * .46 + squash, z: 1 - stretch * .34 - squash * .5 };
     const r = s.r * WORLD;
     dropGroup.position.set((s.x - sim.width / 2) * WORLD, (sim.height / 2 - s.y) * WORLD, 0);
+    const rippling = refined && options.ripple;
+    const ripple = rippling ? rim.update({ ...s, grabPoint }, dt, options.reducedMotion) : (rim.reset(), rim.snapshot);
+    const anchorOffset = { x: 0, y: 0 };
+    if (rippling) {
+      // Keep the side that hit the wall on the wall while the body is squashed.
+      const cos2 = Math.cos(angle) ** 2, sin2 = Math.sin(angle) ** 2, cs = Math.cos(angle) * Math.sin(angle);
+      const offset = contactAnchor(ripple.anchor, scales.x * cos2 + scales.y * sin2, (scales.x - scales.y) * cs, scales.x * sin2 + scales.y * cos2);
+      anchorOffset.x = offset.x; anchorOffset.y = offset.y;
+      dropGroup.position.x += offset.x * r; dropGroup.position.y += offset.y * r;
+    }
+    // The mesh turns with the wobble axis, so express the ripple in its frame.
+    const localRim = rippling ? rotateRim(ripple.coefficients, angle) : null;
+    for (const m of [liquidMaterial, contact.material, caustic.material]) setRim(m, localRim);
     drop.rotation.z = angle;
     drop.scale.set(r * scales.x, r * scales.y, r * scales.z);
     // The front responds to the finger/body gap before the physical body catches
@@ -468,7 +502,8 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       stretch, squash, hue: s.hue, pullX: tension.x, pullY: tension.y, pullStrength: tension.strength,
       pointerGap: s.pointer ? Math.hypot(s.pointer.x - s.x, s.pointer.y - s.y) : 0,
       refinement: options.refinement, clay: options.clay, bendX: bx, bendY: by, press: response.press,
-      scaleX: scales.x, scaleY: scales.y, scaleZ: scales.z, affineVolume: scales.x * scales.y * scales.z });
+      scaleX: scales.x, scaleY: scales.y, scaleZ: scales.z, affineVolume: scales.x * scales.y * scales.z,
+      ripple: rippling, rim: ripple.coefficients, anchorX: anchorOffset.x, anchorY: anchorOffset.y });
   }
 
   function renderScene() {
@@ -563,6 +598,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       const qualityChanged = next.quality !== undefined && next.quality !== options.quality;
       const refinementChanged = next.refinement !== undefined && next.refinement !== options.refinement;
       const clayChanged = next.clay !== undefined && next.clay !== options.clay;
+      const rippleChanged = next.ripple !== undefined && next.ripple !== options.ripple;
       Object.assign(options, next);
       sim.setHue(options.hue);
       material.attenuationColor.set(COLORS[options.hue]);
@@ -586,12 +622,12 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       if (qualityChanged) resize();
       if (options.paused) cancelPointer();
       if (refinementChanged) { surface.reset(); deform(0); }
-      else if (clayChanged) deform(0);
-      if (options.reducedMotion) { motion.reset(); pull.reset(); surface.reset(); deform(0); }
+      else if (clayChanged || rippleChanged) { rim.reset(); deform(0); }
+      if (options.reducedMotion) { motion.reset(); pull.reset(); surface.reset(); rim.reset(); deform(0); }
       last = 0; resetMeasurement();
     },
     reset() {
-      cancelPointer(); sim.reset(); motion.reset(); pull.reset(); surface.reset();
+      cancelPointer(); sim.reset(); motion.reset(); pull.reset(); surface.reset(); rim.reset();
       deform(0); resetMeasurement(); last = 0;
     },
     dispose() {
