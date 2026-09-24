@@ -230,7 +230,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       pu.uLobeCount.value = mu.uLobeCount.value;
       pu.uBlend.value = mu.uBlend.value;
       for (let i = 0; i < 5; i++) pu.uLobes.value[i].copy(mu.uLobes.value[i]);
-      pu.uTint.value.setRGB(...absorption.map(v => Math.exp(-v * .8)) as [number, number, number]);
+      pu.uAbsorption.value.fromArray(absorption);
       const center = new THREE.Vector3().setFromMatrixPosition(b.mesh.matrixWorld).project(camera);
       const edge = new THREE.Vector3(1, 0, 0).applyMatrix4(b.mesh.matrixWorld).project(camera);
       const sampleCount = options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES;

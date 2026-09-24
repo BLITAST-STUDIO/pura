@@ -25,7 +25,7 @@ test('projected light splats remain finite and bounded on small and large viewpo
   for (const radius of [1, 18, 60, 400]) for (const dpr of [1, 2, 3]) {
     for (const count of [CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES]) {
       const size = projectedPointSize(radius, dpr, count);
-      assert.ok(size >= 2 && size <= 24);
+      assert.ok(size >= 3 && size <= 40);
     }
   }
 });

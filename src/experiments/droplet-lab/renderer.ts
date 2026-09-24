@@ -7,6 +7,7 @@ import { DropletPull, MAX_PULL } from './pull-response';
 import { DropletSurface, MAX_SURFACE_BEND, MAX_PRESS, volumeScales } from './surface-response';
 import { SURFACE_BOTTOM, SURFACE_TOP } from './surface-shape';
 import type { SensoryFeedback } from '../sensory/feedback';
+import { ABSORPTION } from '../fusion-lab/composition';
 import { contactAnchor, DropletRim, RIM_GLSL, rotateRim, type RimCoefficients } from './rim-response';
 import { CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES, projectedCausticGeometry, projectedCausticMaterial, projectedPointSize } from './projected-caustic';
 
@@ -623,7 +624,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       liquidMaterial.uniforms.uTint.value.set(COLORS[options.hue]);
       liquidMaterial.uniforms.uDaylight.value = options.lighting === 'daylight' ? 1 : 0;
       caustic.material.uniforms.color.value.set(COLORS[options.hue]);
-      (projected.material as THREE.ShaderMaterial).uniforms.uTint.value.set(COLORS[options.hue]);
+      (projected.material as THREE.ShaderMaterial).uniforms.uAbsorption.value.fromArray(ABSORPTION[options.hue]);
       drop.material = options.clay ? clayMaterial : referenceMaterial ? material : liquidMaterial;
       projected.visible = !options.clay && options.caustic === 'shape' && options.refinement === 'refined' && !referenceMaterial;
       projected.geometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);

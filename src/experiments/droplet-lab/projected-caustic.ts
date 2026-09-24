@@ -50,6 +50,8 @@ export function projectedCausticMaterial() {
       uLobes: { value: Array.from({ length: 5 }, () => new THREE.Vector4()) },
       uBlend: { value: .03 },
       uTint: { value: new THREE.Color('#c9eef0') },
+      // Same absorption coefficients as the liquid; the light is coloured by its path inside.
+      uAbsorption: { value: new THREE.Vector3() },
       uPointSize: { value: 4 },
       uGain: { value: .08 },
     },
@@ -58,7 +60,9 @@ export function projectedCausticMaterial() {
       uniform mat4 uWorldToDrop;
       uniform vec2 uSurfaceBend;
       uniform float uPointSize;
+      uniform vec3 uAbsorption;
       varying float vVisible;
+      varying vec3 vTransmit;
       ${RIM_GLSL}
       ${FIELD_GLSL}
       const vec3 CENTER = vec3(0., 0., .3968);
@@ -86,6 +90,7 @@ export function projectedCausticMaterial() {
       }
       void main() {
         vVisible = 0.;
+        vTransmit = vec3(0.);
         gl_Position = vec4(2., 2., 2., 1.);
         gl_PointSize = 0.;
         vec2 xy = position.xy;
@@ -149,21 +154,24 @@ export function projectedCausticMaterial() {
         gl_Position = projectionMatrix * viewMatrix * vec4(floorPoint, 1.);
         gl_PointSize = uPointSize;
         vVisible = 1.;
+        float path = length((uDropToWorld * vec4(exitLocal - entryLocal, 0.)).xyz);
+        vTransmit = exp(-uAbsorption * path);
       }
     `,
     fragmentShader: /* glsl */ `
-      uniform vec3 uTint;
       uniform float uGain;
       varying float vVisible;
+      varying vec3 vTransmit;
       void main() {
         vec2 p = gl_PointCoord * 2. - 1.;
-        float spot = exp(-dot(p, p) * 3.5) * (1. - smoothstep(.7, 1., length(p)));
-        gl_FragColor = vec4(mix(vec3(1.), uTint, .32), spot * uGain * vVisible);
+        // Wide, faint splats overlap into a smooth pool instead of visible dots.
+        float spot = exp(-dot(p, p) * 2.4) * (1. - smoothstep(.75, 1., length(p)));
+        gl_FragColor = vec4(vTransmit, spot * uGain * .22 * vVisible);
       }
     `,
   });
 }
 
 export function projectedPointSize(projectedRadiusPx: number, pixelRatio: number, sampleCount: number) {
-  return Math.max(2, Math.min(24, projectedRadiusPx * 7.2 / Math.sqrt(sampleCount) * pixelRatio));
+  return Math.max(3, Math.min(40, projectedRadiusPx * 13.5 / Math.sqrt(sampleCount) * pixelRatio));
 }

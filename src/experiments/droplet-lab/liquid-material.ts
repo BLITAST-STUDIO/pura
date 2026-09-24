@@ -20,6 +20,8 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uRimA: { value: new THREE.Vector4() },
       uRimB: { value: new THREE.Vector2() },
       uRimActive: { value: 0 },
+      // 1: light seen through the drop is softened; ?glint=classic keeps the earlier look.
+      uThroughSoft: { value: typeof location !== 'undefined' && new URLSearchParams(location.search).get('glint') === 'classic' ? 0 : 1 },
     },
     depthWrite: true,
     toneMapped: true,
@@ -54,6 +56,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uniform float uDaylight;
       uniform float uIor;
       uniform vec2 uSurfaceBend;
+      uniform float uThroughSoft;
       ${RIM_GLSL}
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
@@ -73,13 +76,15 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
 
       // Rectangular area lights at infinity, with a small angular edge softness.
       // All highlights are reflections of these panels through current normals.
+      // Seen through the lens the edge is magnified, so refracted views use a wider falloff.
+      float panelInner = 0.90;
       float panel(vec3 ray, vec3 center, vec2 size) {
         vec3 forward = normalize(center);
         vec3 right = normalize(cross(vec3(0.0, 0.0, 1.0), forward));
         vec3 up = cross(forward, right);
         float facing = dot(ray, forward);
         vec2 p = abs(vec2(dot(ray, right), dot(ray, up))) / max(facing, 0.001);
-        vec2 mask = 1.0 - smoothstep(size * 0.90, size, p);
+        vec2 mask = 1.0 - smoothstep(size * panelInner, size, p);
         return mask.x * mask.y * smoothstep(0.0, 0.05, facing);
       }
 
@@ -98,8 +103,15 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
         return room;
       }
 
-      vec3 outsideLight(vec3 origin, vec3 ray) {
-        vec3 env = environment(ray);
+      vec3 throughEnvironment(vec3 ray) {
+        panelInner = mix(0.90, 0.45, uThroughSoft);
+        vec3 room = environment(ray);
+        panelInner = 0.90;
+        return room;
+      }
+
+      vec3 outsideLight(vec3 origin, vec3 ray, bool through) {
+        vec3 env = through ? throughEnvironment(ray) : environment(ray);
         if (ray.z >= -0.0001) return env;
         float distanceToFloor = (FLOOR - origin.z) / ray.z;
         if (distanceToFloor <= 0.0) return env;
@@ -170,12 +182,12 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
         vec3 normal = normalize(vWorldNormal);
         if (dot(incident, normal) > 0.0) normal = -normal;
         float entryFresnel = fresnel(dot(-incident, normal), 1.0 / ior);
-        vec3 reflected = outsideLight(vWorldPosition, reflect(incident, normal));
+        vec3 reflected = outsideLight(vWorldPosition, reflect(incident, normal), false);
         vec3 internalRay = normalize(refract(incident, normal, 1.0 / ior));
         vec3 exitPoint = vWorldPosition;
         vec3 exitNormal = normal;
         float distanceInside = 0.0;
-        vec3 transmitted = environment(internalRay);
+        vec3 transmitted = throughEnvironment(internalRay);
         bool hit = findExit(vWorldPosition + internalRay * EPSILON, internalRay,
           exitPoint, exitNormal, distanceInside);
         if (hit) {
@@ -199,10 +211,20 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
           if (dot(outgoing, outgoing) > 0.00001) {
             float exitFresnel = fresnel(dot(internalRay, exitNormal), ior);
             // Small non-TIR secondary reflection is a bounded environment approximation.
-            transmitted = mix(outsideLight(exitPoint, normalize(outgoing)),
-              environment(reflect(internalRay, exitNormal)), exitFresnel);
+            transmitted = mix(outsideLight(exitPoint, normalize(outgoing), true),
+              throughEnvironment(reflect(internalRay, exitNormal)), exitFresnel);
           } else {
-            transmitted = min(environment(reflect(internalRay, exitNormal)), vec3(1.5));
+            transmitted = min(throughEnvironment(reflect(internalRay, exitNormal)), vec3(1.5));
+          }
+        }
+        // The key softbox refracted through a tall drop is ~20x the floor's
+        // brightness and clips to a hard white crescent. Compress only that HDR
+        // peak so it reads as a tinted glow; ordinary floor light is untouched.
+        if (uThroughSoft > 0.5) {
+          float throughPeak = max(transmitted.r, max(transmitted.g, transmitted.b));
+          if (throughPeak > 1.2) {
+            float excess = throughPeak - 1.2;
+            transmitted *= (1.2 + excess / (1.0 + excess / 2.0)) / throughPeak;
           }
         }
         // Tint is a linear transmittance color, not an opaque body-color overlay.
