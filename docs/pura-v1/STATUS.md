@@ -2,7 +2,13 @@
 
 更新日: 2026-09-24 / 仕様基準: 要件定義v1.0.1と最新のユーザー指示
 
-## 最新実装 — 壁の手応えと、音・振動（Claude Codeへ引き継ぎ）
+## 最新実装 — 雫の形から床へ届く光（比較用）
+
+`feat/sensory-feedback` のまま提案4を実装。`?caustic=shape` で一粒・融合・3面の床光を比較できる。承認版の床光は既定に残し、`sensory-approved-20260924`（de17058）から戻せる。仕組み・検証と近似は [SHAPE_CAUSTIC.md](SHAPE_CAUSTIC.md)。
+
+型検査・81テスト・配信用ZIP生成成功。Macブラウザの通常表示は公開中の承認版と画素差0、試作ONは差を確認。WebGL警告・エラーなし。実機での好みと性能はユーザー試遊待ち。
+
+## 前段 — 壁の手応えと、音・振動（Claude Codeへ引き継ぎ）
 
 2026-09-24、開発をCodexからClaude Code（Opus 5.5）へ引き継いだ。ユーザーは現状の感触・見た目を高評価し、昇華の提案を「2→1→3/4」の順で実装するよう承認。現状を `chapters-approved-20260924`（2443937）として保存し、`feat/sensory-feedback` で作業。詳細は [SENSORY_FEEDBACK.md](SENSORY_FEEDBACK.md)。
 

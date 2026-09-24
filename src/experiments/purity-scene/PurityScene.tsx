@@ -39,6 +39,7 @@ export default function PurityScene() {
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [lighting, setLighting] = useState<FusionOptions['lighting']>('studio');
   const [ripple, setRipple] = useState(() => new URLSearchParams(window.location.search).get('ripple') === 'on');
+  const [caustic, setCaustic] = useState<FusionOptions['caustic']>(() => new URLSearchParams(window.location.search).get('caustic') === 'shape' ? 'shape' : 'artistic');
   const [notice, setNotice] = useState('');
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   // Last heard goal states. Null means "adopt silently" after load, undo or reset.
@@ -77,7 +78,7 @@ export default function PurityScene() {
     } catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [retry, chapterId]);
-  useEffect(() => { experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', ripple }); }, [paused, reduced, quality, lighting, ripple, retry, chapterId]);
+  useEffect(() => { experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', ripple, caustic }); }, [paused, reduced, quality, lighting, ripple, caustic, retry, chapterId]);
   const undo = () => {
     if (!simulation.current?.state().canUndo) return;
     heard.current = null; feedback.rewind();
@@ -135,6 +136,12 @@ export default function PurityScene() {
             setRipple(e.target.checked);
             const url = new URL(window.location.href);
             if (e.target.checked) url.searchParams.set('ripple', 'on'); else url.searchParams.delete('ripple');
+            window.history.replaceState(null, '', url);
+          }}/></label><label><span>形から床の光を描く（試作）</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => {
+            const next = e.target.checked ? 'shape' : 'artistic';
+            setCaustic(next);
+            const url = new URL(window.location.href);
+            if (e.target.checked) url.searchParams.set('caustic', 'shape'); else url.searchParams.delete('caustic');
             window.history.replaceState(null, '', url);
           }}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
         </aside>

@@ -10,7 +10,7 @@ type Status = "loading" | "ready" | "error";
 type Stats = { fps: number; frameP95: number; grabbed: boolean };
 type Refinement = "baseline" | "refined";
 
-function updateComparisonQuery(key: "feel" | "view" | "ripple", value: string | null) {
+function updateComparisonQuery(key: "feel" | "view" | "ripple" | "caustic", value: string | null) {
   const url = new URL(window.location.href);
   if (value === null) url.searchParams.delete(key);
   else url.searchParams.set(key, value);
@@ -37,6 +37,8 @@ export function DropletLab() {
   );
   const [clay, setClay] = useState(() => new URLSearchParams(window.location.search).get("view") === "clay");
   const [ripple, setRipple] = useState(() => new URLSearchParams(window.location.search).get("ripple") === "on");
+  const [caustic, setCaustic] = useState<"artistic" | "shape">(() =>
+    new URLSearchParams(window.location.search).get("caustic") === "shape" ? "shape" : "artistic");
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -80,8 +82,8 @@ export function DropletLab() {
   }, [restart]);
 
   useEffect(() => {
-    experienceRef.current?.setOptions({ hue, lighting, inspection, refinement, clay, ripple, reducedMotion, quality, paused });
-  }, [hue, lighting, inspection, refinement, clay, ripple, reducedMotion, quality, paused, restart]);
+    experienceRef.current?.setOptions({ hue, lighting, inspection, refinement, clay, ripple, caustic, reducedMotion, quality, paused });
+  }, [hue, lighting, inspection, refinement, clay, ripple, caustic, reducedMotion, quality, paused, restart]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -224,6 +226,10 @@ export function DropletLab() {
                         updateComparisonQuery("ripple", event.target.checked ? "on" : null);
                       }} aria-describedby="dl-ripple-description" /><span className="dl-switch" aria-hidden="true" /></label>}
                       {refinement === "refined" && <p className="dl-setting-description" id="dl-ripple-description">当たった側から縁にさざ波が回り、壁に押し付けたまま潰れます。</p>}
+                      {refinement === "refined" && <label className="dl-setting-row"><span>形から床の光を描く（試作）</span><input type="checkbox" checked={caustic === "shape"} onChange={(event) => {
+                        const next = event.target.checked ? "shape" : "artistic";
+                        setCaustic(next); updateComparisonQuery("caustic", event.target.checked ? "shape" : null);
+                      }} /><span className="dl-switch" aria-hidden="true" /></label>}
                       <label className="dl-setting-row"><span>形だけを見る</span><input type="checkbox" checked={clay} onChange={(event) => {
                         setClay(event.target.checked);
                         updateComparisonQuery("view", event.target.checked ? "clay" : null);

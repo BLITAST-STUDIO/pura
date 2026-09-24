@@ -8,6 +8,7 @@ import { DropletSurface, MAX_SURFACE_BEND, MAX_PRESS, volumeScales } from './sur
 import { SURFACE_BOTTOM, SURFACE_TOP } from './surface-shape';
 import type { SensoryFeedback } from '../sensory/feedback';
 import { contactAnchor, DropletRim, RIM_GLSL, rotateRim, type RimCoefficients } from './rim-response';
+import { CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES, projectedCausticGeometry, projectedCausticMaterial, projectedPointSize } from './projected-caustic';
 
 export type ExperienceOptions = {
   hue: HueId;
@@ -20,6 +21,8 @@ export type ExperienceOptions = {
   clay: boolean;
   /** Comparison: rim ripples and contact anchoring on top of the refined feel. */
   ripple: boolean;
+  /** Opt-in light projected through the current drop shape. */
+  caustic: 'artistic' | 'shape';
 };
 type Callbacks = {
   onReady?: () => void;
@@ -188,7 +191,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const options: ExperienceOptions = {
     hue: 'cyan', lighting: 'studio', inspection: false,
     reducedMotion: false, paused: false, quality: 'high',
-    refinement: 'refined', clay: false, ripple: false,
+    refinement: 'refined', clay: false, ripple: false, caustic: 'artistic',
   };
   const textures = [floorTexture(false), floorTexture(true)];
   for (const t of textures) t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -245,6 +248,10 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   const caustic = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), causticMaterial());
   caustic.position.z = -0.001;
   contactGroup.add(caustic);
+  const projected = new THREE.Points(projectedCausticGeometry(), projectedCausticMaterial());
+  projected.frustumCulled = false;
+  projected.visible = false;
+  scene.add(projected);
   const guide = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({
     color: '#9baeb7', transparent: true, opacity: 0.085,
   }));
@@ -438,6 +445,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     // The mesh turns with the wobble axis, so express the ripple in its frame.
     const localRim = rippling ? rotateRim(ripple.coefficients, angle) : null;
     for (const m of [liquidMaterial, contact.material, caustic.material]) setRim(m, localRim);
+    if (projected.visible) setRim(projected.material as THREE.ShaderMaterial, localRim);
     drop.rotation.z = angle;
     drop.scale.set(r * scales.x, r * scales.y, r * scales.z);
     // The front responds to the finger/body gap before the physical body catches
@@ -515,6 +523,16 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       liquidMaterial.uniforms.uDropToWorld.value.copy(drop.matrixWorld);
       liquidMaterial.uniforms.uWorldToDrop.value.copy(drop.matrixWorld).invert();
       liquidMaterial.uniforms.uViewProjection.value.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      if (projected.visible) {
+        const uniforms = (projected.material as THREE.ShaderMaterial).uniforms;
+        uniforms.uDropToWorld.value.copy(drop.matrixWorld);
+        uniforms.uWorldToDrop.value.copy(drop.matrixWorld).invert();
+        uniforms.uSurfaceBend.value.copy(liquidMaterial.uniforms.uSurfaceBend.value);
+        const center = new THREE.Vector3().setFromMatrixPosition(drop.matrixWorld).project(camera);
+        const edge = new THREE.Vector3(1, 0, 0).applyMatrix4(drop.matrixWorld).project(camera);
+        const sampleCount = options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES;
+        uniforms.uPointSize.value = projectedPointSize(Math.hypot(edge.x - center.x, edge.y - center.y) * canvas.width * .5, renderer.getPixelRatio(), sampleCount);
+      }
       const toneMapping = renderer.toneMapping;
       dropGroup.visible = false;
       renderer.toneMapping = THREE.NoToneMapping;
@@ -605,8 +623,11 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       liquidMaterial.uniforms.uTint.value.set(COLORS[options.hue]);
       liquidMaterial.uniforms.uDaylight.value = options.lighting === 'daylight' ? 1 : 0;
       caustic.material.uniforms.color.value.set(COLORS[options.hue]);
+      (projected.material as THREE.ShaderMaterial).uniforms.uTint.value.set(COLORS[options.hue]);
       drop.material = options.clay ? clayMaterial : referenceMaterial ? material : liquidMaterial;
-      caustic.visible = !options.clay;
+      projected.visible = !options.clay && options.caustic === 'shape' && options.refinement === 'refined' && !referenceMaterial;
+      projected.geometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
+      caustic.visible = !options.clay && !projected.visible;
       floorMaterial.map = textures[options.inspection ? 1 : 0];
       floorMaterial.bumpMap = options.inspection ? null : textures[0];
       floorMaterial.needsUpdate = true;
@@ -651,6 +672,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
           materials.forEach(m => m.dispose());
         }
       });
+      projected.geometry.dispose(); (projected.material as THREE.Material).dispose();
       textures.forEach(t => t.dispose()); environment.dispose(); backgroundTarget.dispose();
       if (referenceMaterial) liquidMaterial.dispose(); else material.dispose();
       clayMaterial.dispose();
