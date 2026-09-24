@@ -86,7 +86,19 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
     bus.connect(reverb);
     reverb.connect(wet);
     wet.connect(compressor);
-    compressor.connect(master);
+    // Round the edges, at the edge of audibility: a -2.5 dB shelf above 4.5 kHz
+    // and a soft roll-off near 11 kHz take the glassy bite off clicks and chimes.
+    const shelf = ctx.createBiquadFilter();
+    shelf.type = 'highshelf';
+    shelf.frequency.value = 4500;
+    shelf.gain.value = -2.5;
+    const soften = ctx.createBiquadFilter();
+    soften.type = 'lowpass';
+    soften.frequency.value = 11000;
+    soften.Q.value = 0.5;
+    compressor.connect(shelf);
+    shelf.connect(soften);
+    soften.connect(master);
     master.connect(ctx.destination);
     const length = Math.floor(ctx.sampleRate * 0.25);
     noiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
