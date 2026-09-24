@@ -75,3 +75,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース `70ef3f6a9ee06ad75b85e6c1fe8f2daf0bf8e0bf`、配信 `c7c0e7f3dda6e007f3e623e8cedce93238e84459`。
 - 比較は `?ripple=on`（一粒・融合・3面）。既定表示は直前の配信 `c4eee52` と静止画で画素差0。
 - Pages built、全12ファイルSHA-256一致。公開版をGPU描画のヘッドレスChromeで操作し、3画面とも警告・エラー0。証拠: `artifacts/ripple/public-check.json`。
+
+## 雫の形から床へ届く光（比較用、2026-09-24）
+
+- 試遊: https://blitast-studio.github.io/pura/?play=chapters&chapter=2&caustic=shape 。一粒・融合でも `caustic=shape` を指定できる。指定しない既定表示は承認済みの床光を維持。
+- ソース `b054db25a0cbd2591f6786a1b6b85fa737f58928`、配信 `2d7b20cbe64245c12fda297cc3c3943b10ac5aed`。直前の配信は `08d15311825666ecaa861eb61cf6fad6ec676257`。復元基準は `sensory-approved-20260924`（de17058）。
+- Pages built、全11ファイルHTTP200・ローカルSHA-256一致。公開版の一粒と第2面で描画・警告エラー0を確認。証拠: `artifacts/shape-caustic/deployment.json`、`pages-build.json`、`http-check.json`、`public-check.json`。実機タッチ・端末GPU負荷は未検証。

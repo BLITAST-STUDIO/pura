@@ -8,6 +8,8 @@
 
 型検査・81テスト・配信用ZIP生成成功。Macブラウザの通常表示は公開中の承認版と画素差0、試作ONは差を確認。WebGL警告・エラーなし。実機での好みと性能はユーザー試遊待ち。
 
+試遊入口: https://blitast-studio.github.io/pura/?play=chapters&chapter=2&caustic=shape （`caustic=shape` を外すと承認済みの床光）。ソース `b054db2`、Pages `2d7b20c`。Pages built、全11ファイルHTTP200・ローカルSHA-256一致。公開版の一粒と第2面をブラウザで表示し、描画と警告・エラー0を確認。証拠は `artifacts/shape-caustic/`。実機の指操作・GPU負荷は未検証。次はスマホで既定と試作を見比べ、光の強さと負荷を評価する。
+
 ## 前段 — 壁の手応えと、音・振動（Claude Codeへ引き継ぎ）
 
 2026-09-24、開発をCodexからClaude Code（Opus 5.5）へ引き継いだ。ユーザーは現状の感触・見た目を高評価し、昇華の提案を「2→1→3/4」の順で実装するよう承認。現状を `chapters-approved-20260924`（2443937）として保存し、`feat/sensory-feedback` で作業。詳細は [SENSORY_FEEDBACK.md](SENSORY_FEEDBACK.md)。
