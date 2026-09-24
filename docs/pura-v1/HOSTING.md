@@ -62,3 +62,10 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース `c54195d9d0944972cfde9c03fc3b24ad2a427f49`、配信 `bd7d161a41b15df529bc606fcd66c8eb4494e10c`。
 - Pages built、全11ファイルHTTP200・SHA-256一致、build-info一致。公開版390×844で融合と取り消し、警告・エラー0を確認。証拠: `artifacts/chapters/`。
 - 復元タグ `first-scene-approved-20260917`、直前の配信 `5855eb2`。既存比較URLと旧標準入口を保持。
+
+## 壁の手応えと音・振動（2026-09-24）
+
+- ソース `63435a4f5015ec560e459b8735d86adb2c3f0c17`、配信 `c4eee52991bb8a73fd0bdbe9985710822d986e01`。
+- 3面・一粒・融合の全入口に音と振動、融合／3面に壁・石の手応えを追加。`?sound=off` で一時的に消音。
+- 復元タグ `chapters-approved-20260924`（2443937）、直前の配信 `bd7d161`。
+- Pages built、全12ファイルHTTP200・SHA-256一致。公開版をヘッドレスChromeで実操作し警告・エラー0。証拠: `artifacts/sensory/public-*.json`。

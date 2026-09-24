@@ -90,3 +90,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 三つの道
 
 [3面の試遊版を遊ぶ](https://blitast-studio.github.io/pura/?play=chapters) — 純度を守って運ぶ、小さなまま隙間を通す、二色を別々に届ける。面選択とブラウザごとの達成記録付き。[実装・検証範囲](docs/pura-v1/THREE_CHAPTERS.md)。
+
+## 音と手応え
+
+[3面を音つきで遊ぶ](https://blitast-studio.github.io/pura/?play=chapters) — つかむ・壁に当たる・融合・輪に届くを、合成音と振動で返します。消音は操作列のスピーカーボタン、または `?sound=off`。壁や石では、一粒の実験と同じように滴が潰れて戻ります。[実装・検証範囲](docs/pura-v1/SENSORY_FEEDBACK.md)。

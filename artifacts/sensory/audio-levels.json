@@ -1,0 +1,14 @@
+{
+ "method": "OfflineAudioContext 48 kHz stereo, peak dBFS after the shipped reverb and limiter; perceived loudness and phone speaker response not measured",
+ "touch_r44": -21.9,
+ "wall_soft_impulse120": -26.5,
+ "wall_hard_impulse700": -18.3,
+ "island_hard_impulse700": -18.5,
+ "fusion_pure_r62": -15.7,
+ "fusion_mixed_r62_purity60": -15.1,
+ "ready_chime": -19.4,
+ "delivered_two_notes": -12.2,
+ "finished_arpeggio": -11.6,
+ "rewind": -29.9,
+ "worst_burst_5fusions_3hits_arpeggio": -1.9
+}

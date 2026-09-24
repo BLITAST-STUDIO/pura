@@ -1,0 +1,120 @@
+{
+ "audioBefore": "idle",
+ "wall": {
+  "squash1000": 0.0870687271312532,
+  "stretch1000": -0.09525692293284563,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 1,
+    "impact": 1,
+    "fusion": 0,
+    "ready": 0,
+    "delivered": 0,
+    "rewind": 0
+   }
+  }
+ },
+ "afterFirstFusion": {
+  "count": 4,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 2,
+    "impact": 1,
+    "fusion": 1,
+    "ready": 0,
+    "delivered": 0,
+    "rewind": 0
+   }
+  }
+ },
+ "afterGather": {
+  "count": 3,
+  "scene": {
+   "hue": "cyan",
+   "count": 3,
+   "gathered": 1,
+   "purity": 1,
+   "ready": true,
+   "inGoal": false,
+   "delivered": false
+  },
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 3,
+    "impact": 1,
+    "fusion": 2,
+    "ready": 1,
+    "delivered": 0,
+    "rewind": 0
+   }
+  }
+ },
+ "nudge0": {
+  "ex": -15,
+  "ey": -43
+ },
+ "nudge1": {
+  "ex": 3,
+  "ey": 7
+ },
+ "afterDelivery": {
+  "scene": {
+   "targets": [
+    {
+     "hue": "cyan",
+     "count": 3,
+     "gathered": 1,
+     "purity": 1,
+     "ready": true,
+     "inGoal": true,
+     "delivered": true
+    }
+   ],
+   "gathered": 1,
+   "purity": 1,
+   "ready": true,
+   "inGoal": true,
+   "contaminated": false,
+   "completed": true,
+   "canUndo": true
+  },
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 5,
+    "impact": 1,
+    "fusion": 2,
+    "ready": 1,
+    "delivered": 1,
+    "rewind": 0
+   }
+  }
+ },
+ "afterUndo": {
+  "completed": false,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 5,
+    "impact": 1,
+    "fusion": 2,
+    "ready": 1,
+    "delivered": 1,
+    "rewind": 1
+   }
+  }
+ },
+ "muted": {
+  "label": "音を出す",
+  "stored": "{\"v\":1,\"sound\":false,\"haptics\":true}"
+ },
+ "logs": []
+}
