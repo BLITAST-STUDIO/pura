@@ -35,8 +35,7 @@ export class PuritySimulation extends FusionSimulation {
     this.core.resize(this.width, this.height);
     // Fresh IDs cannot collide with the new core's generated IDs after an undo.
     this.core.drops = copy(drops).map((d, i) => ({ ...d, id: 1000 + i, vx: 0, vy: 0 }));
-    this.events = [];
-    this.core.onFusion = (a, b, result) => this.events.push({ a, b, result });
+    this.observe();
     this.core.quota = { cyan: this.total('cyan'), rose: this.total('rose'), amber: 0 };
   }
   override resize(_width: number, _height: number) {

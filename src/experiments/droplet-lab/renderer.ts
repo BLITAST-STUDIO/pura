@@ -6,6 +6,7 @@ import { DropletMotion } from './motion';
 import { DropletPull, MAX_PULL } from './pull-response';
 import { DropletSurface, MAX_SURFACE_BEND, MAX_PRESS, volumeScales } from './surface-response';
 import { SURFACE_BOTTOM, SURFACE_TOP } from './surface-shape';
+import type { SensoryFeedback } from '../sensory/feedback';
 
 export type ExperienceOptions = {
   hue: HueId;
@@ -140,7 +141,7 @@ export function causticMaterial() {
   });
 }
 
-export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}) {
+export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, feedback?: SensoryFeedback) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
   if (!context) throw new Error('このブラウザでは水滴の描画を開始できません。WebGL 2対応のブラウザでお試しください。');
   const renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true });
@@ -249,6 +250,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
   let previousBendX = Number.NaN;
   let previousBendY = Number.NaN;
   let previousRefinement = '';
+  let clock = 0;
 
   function resize() {
     if (disposed || contextLost) return;
@@ -356,6 +358,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     }
     grabPoint.clampLength(0, 1);
     if (!sim.pointerDown(s.x, s.y)) return;
+    feedback?.grab(s.r, s.x, sim.width);
     activePointer = e.pointerId;
     canvas.setPointerCapture(e.pointerId);
     canvas.style.cursor = 'grabbing';
@@ -494,7 +497,12 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
     const interval = last ? now - last : 0;
     const dt = Math.min(interval / 1000, 1 / 12);
     last = now;
-    if (!options.paused) { sim.tick(dt); deform(dt); }
+    if (!options.paused) {
+      sim.tick(dt); deform(dt);
+      clock += dt;
+      const s = sim.snapshot;
+      if (feedback && dt > 0) feedback.contact(1, Math.hypot(s.wallImpulse.x, s.wallImpulse.y), s.r, s.x, sim.width, 'wall', clock);
+    }
     renderScene();
     if (interval > 0 && !options.paused) {
       samples.push(interval);
@@ -524,6 +532,7 @@ export function createDropletExperience(canvas: HTMLCanvasElement, callbacks: Ca
       canvas.dataset.renderStats = JSON.stringify({ medianMs: median, p95Ms: p95, calls: renderer.info.render.calls,
         triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries,
         width: canvas.width, height: canvas.height, quality: options.quality });
+      if (feedback) canvas.dataset.sensory = JSON.stringify(feedback.status());
     }
     raf = requestAnimationFrame(loop);
   }

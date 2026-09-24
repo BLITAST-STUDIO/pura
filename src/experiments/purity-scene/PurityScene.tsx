@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, RotateCcw, Undo2, Pause, Play } from 'lucide-react';
+import { ArrowUpRight, RotateCcw, Undo2, Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { createFusionExperience, type FusionOptions } from '../fusion-lab/renderer';
 import { PuritySimulation, type SceneState } from './simulation';
 import { CHAPTERS, getChapter, HUE_NAMES } from './chapters';
 import { readProgress, writeProgress, type Progress } from './progress';
+import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import '../droplet-lab/droplet-lab.css';
 import './purity-scene.css';
 
@@ -38,14 +39,25 @@ export default function PurityScene() {
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [lighting, setLighting] = useState<FusionOptions['lighting']>('studio');
   const [notice, setNotice] = useState('');
+  const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
+  // Last heard goal states. Null means "adopt silently" after load, undo or reset.
+  const heard = useRef<{ ready: boolean[]; delivered: boolean[] } | null>(null);
   useEffect(() => {
     let alive = true;
     setStatus('loading'); setError('');
     const sim = new PuritySimulation(chapterId); simulation.current = sim;
     let recorded = false;
+    heard.current = null;
     const update = () => {
       const next = sim.state();
       if (canvas.current) canvas.current.dataset.scene = JSON.stringify(next);
+      const previous = heard.current;
+      heard.current = { ready: next.targets.map(t => t.ready), delivered: next.targets.map(t => t.delivered) };
+      if (previous && alive) next.targets.forEach((target, i) => {
+        const finished = next.targets.every(t => t.delivered);
+        if (target.delivered && !previous.delivered[i]) feedback.delivered(target.hue, finished);
+        else if (target.ready && !previous.ready[i] && !target.delivered) feedback.ready(target.hue);
+      });
       if (alive) {
         setState(next);
         if (next.completed && !recorded) {
@@ -59,7 +71,7 @@ export default function PurityScene() {
         onReady: () => { if (alive) setStatus('ready'); },
         onError: e => { if (alive) { setError(e); setStatus('error'); } },
         onInteraction: () => { if (alive) setNotice(''); },
-      }, { simulation: sim, obstacles: sim.chapter.obstacles, goals: () => sim.chapter.goals.map((g, i) => ({ ...g, ready: sim.state().targets[i].ready, completed: sim.state().targets[i].delivered })), onUpdate: update });
+      }, { simulation: sim, obstacles: sim.chapter.obstacles, goals: () => sim.chapter.goals.map((g, i) => ({ ...g, ready: sim.state().targets[i].ready, completed: sim.state().targets[i].delivered })), onUpdate: update, feedback });
       update();
     } catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
@@ -67,10 +79,12 @@ export default function PurityScene() {
   useEffect(() => { experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom' }); }, [paused, reduced, quality, lighting, retry, chapterId]);
   const undo = () => {
     if (!simulation.current?.state().canUndo) return;
+    heard.current = null; feedback.rewind();
     experience.current?.restoreState(() => simulation.current?.undo());
     setPaused(false); setNotice('ひとつ前の操作へ戻しました。');
   };
   const reset = () => {
+    heard.current = null;
     experience.current?.restoreState(() => simulation.current?.reset());
     setPaused(false); setNotice('最初の配置に戻しました。');
   };
@@ -104,7 +118,7 @@ export default function PurityScene() {
           {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
           <div className="dl-stage-bottom"><span>{multi ? 'CYAN + ROSE → LIGHT' : 'CYAN → LIGHT'}</span><span>NO TIME LIMIT</span></div>
         </section>
-          <div className="purity-actions"><button onClick={undo} disabled={!state.canUndo || status !== 'ready'}><Undo2 size={16}/><span>一手戻す</span></button><button onClick={reset} disabled={status !== 'ready'}><RotateCcw size={15}/><span>{state.completed ? 'もう一度遊ぶ' : '最初から'}</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button></div>
+          <div className="purity-actions"><button onClick={undo} disabled={!state.canUndo || status !== 'ready'}><Undo2 size={16}/><span>一手戻す</span></button><button onClick={reset} disabled={status !== 'ready'}><RotateCcw size={15}/><span>{state.completed ? 'もう一度遊ぶ' : '最初から'}</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
           <p className="purity-notice" role="status">{notice || (chapterId === 2 ? '石は動かせません。外側にも、回り道があります。' : '違う色に触れると混ざります。一手戻して試せます。')}</p>
         </div>
         <aside className={`purity-companion${state.completed ? ' is-complete' : ''}`}>
@@ -116,7 +130,7 @@ export default function PurityScene() {
           </div>)}
           <p className="purity-target">目標：{multi ? '二色それぞれ' : 'シアン'}を全部集め、純度90%以上で輪の中へ。</p>
           {state.completed && <div className="purity-completion" role="status">{chapterId < 3 ? <button onClick={() => selectChapter(chapterId + 1)}>次の面へ <ArrowUpRight size={15}/></button> : <><p>{progress.completed.length === 3 ? '三つの道の、最後まで。' : 'ふたつの色が、そろいました。'}<br/>別の道を選ぶか、自由な混色へ。</p><a href="?lab=fusion&mixing=bloom">自由に混ぜる <ArrowUpRight size={15}/></a></>}</div>}
-          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
+          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
         </aside>
       </div>
     </main>

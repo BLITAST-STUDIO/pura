@@ -34,6 +34,8 @@ export type Particle = {
   rgb: [number, number, number];
 };
 
+export type ContactKind = "wall" | "obstacle" | "drop";
+
 export type CoreStat = {
   hue: HueId;
   mass: number;
@@ -121,6 +123,12 @@ export class PuraSim {
   onMerge: ((mass: number, mixed: boolean) => void) | null = null;
   /** Detached snapshots for presentation; observers cannot alter the simulation. */
   onFusion: ((a: Drop, b: Drop, result: Drop) => void) | null = null;
+  /**
+   * Presentation-only contact observation. The vector is the velocity change
+   * the contact applied, in board units per second; it points away from the
+   * surface that was hit. Observers receive numbers, not the live drop.
+   */
+  onContact: ((id: number, impulseX: number, impulseY: number, kind: ContactKind) => void) | null = null;
   onGrab: (() => void) | null = null;
   onSplit: (() => void) | null = null;
   onBounce: (() => void) | null = null;
@@ -426,7 +434,7 @@ export class PuraSim {
       for (const d of this.drops) {
         d.x += d.vx * sdt;
         d.y += d.vy * sdt;
-        this.clamp(d);
+        this.clamp(d, true);
       }
       this.collide(sdt);
       // Iterate shared contacts so a large drop cannot remain embedded between two islands.
@@ -441,32 +449,45 @@ export class PuraSim {
         const ny = distance > 1e-8 ? dy / distance : 1;
         d.x = obstacle.x + nx * reach; d.y = obstacle.y + ny * reach;
         const approach = d.vx * nx + d.vy * ny;
-        if (approach < 0) { d.vx -= (1 + REST) * approach * nx; d.vy -= (1 + REST) * approach * ny; }
+        if (approach < 0) {
+          d.vx -= (1 + REST) * approach * nx; d.vy -= (1 + REST) * approach * ny;
+          this.onContact?.(d.id, -(1 + REST) * approach * nx, -(1 + REST) * approach * ny, "obstacle");
+        }
         }
         if (!corrected) break;
       }
     }
   }
 
-  private clamp(d: Drop) {
+  private clamp(d: Drop, report = false) {
     const minX = this.pad + d.r;
     const maxX = this.w - this.pad - d.r;
     const minY = this.pad + d.r;
     const maxY = this.h - this.pad - d.r;
+    const vx = d.vx;
+    const vy = d.vy;
+    let ix = 0;
+    let iy = 0;
     if (d.x < minX) {
       d.x = minX;
       d.vx = Math.abs(d.vx) * REST;
+      ix = Math.abs(d.vx - vx);
     } else if (d.x > maxX) {
       d.x = maxX;
       d.vx = -Math.abs(d.vx) * REST;
+      ix = -Math.abs(d.vx - vx);
     }
     if (d.y < minY) {
       d.y = minY;
       d.vy = Math.abs(d.vy) * REST;
+      iy = Math.abs(d.vy - vy);
     } else if (d.y > maxY) {
       d.y = maxY;
       d.vy = -Math.abs(d.vy) * REST;
+      iy = -Math.abs(d.vy - vy);
     }
+    // Resize and split also clamp; only physics substeps are real contacts.
+    if (report && (ix || iy)) this.onContact?.(d.id, ix, iy, "wall");
   }
 
   private closestApproach(a: Drop, b: Drop, dt: number): number {
@@ -553,6 +574,12 @@ export class PuraSim {
           a.vy -= (jimp / Math.max(1e-6, a.mass)) * ny;
           b.vx += (jimp / Math.max(1e-6, b.mass)) * nx;
           b.vy += (jimp / Math.max(1e-6, b.mass)) * ny;
+          if (this.onContact) {
+            const ja = jimp / Math.max(1e-6, a.mass);
+            const jb = jimp / Math.max(1e-6, b.mass);
+            this.onContact(a.id, -ja * nx, -ja * ny, "drop");
+            this.onContact(b.id, jb * nx, jb * ny, "drop");
+          }
           this.capSpeed(a);
           this.capSpeed(b);
           if (overlap > 3) this.onBounce?.();

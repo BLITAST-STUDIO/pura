@@ -3,6 +3,7 @@ import { ArrowUpRight, Check, Grid2X2, Pause, Play, RotateCcw, SlidersHorizontal
 import type { HueId } from "../../game/palette";
 import { createDropletExperience } from "./renderer";
 import "./droplet-lab.css";
+import { useSensoryFeedback } from "../sensory/useSensoryFeedback";
 
 type Experience = ReturnType<typeof createDropletExperience>;
 type Status = "loading" | "ready" | "error";
@@ -47,6 +48,7 @@ export function DropletLab() {
   const [touched, setTouched] = useState(false);
   const [restart, setRestart] = useState(0);
   const [stats, setStats] = useState<Stats>({ fps: 0, frameP95: 0, grabbed: false });
+  const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,7 +66,7 @@ export function DropletLab() {
         },
         onStats: (nextStats) => { if (mounted) setStats(nextStats); },
         onInteraction: () => { if (mounted) setTouched(true); },
-      });
+      }, feedback);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "描画を開始できませんでした。");
       setStatus("error");
@@ -224,6 +226,8 @@ export function DropletLab() {
                     </div>
                     <label className="dl-setting-row"><span>揺れを控えめに</span><input type="checkbox" checked={reducedMotion} onChange={(event) => setReducedMotion(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
                     <label className="dl-setting-row dl-select-setting"><span>画質</span><select value={quality} onChange={(event) => setQuality(event.target.value as "high" | "balanced")}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
+                    <label className="dl-setting-row"><span>音</span><input type="checkbox" checked={sensory.sound} onChange={(event) => changeSensory({ sound: event.target.checked })} /><span className="dl-switch" aria-hidden="true" /></label>
+                    {feedback.hapticMode !== "none" && <label className="dl-setting-row"><span>{feedback.hapticMode === "ios-switch" ? "振動（iPhoneは試験的）" : "振動"}</span><input type="checkbox" checked={sensory.haptics} onChange={(event) => changeSensory({ haptics: event.target.checked })} /><span className="dl-switch" aria-hidden="true" /></label>}
                     <label className="dl-setting-row"><span>動作情報を表示</span><input type="checkbox" checked={showStats} onChange={(event) => setShowStats(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
                     <button className="dl-pause-setting" disabled={status !== "ready"} onClick={() => { setPaused((value) => !value); setSettingsOpen(false); settingsButtonRef.current?.focus(); }}>{paused ? <Play size={14} /> : <Pause size={14} />}<span>{paused ? "再開する" : "一時停止"}</span><kbd>Esc</kbd></button>
                   </div>

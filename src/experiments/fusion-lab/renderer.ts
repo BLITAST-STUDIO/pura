@@ -8,6 +8,9 @@ import { floorTexture, studioEnvironment, contactMaterial, causticMaterial } fro
 import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
 import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
+import { purityOf } from '../../game/palette';
+import type { ContactKind } from '../../game/sim';
+import type { SensoryFeedback } from '../sensory/feedback';
 
 export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
@@ -15,6 +18,7 @@ type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onSt
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2 };
 const W = .01;
 const HEIGHT = .88; // Fixed height makes the enclosed volume proportional to r².
+const NO_IMPULSE: Readonly<{ x: number; y: number }> = Object.freeze({ x: 0, y: 0 });
 
 function footprint(material: THREE.ShaderMaterial) {
   material.uniforms.lobeCount = { value: 0 };
@@ -30,7 +34,7 @@ function footprint(material: THREE.ShaderMaterial) {
 }
 
 type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: boolean; hue?: 'cyan' | 'rose' };
-type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void };
+type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback };
 export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
   if (!context) throw Error('WebGL 2に対応したブラウザでお試しください。');
@@ -75,6 +79,9 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const bodies = new Map<number, Body>();
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
+  // Monotonic across undo/reset, which replace the simulation's own clock.
+  let clock = 0;
+  const feedback = adapter.feedback;
   let active: number | null = null;
   let pointerPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   const offset = new THREE.Vector2();
@@ -126,13 +133,15 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       }
     }
     removeBody(a.id); removeBody(b.id);
+    feedback?.fusion(result.r, result.x, sim.width, purityOf(result.pigment));
     const view = makeBody(result, source);
     updateBody(result, view, 0);
   }
-  function updateBody(d: Drop, b: Body, dt: number) {
+  function updateBody(d: Drop, b: Body, dt: number, wallImpulse = NO_IMPULSE) {
     b.age += dt;
     const grabbed = sim.core.grabbedId === d.id;
-    const s = { ...d, grabbed, pointer: grabbed ? sim.core.pointer : null, wallImpulse: { x: 0, y: 0 } };
+    // The approved one-drop wall response, now also driven by walls and islands.
+    const s = { ...d, grabbed, pointer: grabbed ? sim.core.pointer : null, wallImpulse };
     const m = b.motion.update(s, dt, options.reducedMotion);
     const pull = b.pull.update(s, dt, options.reducedMotion);
     const response = b.surface.update({ ...s, grabPoint: b.grabPoint }, dt, options.reducedMotion);
@@ -199,7 +208,21 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function refresh(dt: number) {
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
-    for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt);
+    // Sum this frame's contacts per drop, exactly as the one-drop study does.
+    clock += dt;
+    const impulses = new Map<number, { x: number; y: number; kind: ContactKind; peak: number }>();
+    for (const contact of sim.contacts.splice(0)) {
+      const sum = impulses.get(contact.id) ?? { x: 0, y: 0, kind: contact.kind, peak: 0 };
+      sum.x += contact.x; sum.y += contact.y;
+      const size = Math.hypot(contact.x, contact.y);
+      if (size > sum.peak) { sum.peak = size; sum.kind = contact.kind; }
+      impulses.set(contact.id, sum);
+    }
+    if (feedback && dt > 0) for (const [id, sum] of impulses) {
+      const d = sim.core.drops.find(drop => drop.id === id);
+      if (d) feedback.contact(id, Math.hypot(sum.x, sum.y), d.r, d.x, sim.width, sum.kind, clock);
+    }
+    for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt, impulses.get(d.id));
     for (const id of bodies.keys()) if (!sim.core.drops.some(d => d.id === id)) removeBody(id);
     const rect = canvas.getBoundingClientRect();
     const projectedGoals = (adapter.goals?.() ?? []).map((goal, i) => {
@@ -221,7 +244,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     canvas.dataset.drops = JSON.stringify(sim.core.drops.map(d => {
       const b = bodies.get(d.id)!;
       const screen = new THREE.Vector3(0, 0, .48).applyMatrix4(b.mesh.matrixWorld).project(camera);
-      return { id: d.id, mass: d.mass, pigment: d.pigment, fractions: fractions(d.pigment), x: d.x, y: d.y, vx: d.vx, vy: d.vy, r: d.r, grabbed: sim.core.grabbedId === d.id, age: b.age, lobes: b.material.uniforms.uLobeCount.value, correction: b.correction,
+      return { id: d.id, mass: d.mass, pigment: d.pigment, fractions: fractions(d.pigment), x: d.x, y: d.y, vx: d.vx, vy: d.vy, r: d.r, grabbed: sim.core.grabbedId === d.id, age: b.age, lobes: b.material.uniforms.uLobeCount.value, correction: b.correction, squash: b.motion.snapshot.squash, stretch: b.motion.snapshot.stretch,
         screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2 };
     }));
   }
@@ -265,6 +288,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       hitPoint = point.clone();
     }
     if (!chosen || !hitPoint || !sim.grab(chosen.id)) return;
+    feedback?.grab(chosen.r, chosen.x, sim.width);
     bodies.get(chosen.id)!.grabPoint.set((hitPoint.x / W + sim.width / 2 - chosen.x) / chosen.r,
       (hitPoint.y / W - sim.height / 2 + chosen.y) / chosen.r).clampLength(0, 1);
     pointerPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -hitPoint.z);
@@ -303,6 +327,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       const sorted = [...samples].sort((a, b) => a - b);
       const stats = { count: sim.core.drops.length, cyan: f.cyan, rose: f.rose, merged: !!selected && f.rose > 0 && f.cyan > 0, fps: sorted.length ? 1000 / sorted[Math.floor(sorted.length * .5)] : 0, p95: sorted[Math.floor(sorted.length * .95)] ?? 0 };
       canvas.dataset.stats = JSON.stringify(stats); callbacks.onStats?.(stats);
+      if (feedback) canvas.dataset.sensory = JSON.stringify(feedback.status());
       adapter.onUpdate?.();
     }
     raf = requestAnimationFrame(loop);
