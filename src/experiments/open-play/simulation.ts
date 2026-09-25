@@ -63,8 +63,10 @@ export class OpenPlaySimulation extends FusionSimulation {
     if (previous && previous.id === id && now - previous.t < DOUBLE_TAP_SECONDS) {
       this.lastTap = null;
       const before = { id, x: drop.x, y: drop.y, r: drop.r };
+      const existing = new Set(this.core.drops.map(d => d.id));
       if (this.core.splitAt(drop.x, drop.y)) {
-        this.splits.push(before);
+        const children = this.core.drops.filter(d => !existing.has(d.id)).map(d => ({ ...d, pigment: { ...d.pigment } }));
+        this.splits.push({ ...before, children });
         this.core.pointerUp();
         return false;
       }

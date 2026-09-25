@@ -6,6 +6,7 @@ import { FusionShape, type Lobe } from './shape';
 import { createFusionMaterial } from './material';
 import { floorTexture, studioEnvironment, contactMaterial, causticMaterial, setRim } from '../droplet-lab/renderer';
 import { contactAnchor, DropletRim } from '../droplet-lab/rim-response';
+import { createSparkPoints, SplitSparks } from './split-sparks';
 import { CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES, projectedCausticGeometry, projectedCausticMaterial, projectedPointSize } from '../droplet-lab/projected-caustic';
 import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
@@ -17,10 +18,11 @@ import type { SensoryFeedback } from '../sensory/feedback';
 export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
-type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim };
+type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim; appear: number };
 const W = .01;
 const HEIGHT = .88; // Fixed height makes the enclosed volume proportional to r².
 const NO_IMPULSE: Readonly<{ x: number; y: number }> = Object.freeze({ x: 0, y: 0 });
+const APPEAR_SECONDS = 0.16;
 
 function footprint(material: THREE.ShaderMaterial) {
   material.uniforms.lobeCount = { value: 0 };
@@ -80,6 +82,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     scene.add(mesh); return mesh;
   });
   const bodies = new Map<number, Body>();
+  // Separated drops grow in from small instead of popping into place.
+  const appearing = new Set<number>();
+  const sparks = new SplitSparks();
+  const spray = createSparkPoints();
+  scene.add(spray.points);
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
   // Monotonic across undo/reset, which replace the simulation's own clock.
@@ -112,7 +119,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const caustic = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), footprint(causticMaterial())); caustic.position.z = -.001; scene.add(caustic);
     const projected = new THREE.Points(projectionGeometry, projectedCausticMaterial());
     projected.frustumCulled = false; projected.visible = options.caustic === 'shape' && !options.clay; scene.add(projected);
-    const body: Body = { mesh, material, group, pullGroup, shadow, caustic, projected, source, lobes: [], age: source.length ? 0 : 10, correction: 1, shape: source.length ? new FusionShape() : null, motion: new DropletMotion(), pull: new DropletPull(), radius: d.r, surface: new DropletSurface(), grabPoint: new THREE.Vector2(), rim: new DropletRim() };
+    const body: Body = { mesh, material, group, pullGroup, shadow, caustic, projected, source, lobes: [], age: source.length ? 0 : 10, correction: 1, shape: source.length ? new FusionShape() : null, motion: new DropletMotion(), pull: new DropletPull(), radius: d.r, surface: new DropletSurface(), grabPoint: new THREE.Vector2(), rim: new DropletRim(), appear: appearing.delete(d.id) ? 0 : Infinity };
     if (source.length) mesh.geometry = body.shape!.geometry;
     bodies.set(d.id, body);
     return body;
@@ -189,7 +196,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     b.group.position.set((d.x - sim.width / 2) * W, (sim.height / 2 - d.y) * W, 0);
     // Deform along travel without rotating the captured contact axis or dye regions.
     b.mesh.rotation.z = 0;
-    b.mesh.scale.set(d.r * W * b.correction, d.r * W * b.correction, HEIGHT);
+    b.appear += dt;
+    const t = Math.min(1, b.appear / APPEAR_SECONDS);
+    const grow = options.reducedMotion ? 1 : 0.42 + 0.58 * (1 - (1 - t) ** 3);
+    b.mesh.scale.set(d.r * W * b.correction * grow, d.r * W * b.correction * grow, HEIGHT * grow);
     const strength = pull.strength, e = strength * .5;
     const nx = strength ? pull.x / strength : 0, ny = strength ? pull.y / strength : 0;
     b.pullGroup.matrix.set(1 + e * nx * nx, e * nx * ny, 0, pull.x * d.r * W * .5,
@@ -210,7 +220,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     for (const footprint of [b.shadow, b.caustic]) {
       footprint.matrixAutoUpdate = false;
       footprint.matrix.makeTranslation(b.group.position.x, b.group.position.y, footprint === b.shadow ? -.003 : -.001)
-        .multiply(b.pullGroup.matrix).multiply(new THREE.Matrix4().makeScale(d.r * W * b.correction, d.r * W * b.correction, 1));
+        .multiply(b.pullGroup.matrix).multiply(new THREE.Matrix4().makeScale(d.r * W * b.correction * grow, d.r * W * b.correction * grow, 1));
       footprint.material.uniforms.lobeCount.value = b.age < .85 ? b.lobes.length : 0;
       b.lobes.forEach((l,i) => footprint.material.uniforms.lobes.value[i].set(l.x,l.y,l.r,0));
     }
@@ -240,7 +250,18 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function refresh(dt: number) {
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
-    for (const split of sim.splits.splice(0)) feedback?.split(split.r, split.x, sim.width);
+    for (const split of sim.splits.splice(0)) {
+      feedback?.split(split.r, split.x, sim.width);
+      const from = { x: (split.x - sim.width / 2) * W, y: (sim.height / 2 - split.y) * W };
+      for (const child of split.children) {
+        appearing.add(child.id);
+        if (options.reducedMotion) continue;
+        const tint = absorptionOf(child.pigment).map(v => Math.exp(-v * .8)) as [number, number, number];
+        sparks.burst(from, { x: (child.x - sim.width / 2) * W, y: (sim.height / 2 - child.y) * W }, split.r * W, tint);
+      }
+    }
+    if (options.reducedMotion) sparks.clear(); else sparks.update(dt);
+    spray.sync(sparks);
     // Sum this frame's contacts per drop, exactly as the one-drop study does.
     clock += dt;
     const impulses = new Map<number, { x: number; y: number; kind: ContactKind; peak: number }>();
@@ -297,6 +318,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const tilt = .47, tangent = Math.tan(34 * Math.PI / 360);
     const distance = Math.max(sim.width * W / (2 * tangent * aspect), sim.height * W / (2 * tangent)) * 1.13 + 1.25;
     camera.position.set(0, -Math.sin(tilt) * distance, Math.cos(tilt) * distance); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+    // A bead of about 0.065 world units (6.5 board units) at its drawn distance.
+    (spray.points.material as THREE.ShaderMaterial).uniforms.uPixels.value = 0.065 * canvas.height / (2 * tangent);
     last = 0; samples = []; refresh(0);
   }
   function ray(e: PointerEvent) {
@@ -374,8 +397,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const observer = new ResizeObserver(resize); observer.observe(canvas);
   resize(); sim.reset(); refresh(0); render(); raf = requestAnimationFrame(loop); callbacks.onReady?.();
   return {
-    restoreState(restore: () => void) { cancel(); restore(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
-    reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
+    restoreState(restore: () => void) { cancel(); restore(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
+    reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = next.lighting !== undefined && next.lighting !== options.lighting;
       const qualityChanged = next.quality !== undefined && next.quality !== options.quality;
@@ -401,6 +424,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       canvas.removeEventListener('touchstart', prevent); canvas.removeEventListener('touchmove', prevent); canvas.removeEventListener('webglcontextlost', contextLost); canvas.removeEventListener('webglcontextrestored', contextRestored);
       window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', visibility);
       for (const id of [...bodies.keys()]) removeBody(id);
+      spray.dispose();
       sphere.dispose(); projectionGeometry.dispose(); clay.dispose(); floor.geometry.dispose(); floorMaterial.dispose(); textures.forEach(t => t.dispose()); background.dispose(); env.dispose(); renderer.dispose();
       for (const g of goalViews) { for (const mesh of [g.ring, g.fill, g.label]) { mesh.geometry.dispose(); mesh.material.dispose(); } g.texture.dispose(); }
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }

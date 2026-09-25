@@ -63,6 +63,8 @@ test('a held, slow push mixes two colours, and a double tap separates them again
   assert.equal(s.grab(mixed.id), true); s.release(); advance(s, 0.1);
   assert.equal(s.grab(mixed.id), false);
   assert.equal(s.splits.length, 1);
+  assert.equal(s.splits[0].children.length, 1, 'the released drop is reported for the spray');
+  assert.ok(purityOf(s.splits[0].children[0].pigment) > 0.999);
   assert.equal(s.core.drops.length, 2);
   assert.ok(s.core.drops.every(d => purityOf(d.pigment) > 0.999), 'each colour is pure again');
   assert.ok(Math.abs(total(s) - mass) < 1e-6, 'separation keeps the total amount');

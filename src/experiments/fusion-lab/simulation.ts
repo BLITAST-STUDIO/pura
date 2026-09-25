@@ -12,8 +12,8 @@ export class FusionSimulation {
   events: FusionEvent[] = [];
   /** Drained by the renderer every frame; bounded when nothing is observing. */
   contacts: ContactEvent[] = [];
-  /** Separations since the last frame (drop that gave up its mixed colours). */
-  splits: { id: number; x: number; y: number; r: number }[] = [];
+  /** Separations since the last frame: the drop that gave up colours, and the drops it released. */
+  splits: { id: number; x: number; y: number; r: number; children: Drop[] }[] = [];
   preset: FusionPreset = 'pair';
   ratio = 1;
   width = 550;
