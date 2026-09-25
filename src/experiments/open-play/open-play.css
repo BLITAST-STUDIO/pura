@@ -1,0 +1,4 @@
+.open-play .dl-shell { max-width: 620px; }
+.open-play .open-stage { aspect-ratio: 600 / 700; margin-top: 8px; }
+.open-play .open-reading { font-variant-numeric: tabular-nums; }
+.open-play .open-details { margin-top: 18px; }

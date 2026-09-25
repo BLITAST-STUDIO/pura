@@ -14,6 +14,7 @@ export type DropletAudio = {
   fusion(gain: number, size: number, clarity: number, pan: number): void;
   chime(pitch: number, notes: number[], gain?: number): void;
   rewind(): void;
+  split(size: number, pan: number): void;
   dispose(): void;
 };
 
@@ -254,6 +255,15 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
       const out = voice(c, 0, 0.3, 3);
       noise(c, out, { type: 'bandpass', frequency: 2200, to: 450, q: 1.4, decay: 0.14, gain: 0.05 });
       tone(c, out, { frequency: 520, to: 330, decay: 0.1, gain: 0.03 });
+    },
+    split(size, pan) {
+      const c = live(); if (!c) return;
+      const out = voice(c, pan, 0.4);
+      const f = 520 * size * jitter();
+      // "pichi": the drop lets go of a colour — a quick upward pop and a lighter echo.
+      tone(c, out, { frequency: f, to: f * 1.9, glide: 0.04, decay: 0.09, gain: 0.08 });
+      tone(c, out, { frequency: f * 1.5, to: f * 2.4, glide: 0.03, start: 0.05, decay: 0.07, gain: 0.04 });
+      noise(c, out, { type: 'highpass', frequency: 2500, decay: 0.015, gain: 0.012 });
     },
     dispose() {
       disposed = true;

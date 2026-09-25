@@ -240,6 +240,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function refresh(dt: number) {
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
+    for (const split of sim.splits.splice(0)) feedback?.split(split.r, split.x, sim.width);
     // Sum this frame's contacts per drop, exactly as the one-drop study does.
     clock += dt;
     const impulses = new Map<number, { x: number; y: number; kind: ContactKind; peak: number }>();

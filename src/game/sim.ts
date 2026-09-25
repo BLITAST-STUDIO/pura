@@ -78,6 +78,7 @@ const MIX_MERGE = 0.58;
 const MIX_SPEED = 200;
 const MAX_SPEED = 760;
 const MAX_PARTICLES = 180;
+const PRESS_MIX_SECONDS = 0.35;
 
 function massOfR(r: number): number {
   return r * r * MASS_K;
@@ -109,7 +110,16 @@ export class PuraSim {
   reducedMotion = false;
   sandboxTotal: number = SANDBOX_COUNT.fallback;
   /** Opt-in material study; normal gameplay keeps its original collision rules. */
-  fusionPolicy: 'legacy' | 'all-colors' = 'legacy';
+  /**
+   * 'held-press' (opt-in, open play): the legacy rules, plus a reachable G-06.
+   * The legacy overlap threshold cannot be reached by large drops because each
+   * substep resolves the overlap; here a held drop that keeps pressing into a
+   * different colour slowly for PRESS_MIX_SECONDS mixes with it.
+   */
+  fusionPolicy: 'legacy' | 'all-colors' | 'held-press' = 'legacy';
+  private pressPartner: number | null = null;
+  private pressTime = 0;
+  private pressedThisStep = false;
   /** Optional solid circular islands, used only by the new chapter scenes. */
   obstacles: ReadonlyArray<{ x: number; y: number; r: number }> = [];
   private nextId = 1;
@@ -274,6 +284,11 @@ export class PuraSim {
     this.pointer = null;
   }
 
+  /** The legacy double-tap separation, for callers that detect the double tap themselves. */
+  splitAt(x: number, y: number): boolean {
+    return this.trySplit(x, y);
+  }
+
   private trySplit(x: number, y: number): boolean {
     let target: Drop | null = null;
     let best = Infinity;
@@ -381,6 +396,7 @@ export class PuraSim {
   }
 
   private physics(dt: number) {
+    this.pressedThisStep = false;
     const grabbed = this.drops.find((d) => d.id === this.grabbedId) ?? null;
     const p = this.pointer;
 
@@ -457,6 +473,8 @@ export class PuraSim {
         if (!corrected) break;
       }
     }
+    // A press only counts while it continues without a break.
+    if (!this.pressedThisStep) { this.pressTime = 0; this.pressPartner = null; }
   }
 
   private clamp(d: Drop, report = false) {
@@ -553,6 +571,23 @@ export class PuraSim {
         const overlap = min - dist;
         const slowMix =
           grabbedPair && overlap > MIX_MERGE * Math.min(a.r, b.r) && rel < MIX_SPEED;
+
+        if (!slowMix && this.fusionPolicy === 'held-press' && grabbedPair && rel < MIX_SPEED && this.pointer) {
+          const held = this.grabbedId === a.id ? a : b;
+          const other = held === a ? b : a;
+          const toward = Math.hypot(other.x - held.x, other.y - held.y) || 1;
+          const push = ((this.pointer.x - held.x) * (other.x - held.x) + (this.pointer.y - held.y) * (other.y - held.y)) / toward;
+          if (push > held.r * 0.25) {
+            this.pressTime = this.pressPartner === other.id ? this.pressTime + dt : dt;
+            this.pressPartner = other.id;
+            this.pressedThisStep = true;
+            if (this.pressTime >= PRESS_MIX_SECONDS) {
+              this.pressTime = 0; this.pressPartner = null;
+              this.merge(a, b, merged);
+              continue;
+            }
+          }
+        }
 
         if (slowMix) {
           this.merge(a, b, merged);

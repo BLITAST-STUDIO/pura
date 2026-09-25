@@ -5,7 +5,7 @@ import { createHaptics, type HapticMode, type Haptics } from './haptics';
 export const SENSORY_KEY = 'pura-flow-sensory-v1';
 export type SensoryPreferences = { sound: boolean; haptics: boolean };
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
-export type CueName = 'grab' | 'impact' | 'fusion' | 'ready' | 'delivered' | 'rewind';
+export type CueName = 'grab' | 'impact' | 'fusion' | 'ready' | 'delivered' | 'rewind' | 'split';
 
 /** Stored per browser. `?sound=off` / `?haptics=off` override for one visit only. */
 export function readSensoryPreferences(storage?: StorageLike, search?: string): SensoryPreferences {
@@ -47,6 +47,7 @@ export type SensoryFeedback = {
   ready(hue: string): void;
   delivered(hue: string, finished: boolean): void;
   rewind(): void;
+  split(radius: number, x: number, width: number): void;
   /** Audio state and issued cue counts, for verification and the stats readout. */
   status(): { audio: string; haptics: HapticMode; counts: Record<CueName, number> };
   dispose(): void;
@@ -56,7 +57,7 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
   const audio = options.audio ?? createDropletAudio();
   const haptics = options.haptics ?? createHaptics();
   const gate = new ImpactGate();
-  const counts: Record<CueName, number> = { grab: 0, impact: 0, fusion: 0, ready: 0, delivered: 0, rewind: 0 };
+  const counts: Record<CueName, number> = { grab: 0, impact: 0, fusion: 0, ready: 0, delivered: 0, rewind: 0, split: 0 };
   let sound = true;
 
   // iOS resumes audio only inside a gesture, and may suspend it again after an
@@ -108,6 +109,11 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
       counts.rewind++;
       audio.rewind();
       haptics.pulse(6);
+    },
+    split(radius, x, width) {
+      counts.split++;
+      audio.split(sizeFactor(radius), panFor(x, width));
+      haptics.pulse([6, 30, 6]);
     },
     status() {
       const context = audio.context as AudioContext | null;

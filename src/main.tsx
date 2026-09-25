@@ -5,7 +5,14 @@ import "@/styles.css";
 async function boot() {
   const el = document.getElementById("root");
   if (!el) return;
-  if (['first', 'chapters'].includes(new URLSearchParams(window.location.search).get('play') ?? '')) {
+  if (new URLSearchParams(window.location.search).get('play') === 'open') {
+    try {
+      const { default: OpenPlay } = await import('./experiments/open-play/OpenPlay');
+      createRoot(el).render(<OpenPlay />);
+    } catch {
+      el.textContent = '水滴の準備ができませんでした。ページを再読み込みしてください。';
+    }
+  } else if (['first', 'chapters'].includes(new URLSearchParams(window.location.search).get('play') ?? '')) {
     try {
       const { default: PurityScene } = await import('./experiments/purity-scene/PurityScene');
       createRoot(el).render(<PurityScene />);

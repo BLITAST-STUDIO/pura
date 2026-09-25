@@ -12,6 +12,8 @@ export class FusionSimulation {
   events: FusionEvent[] = [];
   /** Drained by the renderer every frame; bounded when nothing is observing. */
   contacts: ContactEvent[] = [];
+  /** Separations since the last frame (drop that gave up its mixed colours). */
+  splits: { id: number; x: number; y: number; r: number }[] = [];
   preset: FusionPreset = 'pair';
   ratio = 1;
   width = 550;
@@ -42,6 +44,7 @@ export class FusionSimulation {
   protected observe() {
     this.events = [];
     this.contacts = [];
+    this.splits = [];
     this.core.onFusion = (a, b, result) => this.events.push({ a, b, result });
     this.core.onContact = (id, x, y, kind) => {
       if (this.contacts.length >= MAX_PENDING_CONTACTS) this.contacts.shift();

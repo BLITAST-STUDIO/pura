@@ -22,6 +22,7 @@ function fakes() {
     fusion: (...args) => { played.push({ name: 'fusion', args }); },
     chime: (...args) => { played.push({ name: 'chime', args }); },
     rewind: () => { played.push({ name: 'rewind', args: [] }); },
+    split: (...args) => { played.push({ name: 'split', args }); },
     dispose() {},
   };
   const haptics: Haptics = { mode: 'vibrate', setEnabled() {}, pulse: p => { pulses.push(p); }, dispose() {} };
@@ -111,7 +112,7 @@ test('feedback routes each event once, gates sustained contact, and counts what 
   const finale = played[4].args as [number, number[]];
   assert.equal(finale[1].length, 4, 'finishing plays the full arpeggio');
   assert.equal(pulses.length, 6);
-  assert.deepEqual(feedback.status().counts, { grab: 1, impact: 1, fusion: 1, ready: 1, delivered: 1, rewind: 1 });
+  assert.deepEqual(feedback.status().counts, { grab: 1, impact: 1, fusion: 1, ready: 1, delivered: 1, rewind: 1, split: 0 });
   feedback.dispose();
 });
 

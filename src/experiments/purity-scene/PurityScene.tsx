@@ -147,6 +147,6 @@ export default function PurityScene() {
         </aside>
       </div>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三つの道。触れる心地よさを、遊びへ。</p></div><a className="purity-lab-link" href="?lab=fusion&mixing=bloom">自由に混ぜる<ArrowUpRight size={14}/></a></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三つの道。触れる心地よさを、遊びへ。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=open">三色で自由に<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?lab=fusion&mixing=bloom">自由に混ぜる<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }
