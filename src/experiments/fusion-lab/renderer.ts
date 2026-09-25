@@ -38,7 +38,9 @@ function footprint(material: THREE.ShaderMaterial) {
 }
 
 type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: boolean; hue?: 'cyan' | 'rose' };
-type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback };
+type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
+  /** Drop height in world units for a board radius; defaults to the approved fixed height. */
+  height?: (radius: number) => number };
 export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
   const context = canvas.getContext('webgl2', { alpha: false, antialias: true, powerPreference: 'high-performance' });
   if (!context) throw Error('WebGL 2に対応したブラウザでお試しください。');
@@ -201,7 +203,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     b.appear += dt;
     const t = Math.min(1, b.appear / APPEAR_SECONDS);
     const grow = options.reducedMotion ? 1 : 0.42 + 0.58 * (1 - (1 - t) ** 3);
-    b.mesh.scale.set(d.r * W * b.correction * grow, d.r * W * b.correction * grow, HEIGHT * grow);
+    b.mesh.scale.set(d.r * W * b.correction * grow, d.r * W * b.correction * grow, (adapter.height?.(d.r) ?? HEIGHT) * grow);
     const strength = pull.strength, e = strength * .5;
     const nx = strength ? pull.x / strength : 0, ny = strength ? pull.y / strength : 0;
     b.pullGroup.matrix.set(1 + e * nx * nx, e * nx * ny, 0, pull.x * d.r * W * .5,

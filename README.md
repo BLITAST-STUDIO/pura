@@ -100,3 +100,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 入口プレイ（M3試作）
 
 [三色で自由に遊ぶ](https://blitast-studio.github.io/pura/?play=open) — 三色12個。同じ色は融合、違う色は跳ね返り、つかんでゆっくり押し込むと混ざり、2回タップで分離。目標や採点はありません。[実装・検証範囲](docs/pura-v1/OPEN_PLAY.md)。
+
+## 元祖8ステージ（テストプレイ）
+
+[8ステージを遊ぶ](https://blitast-studio.github.io/pura/?play=stages) — 元祖の8ステージとサンドボックス。雫の大きさ（大きめ／元祖）と混ぜ方（押し込み／元祖の判定）を画面上で切り替えて比べられます。[内容と検証](docs/pura-v1/STAGES_TEST_PLAY.md)。

@@ -1,0 +1,56 @@
+{
+ "s4-large": {
+  "drops": 35,
+  "cores": [
+   "シアンの核25%",
+   "ローズの核17%",
+   "アンバーの核16%"
+  ],
+  "title": "密集狭いほど、混ぜない指先が要る。",
+  "url": "?play=stages&stage=4&scale=large&sound=off&mix=press",
+  "fps": 30,
+  "logs": []
+ },
+ "s4-original": {
+  "drops": 35,
+  "cores": [
+   "シアンの核25%",
+   "ローズの核16%",
+   "アンバーの核16%"
+  ],
+  "title": "密集狭いほど、混ぜない指先が要る。",
+  "url": "?play=stages&stage=4&scale=original&sound=off&mix=press",
+  "fps": 30,
+  "logs": []
+ },
+ "s1-large": {
+  "drops": 12,
+  "cores": [
+   "シアンの核16%"
+  ],
+  "title": "覚醒ドラッグして、同じ雫をひとつに。",
+  "url": "?play=stages&stage=1&sound=off&scale=large&mix=press",
+  "fps": 30,
+  "logs": []
+ },
+ "s6-currents": {
+  "drops": 20,
+  "cores": [
+   "シアンの核50%",
+   "ローズの核39%",
+   "アンバーの核35%"
+  ],
+  "title": "潮流場が流れる。核を手放すな。",
+  "url": "?play=stages&stage=6&sound=off&scale=large&mix=press",
+  "fps": 30,
+  "logs": []
+ },
+ "sandbox60": {
+  "drops": 54,
+  "cores": [],
+  "title": "サンドボックスエンドレス。左上で初期の雫の数を変えられる。",
+  "url": "?play=stages&stage=0&count=60&sound=off&scale=large&mix=press",
+  "fps": 30,
+  "logs": []
+ }
+}

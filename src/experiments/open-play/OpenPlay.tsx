@@ -101,6 +101,6 @@ export default function OpenPlay() {
         <p>R：もう一度 · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><a className="purity-lab-link" href="?play=chapters">三つの道へ<ArrowUpRight size={14}/></a></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">8ステージへ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=chapters">三つの道へ<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }
