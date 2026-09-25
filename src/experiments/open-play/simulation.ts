@@ -24,10 +24,42 @@ export const OPEN_LAYOUT: { x: number; y: number; r: number; hue: HueId }[] = [
   { x: 395, y: 290, r: 30, hue: 'amber' }, { x: 300, y: 470, r: 32, hue: 'amber' },
 ];
 
+export const OPEN_COUNTS = [12, 24, 36, 48, 60] as const;
+
+/**
+ * Larger boards for the 12–24 drop validation (M3) and the 60-drop sandbox
+ * load (M4): a jittered grid, colours interleaved, sizes shrinking with count
+ * as in the legacy sandbox. Deterministic, and nothing touches at rest.
+ */
+export function openLayout(count: number): { x: number; y: number; r: number; hue: HueId }[] {
+  const n = OPEN_COUNTS.includes(count as typeof OPEN_COUNTS[number]) ? count : 12;
+  if (n === 12) return OPEN_LAYOUT;
+  const hues: HueId[] = ['cyan', 'rose', 'amber'];
+  const cols = n <= 24 ? 4 : n <= 36 ? 6 : n <= 48 ? 6 : 7;
+  const rows = Math.ceil(n / cols);
+  const pad = 52, cellW = (OPEN_BOARD.width - pad * 2) / cols, cellH = (OPEN_BOARD.height - pad * 2) / rows;
+  const rMax = Math.min(cellW, cellH) * 0.34;
+  let seed = 0x9e3779b9;
+  const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) | 0) >>> 0) / 4294967296;
+  const out: { x: number; y: number; r: number; hue: HueId }[] = [];
+  for (let i = 0; i < n; i++) {
+    const col = i % cols, row = Math.floor(i / cols);
+    const r = rMax * (0.72 + random() * 0.28);
+    const slack = Math.max(0, Math.min(cellW, cellH) / 2 - r - 6);
+    out.push({
+      x: pad + (col + 0.5) * cellW + (random() - 0.5) * slack,
+      y: pad + (row + 0.5) * cellH + (random() - 0.5) * slack,
+      r, hue: hues[(i + row) % 3],
+    });
+  }
+  return out;
+}
+
 export class OpenPlaySimulation extends FusionSimulation {
   private lastTap: { id: number; t: number } | null = null;
+  private layout = OPEN_LAYOUT;
 
-  constructor() { super(); this.reset(); }
+  constructor(count = 12) { super(); this.layout = openLayout(count); this.reset(); }
 
   override reset() {
     this.width = OPEN_BOARD.width; this.height = OPEN_BOARD.height;
@@ -38,7 +70,7 @@ export class OpenPlaySimulation extends FusionSimulation {
     // pressed in slowly — 'held-press' makes that reachable for these sizes.
     this.core.fusionPolicy = 'held-press';
     this.core.resize(this.width, this.height);
-    this.core.drops = OPEN_LAYOUT.map((d, i): Drop => {
+    this.core.drops = (this.layout ?? OPEN_LAYOUT).map((d, i): Drop => {
       const pigment = emptyPigment();
       pigment[d.hue] = d.r * d.r;
       return { id: 1000 + i, x: d.x, y: d.y, vx: 0, vy: 0, r: d.r, renderR: d.r, mass: d.r * d.r, pigment, freshness: 0 };

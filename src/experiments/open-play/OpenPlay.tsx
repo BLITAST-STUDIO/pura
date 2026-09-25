@@ -33,7 +33,8 @@ export default function OpenPlay() {
   useEffect(() => {
     let alive = true;
     setStatus('loading'); setError('');
-    const sim = new OpenPlaySimulation(); simulation.current = sim;
+    // ?drops=24 (12–60) is for load and play checks; the curated 12 is the default.
+    const sim = new OpenPlaySimulation(Number(query.get('drops') ?? 12)); simulation.current = sim;
     const update = () => {
       if (!alive) return;
       const held = sim.core.drops.find(d => d.id === sim.core.grabbedId);

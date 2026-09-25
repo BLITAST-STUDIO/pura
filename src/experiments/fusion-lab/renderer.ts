@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Drop } from '../../game/sim';
 import { FusionSimulation, type FusionPreset, type FusionEvent } from './simulation';
 import { absorptionOf, fractions } from './composition';
-import { FusionShape, type Lobe } from './shape';
+import { capLobes, FusionShape, type Lobe } from './shape';
 import { createFusionMaterial } from './material';
 import { floorTexture, studioEnvironment, contactMaterial, causticMaterial, setRim } from '../droplet-lab/renderer';
 import { contactAnchor, DropletRim } from '../droplet-lab/rim-response';
@@ -89,6 +89,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   scene.add(spray.points);
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
+  let loopFault = false;
   // Monotonic across undo/reset, which replace the simulation's own clock.
   let clock = 0;
   const feedback = adapter.feedback;
@@ -145,6 +146,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       }
     }
     removeBody(a.id); removeBody(b.id);
+    source.splice(0, source.length, ...capLobes(source));
     feedback?.fusion(result.r, result.x, sim.width, purityOf(result.pigment));
     const view = makeBody(result, source);
     const small = a.mass <= b.mass ? a : b;
@@ -373,8 +375,13 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     if (disposed || lost || document.hidden) return;
     const interval = last ? now - last : 0; last = now;
     const dt = Math.min(interval / 1000, 1 / 12);
-    if (!options.paused) { sim.tick(dt); refresh(dt); }
-    render();
+    try {
+      if (!options.paused) { sim.tick(dt); refresh(dt); }
+      render();
+    } catch (error) {
+      // A presentation fault must not freeze play: report once, keep the loop alive.
+      if (!loopFault) { loopFault = true; console.error('PURA render step failed', error); }
+    }
     if (interval > 0 && !options.paused) { samples.push(interval); if (samples.length > 240) samples.shift(); }
     if (now - statTime > 200) {
       statTime = now;
@@ -384,6 +391,9 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       const stats = { count: sim.core.drops.length, cyan: f.cyan, rose: f.rose, merged: !!selected && f.rose > 0 && f.cyan > 0, fps: sorted.length ? 1000 / sorted[Math.floor(sorted.length * .5)] : 0, p95: sorted[Math.floor(sorted.length * .95)] ?? 0 };
       canvas.dataset.stats = JSON.stringify(stats); callbacks.onStats?.(stats);
       if (feedback) canvas.dataset.sensory = JSON.stringify(feedback.status());
+      // Resource counts for long-session checks (P-05): these must not climb.
+      canvas.dataset.memory = JSON.stringify({ geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
+        programs: renderer.info.programs?.length ?? 0, bodies: bodies.size, sceneChildren: scene.children.length, sparks: sparks.alive });
       adapter.onUpdate?.();
     }
     raf = requestAnimationFrame(loop);

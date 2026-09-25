@@ -106,3 +106,20 @@ test('"again" restores the curated layout and clears pending events', () => {
   assert.deepEqual(s.core.drops.map(d => [d.x, d.y, d.r]), OPEN_LAYOUT.map(d => [d.x, d.y, d.r]));
   assert.equal(s.events.length + s.contacts.length + s.splits.length, 0);
 });
+
+test('larger check boards keep colours balanced, fit the board and start apart', async () => {
+  const { openLayout, OPEN_BOARD, OPEN_COUNTS } = await import('../src/experiments/open-play/simulation');
+  for (const n of OPEN_COUNTS) {
+    const layout = openLayout(n);
+    assert.equal(layout.length, n);
+    for (const hue of ['cyan', 'rose', 'amber'] as const) assert.equal(layout.filter(d => d.hue === hue).length, n / 3);
+    for (const d of layout) assert.ok(d.x - d.r > 28 && d.x + d.r < OPEN_BOARD.width - 28 && d.y - d.r > 28 && d.y + d.r < OPEN_BOARD.height - 28);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const a = layout[i], b = layout[j];
+      assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > a.r + b.r + 4, `${n}: ${i}/${j}`);
+    }
+    const s = new OpenPlaySimulation(n);
+    assert.equal(s.core.drops.length, n);
+  }
+  assert.equal(openLayout(7).length, 12, 'unsupported counts fall back to the curated board');
+});

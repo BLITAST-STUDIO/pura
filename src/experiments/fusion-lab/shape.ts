@@ -4,6 +4,26 @@ import type { Absorption } from './composition';
 
 export type Lobe = { x: number; y: number; r: number; absorption: Absorption; amount: number };
 export const BOTTOM = .007;
+/** Shader arrays (lobes, dye seeds) hold five entries. */
+export const MAX_LOBES = 5;
+/**
+ * Rapid chains can combine more lobes than the shaders hold. Keep the largest
+ * and fold the rest into one amount-weighted lobe, so no dye is lost.
+ */
+export function capLobes(lobes: Lobe[], max = MAX_LOBES): Lobe[] {
+  if (lobes.length <= max) return lobes;
+  const sorted = [...lobes].sort((a, b) => b.amount - a.amount);
+  const kept = sorted.slice(0, max - 1), rest = sorted.slice(max - 1);
+  const total = rest.reduce((n, l) => n + l.amount, 0);
+  const w = (l: Lobe) => (total > 0 ? l.amount / total : 1 / rest.length);
+  return [...kept, {
+    x: rest.reduce((n, l) => n + l.x * w(l), 0),
+    y: rest.reduce((n, l) => n + l.y * w(l), 0),
+    r: Math.sqrt(rest.reduce((n, l) => n + l.r * l.r, 0)),
+    absorption: [0, 1, 2].map(c => rest.reduce((n, l) => n + l.absorption[c] * w(l), 0)) as Absorption,
+    amount: total,
+  }];
+}
 const t = (BOTTOM - .3968) / .62;
 export const UNIT_VOLUME = Math.PI * .62 * (2 / 3 - t + t ** 3 / 3);
 export function smoothUnion(a: number, b: number, k: number) {
