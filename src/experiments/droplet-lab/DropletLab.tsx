@@ -4,6 +4,7 @@ import type { HueId } from "../../game/palette";
 import { createDropletExperience } from "./renderer";
 import "./droplet-lab.css";
 import { useSensoryFeedback } from "../sensory/useSensoryFeedback";
+import { causticQuery, initialCaustic, initialRipple, rippleQuery } from "../look-defaults";
 
 type Experience = ReturnType<typeof createDropletExperience>;
 type Status = "loading" | "ready" | "error";
@@ -36,9 +37,8 @@ export function DropletLab() {
     new URLSearchParams(window.location.search).get("feel") === "baseline" ? "baseline" : "refined",
   );
   const [clay, setClay] = useState(() => new URLSearchParams(window.location.search).get("view") === "clay");
-  const [ripple, setRipple] = useState(() => new URLSearchParams(window.location.search).get("ripple") === "on");
-  const [caustic, setCaustic] = useState<"artistic" | "shape">(() =>
-    new URLSearchParams(window.location.search).get("caustic") === "shape" ? "shape" : "artistic");
+  const [ripple, setRipple] = useState(initialRipple);
+  const [caustic, setCaustic] = useState<"artistic" | "shape">(initialCaustic);
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -221,14 +221,14 @@ export function DropletLab() {
                         updateComparisonQuery("feel", next);
                       }} aria-describedby="dl-feel-description"><option value="refined">今回の調整</option><option value="baseline">保存した感触</option></select></label>
                       <p className="dl-setting-description" id="dl-feel-description">いつでも保存した感触に戻せます。</p>
-                      {refinement === "refined" && <label className="dl-setting-row"><span>縁が波打つ（試作）</span><input type="checkbox" checked={ripple} onChange={(event) => {
+                      {refinement === "refined" && <label className="dl-setting-row"><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={(event) => {
                         setRipple(event.target.checked);
-                        updateComparisonQuery("ripple", event.target.checked ? "on" : null);
+                        updateComparisonQuery("ripple", rippleQuery(event.target.checked));
                       }} aria-describedby="dl-ripple-description" /><span className="dl-switch" aria-hidden="true" /></label>}
                       {refinement === "refined" && <p className="dl-setting-description" id="dl-ripple-description">当たった側から縁にさざ波が回り、壁に押し付けたまま潰れます。</p>}
-                      {refinement === "refined" && <label className="dl-setting-row"><span>形から床の光を描く（試作）</span><input type="checkbox" checked={caustic === "shape"} onChange={(event) => {
+                      {refinement === "refined" && <label className="dl-setting-row"><span>形から床の光を描く</span><input type="checkbox" checked={caustic === "shape"} onChange={(event) => {
                         const next = event.target.checked ? "shape" : "artistic";
-                        setCaustic(next); updateComparisonQuery("caustic", event.target.checked ? "shape" : null);
+                        setCaustic(next); updateComparisonQuery("caustic", causticQuery(event.target.checked));
                       }} /><span className="dl-switch" aria-hidden="true" /></label>}
                       <label className="dl-setting-row"><span>形だけを見る</span><input type="checkbox" checked={clay} onChange={(event) => {
                         setClay(event.target.checked);

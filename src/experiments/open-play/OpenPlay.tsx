@@ -4,6 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
 import './open-play.css';
@@ -24,7 +25,8 @@ export default function OpenPlay() {
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [lighting, setLighting] = useState<FusionOptions['lighting']>('studio');
-  const [ripple, setRipple] = useState(() => query.get('ripple') === 'on');
+  const [ripple, setRipple] = useState(initialRipple);
+  const [caustic, setCaustic] = useState(initialCaustic);
   const [reading, setReading] = useState<Reading>({ count: 12, held: null });
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
 
@@ -49,8 +51,8 @@ export default function OpenPlay() {
   }, [retry]);
   useEffect(() => {
     experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', ripple,
-      caustic: query.get('caustic') === 'shape' ? 'shape' : 'artistic' });
-  }, [paused, reduced, quality, lighting, ripple, retry]);
+      caustic });
+  }, [paused, reduced, quality, lighting, ripple, caustic, retry]);
   const again = () => {
     experience.current?.restoreState(() => simulation.current?.reset());
     setPaused(false); setTouched(false);
@@ -91,7 +93,8 @@ export default function OpenPlay() {
         <label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label>
         <label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
-        <label><span>縁が波打つ（試作）</span><input type="checkbox" checked={ripple} onChange={e => setRipple(e.target.checked)}/></label>
+        <label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => { setRipple(e.target.checked); writeLookQuery('ripple', rippleQuery(e.target.checked)); }}/></label>
+        <label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => { setCaustic(e.target.checked ? 'shape' : 'artistic'); writeLookQuery('caustic', causticQuery(e.target.checked)); }}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
         <p>R：もう一度 · Esc：一時停止</p>

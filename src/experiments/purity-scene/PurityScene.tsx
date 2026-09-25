@@ -5,6 +5,7 @@ import { PuritySimulation, type SceneState } from './simulation';
 import { CHAPTERS, getChapter, HUE_NAMES } from './chapters';
 import { readProgress, writeProgress, type Progress } from './progress';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import './purity-scene.css';
 
@@ -38,8 +39,8 @@ export default function PurityScene() {
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [lighting, setLighting] = useState<FusionOptions['lighting']>('studio');
-  const [ripple, setRipple] = useState(() => new URLSearchParams(window.location.search).get('ripple') === 'on');
-  const [caustic, setCaustic] = useState<FusionOptions['caustic']>(() => new URLSearchParams(window.location.search).get('caustic') === 'shape' ? 'shape' : 'artistic');
+  const [ripple, setRipple] = useState(initialRipple);
+  const [caustic, setCaustic] = useState<FusionOptions['caustic']>(initialCaustic);
   const [notice, setNotice] = useState('');
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   // Last heard goal states. Null means "adopt silently" after load, undo or reset.
@@ -132,17 +133,13 @@ export default function PurityScene() {
           </div>)}
           <p className="purity-target">目標：{multi ? '二色それぞれ' : 'シアン'}を全部集め、純度90%以上で輪の中へ。</p>
           {state.completed && <div className="purity-completion" role="status">{chapterId < 3 ? <button onClick={() => selectChapter(chapterId + 1)}>次の面へ <ArrowUpRight size={15}/></button> : <><p>{progress.completed.length === 3 ? '三つの道の、最後まで。' : 'ふたつの色が、そろいました。'}<br/>別の道を選ぶか、自由な混色へ。</p><a href="?lab=fusion&mixing=bloom">自由に混ぜる <ArrowUpRight size={15}/></a></>}</div>}
-          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><label><span>縁が波打つ（試作）</span><input type="checkbox" checked={ripple} onChange={e => {
+          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => {
             setRipple(e.target.checked);
-            const url = new URL(window.location.href);
-            if (e.target.checked) url.searchParams.set('ripple', 'on'); else url.searchParams.delete('ripple');
-            window.history.replaceState(null, '', url);
-          }}/></label><label><span>形から床の光を描く（試作）</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => {
+            writeLookQuery('ripple', rippleQuery(e.target.checked));
+          }}/></label><label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => {
             const next = e.target.checked ? 'shape' : 'artistic';
             setCaustic(next);
-            const url = new URL(window.location.href);
-            if (e.target.checked) url.searchParams.set('caustic', 'shape'); else url.searchParams.delete('caustic');
-            window.history.replaceState(null, '', url);
+            writeLookQuery('caustic', causticQuery(e.target.checked));
           }}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
         </aside>
       </div>
