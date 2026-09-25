@@ -103,11 +103,7 @@ export default function StagePlay() {
     <header className="dl-header"><a className="dl-brand" href="?play=stages" aria-label="PURA ステージ"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
     <main>
       <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? '自由' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
-      <div className="stage-compare" role="group" aria-label="テストプレイの比較">
-        <div><span>雫の大きさ</span><button aria-pressed={scale === 'large'} onClick={() => setScale('large')}>大きめ（案A）</button><button aria-pressed={scale === 'original'} onClick={() => setScale('original')}>元祖の大きさ（案B）</button></div>
-        <div><span>混ぜ方</span><button aria-pressed={mix === 'press'} onClick={() => setMix('press')}>押し込み0.35秒</button><button aria-pressed={mix === 'legacy'} onClick={() => setMix('legacy')}>元祖の判定</button></div>
-        {def.sandbox && <div><span>雫の数</span><select value={sandboxCount} onChange={e => setSandboxCount(clampSandboxCount(Number(e.target.value)))}>{Array.from({ length: (SANDBOX_COUNT.max - SANDBOX_COUNT.min) / SANDBOX_COUNT.step + 1 }, (_, i) => SANDBOX_COUNT.min + i * SANDBOX_COUNT.step).map(n => <option key={n} value={n}>{n}</option>)}</select></div>}
-      </div>
+      {def.sandbox && <div className="stage-compare"><div><span>雫の数</span><select value={sandboxCount} onChange={e => setSandboxCount(clampSandboxCount(Number(e.target.value)))}>{Array.from({ length: (SANDBOX_COUNT.max - SANDBOX_COUNT.min) / SANDBOX_COUNT.step + 1 }, (_, i) => SANDBOX_COUNT.min + i * SANDBOX_COUNT.step).map(n => <option key={n} value={n}>{n}</option>)}</select></div></div>}
       <p className="stage-title"><b>{def.name}</b>{def.hint}</p>
       <section className="dl-stage purity-stage stage-board" aria-label={`ステージ ${def.code} ${def.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={def.hint}/>
@@ -127,6 +123,10 @@ export default function StagePlay() {
         <p>色ごとに、その色の{Math.round(def.targetFrac * 100)}%以上を一つの核に集めます。核の純度が{Math.round(def.purity * 100)}%以上で達成。全色そろうとクリアです。</p>
         <p>違う色はぶつかると跳ね返ります。つかんで押し込むと混ざり、純度が下がります。混ざった雫は素早く2回タップすると、入った色を取り出せます。</p>
         <p>星: 平均純度99.5%以上で3つ、必要純度+4%以上で2つ。時間制限はありません。</p>
+        <div className="stage-compare" role="group" aria-label="比較用の設定">
+          <div><span>雫の大きさ</span><button aria-pressed={scale === 'large'} onClick={() => setScale('large')}>大きめ</button><button aria-pressed={scale === 'original'} onClick={() => setScale('original')}>元祖の大きさ</button></div>
+          <div><span>混ぜ方</span><button aria-pressed={mix === 'press'} onClick={() => setMix('press')}>押し込み0.35秒</button><button aria-pressed={mix === 'legacy'} onClick={() => setMix('legacy')}>元祖の判定（難しめ）</button></div>
+        </div>
         <label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
