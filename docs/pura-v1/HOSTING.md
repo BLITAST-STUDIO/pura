@@ -87,3 +87,8 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース `512594d`、配信 `22da96b`。試遊 `?play=open`。既存の入口は変更なし（3面の下部に入口プレイへのリンクを追加）。
 - Pages built、全13ファイルSHA-256一致。公開版をGPU描画のヘッドレスChrome（390×844）で操作し、融合・反発・音・60 fps・警告エラー0。証拠 `artifacts/open-play/public-check.json`。
 
+## 分離のしぶき（2026-09-25）
+
+- ソース `0d6f039`、配信 `2714969`。全ファイルSHA-256一致。
+- 承認版（しぶき追加前）の保存点: タグ `open-play-approved-20260925`（7c86698）、直前の配信 `22da96b`。
+
