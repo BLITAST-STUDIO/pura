@@ -24,3 +24,16 @@
 .stage-cores [data-color="amber"] b { background: #e9bd6a; }
 .stage-cores small { text-align: right; font-variant-numeric: tabular-nums; }
 .stage-cores .is-done { color: #d9f1ec; }
+.stage-modes { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 10px; color: #8fa7ab; }
+.stage-modes button { padding: 7px 12px; border: 1px solid #35505a; background: #172a2f; color: #b9cfd0; border-radius: 999px; font-size: 11px; cursor: pointer; }
+.stage-modes button[aria-pressed="true"] { border-color: #8cc2bd; background: #28474b; color: #e3f4f2; }
+.stage-modes span { margin-left: auto; font-variant-numeric: tabular-nums; }
+.stage-score { position: absolute; top: 40px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; pointer-events: none; color: #eaf6f5; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+.stage-score b { font-size: 20px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.stage-score span { font-size: 10px; letter-spacing: .04em; }
+.stage-score .is-combo { color: #bdf1e6; }
+.stage-score .is-gain { color: #d7f7c8; }
+.stage-score .is-spit { color: #f3b8c6; }
+.stage-result { position: absolute; top: 88px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 88%; text-align: center; padding: 8px 14px; border-radius: 12px; background: rgba(14, 26, 30, .72); color: #eef8f7; pointer-events: none; backdrop-filter: blur(6px); }
+.stage-result strong { display: block; font-size: 24px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.stage-result small { font-size: 9px; color: #b3c9c9; }

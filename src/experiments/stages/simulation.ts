@@ -1,6 +1,7 @@
 import { PuraSim, type Drop } from '../../game/sim';
 import { getLevel, LEVELS, SANDBOX, SANDBOX_COUNT, type LevelDef } from '../../game/levels';
-import { emptyPigment } from '../../game/palette';
+import { emptyPigment, purityOf } from '../../game/palette';
+import { ScoreAttack } from './score';
 import { OpenPlaySimulation } from '../open-play/simulation';
 
 /**
@@ -16,7 +17,8 @@ export type StageScale = 'large' | 'original';
 export type MixRule = 'press' | 'legacy';
 export const SCALE_FACTOR: Record<StageScale, number> = { large: 1.5, original: 1 };
 
-export type StageSetup = { stage: number; scale: StageScale; mix: MixRule; sandboxCount: number };
+export type StageMode = 'stage' | 'score';
+export type StageSetup = { stage: number; scale: StageScale; mix: MixRule; sandboxCount: number; mode?: StageMode };
 
 /** The legacy sandbox's size rule: smaller drops as the board gets more crowded. */
 export function sandboxRadii(total: number) {
@@ -64,11 +66,26 @@ export function spawnStage(def: LevelDef, setup: StageSetup, width: number, heig
 export class StageSimulation extends OpenPlaySimulation {
   setup: StageSetup | undefined;
   won: { stars: number; time: number; purity: number } | null = null;
+  /** Score attack state; null in the relaxed stage mode and the sandbox. */
+  score: ScoreAttack | null = null;
+  /** The most recent score change, for a brief on-board note. */
+  lastNote: { kind: 'combo' | 'spit'; value: number; time: number } | null = null;
 
   constructor(setup: StageSetup) {
     super(12);
     this.setup = { ...setup, sandboxCount: clampSandboxCount(setup.sandboxCount) };
     this.reset();
+  }
+
+  /** A separation in score attack costs points by the amount released. */
+  override grab(id: number) {
+    const before = this.splits.length;
+    const grabbed = super.grab(id);
+    if (this.score && this.splits.length > before) {
+      const released = this.splits.at(-1)!.children.reduce((n, d) => n + d.mass, 0);
+      this.lastNote = { kind: 'spit', value: -this.score.spit(released), time: this.core.time };
+    }
+    return grabbed;
   }
 
   get def(): LevelDef { return (this.setup && getLevel(this.setup.stage)) || LEVELS[0]; }
@@ -86,8 +103,17 @@ export class StageSimulation extends OpenPlaySimulation {
     this.core.drops = spawnStage(def, this.setup, this.width, this.height, this.core.pad);
     this.core.quota = { cyan: 0, rose: 0, amber: 0 };
     for (const d of this.core.drops) for (const hue of ['cyan', 'rose', 'amber'] as const) this.core.quota[hue] += d.pigment[hue];
-    this.core.onWin = (stars, time, purity) => { this.won = { stars, time, purity }; };
+    const totalMass = this.core.drops.reduce((n, d) => n + d.mass, 0);
+    this.score = this.setup.mode === 'score' && !def.sandbox ? new ScoreAttack(totalMass, this.core.drops.length, def.purity) : null;
+    this.lastNote = null;
+    this.core.onWin = (stars, time, purity) => { this.won = { stars, time, purity }; this.score?.finish(time, purity); };
     this.observe();
+    const presentation = this.core.onFusion;
+    this.core.onFusion = (a, b, result) => {
+      presentation?.(a, b, result);
+      const gain = this.score?.fusion(this.core.time, purityOf(result.pigment) >= 0.995) ?? 0;
+      if (gain > 0) this.lastNote = { kind: 'combo', value: gain, time: this.core.time };
+    };
   }
 }
 
