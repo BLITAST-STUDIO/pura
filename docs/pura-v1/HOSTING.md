@@ -81,3 +81,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - 試遊: https://blitast-studio.github.io/pura/?play=chapters&chapter=2&caustic=shape 。一粒・融合でも `caustic=shape` を指定できる。指定しない既定表示は承認済みの床光を維持。
 - ソース `b054db25a0cbd2591f6786a1b6b85fa737f58928`、配信 `2d7b20cbe64245c12fda297cc3c3943b10ac5aed`。直前の配信は `08d15311825666ecaa861eb61cf6fad6ec676257`。復元基準は `sensory-approved-20260924`（de17058）。
 - Pages built、全11ファイルHTTP200・ローカルSHA-256一致。公開版の一粒と第2面で描画・警告エラー0を確認。証拠: `artifacts/shape-caustic/deployment.json`、`pages-build.json`、`http-check.json`、`public-check.json`。実機タッチ・端末GPU負荷は未検証。
+
+## 入口プレイ（2026-09-25）
+
+- ソース `512594d`、配信 `22da96b`。試遊 `?play=open`。既存の入口は変更なし（3面の下部に入口プレイへのリンクを追加）。
+- Pages built、全13ファイルSHA-256一致。公開版をGPU描画のヘッドレスChrome（390×844）で操作し、融合・反発・音・60 fps・警告エラー0。証拠 `artifacts/open-play/public-check.json`。
+
