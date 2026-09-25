@@ -92,3 +92,7 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ソース `0d6f039`、配信 `2714969`。全ファイルSHA-256一致。
 - 承認版（しぶき追加前）の保存点: タグ `open-play-approved-20260925`（7c86698）、直前の配信 `22da96b`。
 
+
+## 見た目の既定化（2026-09-25）
+
+- ソース `6673359`、配信 `1f3e4c8`。全ファイルSHA-256一致。縁の波と形からの床光が既定。旧表示は `?ripple=off&caustic=artistic`。
