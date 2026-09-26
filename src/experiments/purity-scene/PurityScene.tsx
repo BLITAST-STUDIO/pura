@@ -5,6 +5,7 @@ import { PuritySimulation, type SceneState } from './simulation';
 import { CHAPTERS, getChapter, HUE_NAMES } from './chapters';
 import { readProgress, writeProgress, type Progress } from './progress';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { ModeNav } from '../mode-nav';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import './purity-scene.css';
@@ -106,7 +107,8 @@ export default function PurityScene() {
   const heading = state.completed ? (multi ? 'ふたつの色が、届きました。' : '澄んだ一滴が、届きました。') : state.contaminated ? '混ざっても、やり直せる。' : state.ready ? (multi ? 'それぞれの輪へ、そっと。' : '光の輪へ、そっと。') : multi ? '色ごとに、ひとつに。' : 'シアンを、ひとつに。';
   const guidance = state.completed ? 'このまま眺めても、もう一度触れても。' : state.contaminated ? '別の色が入りました。一手戻して、違う道を試せます。' : state.ready ? '同じ色名の輪に収め、指を離して落ち着かせます。' : chapter.hint;
   return <div className="droplet-lab purity-scene" data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="?play=first" aria-label="PURA 澄んだ道"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>CHAPTER <b>{String(chapterId).padStart(2, '0')}</b></span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>CHAPTER <b>{String(chapterId).padStart(2, '0')}</b></span></div></header>
+    <ModeNav current="chapters"/>
     <main>
       <div className="dl-intro"><div><p className="dl-eyebrow"><span/>A QUIET WAY THROUGH</p><h1>{chapter.title}</h1><p className="dl-description">{chapter.description}</p></div><div className="dl-study-note"><span className="dl-study-number">{String(chapterId).padStart(2, '0')} <span>/ PURE</span></span><span>急がなくていい。道を、見つけよう。</span></div></div>
       <nav className="purity-chapters" aria-label="面を選ぶ">{CHAPTERS.map(c => <button key={c.id} aria-current={c.id === chapterId ? 'step' : undefined} onClick={() => selectChapter(c.id)}><span>{String(c.id).padStart(2, '0')}</span>{c.name}<small>{progress.completed.includes(c.id) ? '達成' : ''}</small></button>)}</nav>

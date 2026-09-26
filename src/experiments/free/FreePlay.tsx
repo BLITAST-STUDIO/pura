@@ -4,6 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { FREE_DEFAULTS, FREE_PRESETS, FreeSimulation, normalizeFree, type FreeMix, type FreeSettings } from './simulation';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { ModeNav } from '../mode-nav';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -73,7 +74,8 @@ export default function FreePlay() {
     <label className="free-slider"><span>{label}</span><small>{left}</small><input type="range" min={0} max={max} step={0.05} value={settings[key]} onChange={e => change({ [key]: Number(e.target.value) })}/><small>{right}</small></label>;
 
   return <div className="droplet-lab purity-scene stage-play free-play" data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="?play=free" aria-label="PURA 自由モード"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
+    <ModeNav current="free"/>
     <main>
       <p className="stage-title"><b>自由</b>目標も点数もなし。好きな手触りで、好きなだけ。</p>
       <div className="stage-modes free-presets" role="group" aria-label="おすすめの設定">{PRESET_LABELS.map(([id, label]) => <button key={id} onClick={() => change({ ...FREE_DEFAULTS, ...FREE_PRESETS[id], ...(id === 'gather' ? {} : { count: settings.count, colors: settings.colors }) })}>{label}</button>)}</div>

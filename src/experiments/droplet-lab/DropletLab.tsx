@@ -129,7 +129,7 @@ export function DropletLab() {
     <div className="droplet-lab" data-hue={hue} data-lighting={lighting}>
       <div className="dl-shell">
         <header className="dl-header">
-          <a className="dl-brand" href="./" aria-label="PURA オリジナルへ">
+          <a className="dl-brand" href="./" aria-label="PURA はじめる">
             <span className="dl-brand-symbol" aria-hidden="true" />
             <span>PURA<span className="dl-brand-period">.</span></span>
           </a>
@@ -255,7 +255,7 @@ export function DropletLab() {
           <div className="dl-footer-right">
             {showStats && <output className="dl-stats" aria-label="描画の動作情報">{Math.round(stats.fps)} fps<span>p95 {stats.frameP95.toFixed(1)} ms</span></output>}
             <a href="?lab=fusion">融合の実験へ<ArrowUpRight size={14} /></a>
-            <a href="./">PURA オリジナル<ArrowUpRight size={14} /></a>
+            <a href="?play=classic">PURA オリジナル<ArrowUpRight size={14} /></a>
           </div>
         </footer>
       </div>

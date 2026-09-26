@@ -24,7 +24,7 @@ npm run dev -- --host 127.0.0.1
 `package-lock.json` を追加済みです。ロックされた依存を再現して導入する場合は、`npm install` の代わりに `npm ci` を使えます。
 
 - [一滴の実験画面](http://127.0.0.1:8080/?lab=droplets): `?lab=droplets` で開きます。
-- [PURAオリジナル](http://127.0.0.1:8080/): 通常の `/` は既存ゲームの入口を維持しています。
+- [はじめる](http://127.0.0.1:8080/): 通常の `/` は新しい入口プレイ（2026-09-26から）。元祖PURAは [`?play=classic`](http://127.0.0.1:8080/?play=classic)。
 
 ポートが使用中の場合は、Viteが表示するURLに合わせてください。この手順はローカル起動です。スマホ試遊用の外部配信は上記URLを使います。
 
@@ -108,3 +108,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 自由モード
 
 [自由に遊ぶ](https://blitast-studio.github.io/pura/?play=free) — 目標も点数もなし。雫の数と色、混ざり方、粘度・慣性・摩擦・引き寄せを好きに変えられます。「ゴゴゴ」で60個を一気に集めることも。[設定と検証](docs/pura-v1/FREE_MODE.md)。
+
+## 入口（2026-09-26から）
+
+[https://blitast-studio.github.io/pura/](https://blitast-studio.github.io/pura/) を開くと、すぐ雫に触れる入口プレイが始まります。上部の切り替えから「ステージ」「スコア」「自由」「三つの道」へ。元祖PURAは [`?play=classic`](https://blitast-studio.github.io/pura/?play=classic)。[詳細](docs/pura-v1/ENTRY.md)。

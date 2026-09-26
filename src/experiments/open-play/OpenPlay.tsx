@@ -4,6 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { ModeNav } from '../mode-nav';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -71,7 +72,8 @@ export default function OpenPlay() {
   const held = reading.held;
 
   return <div className="droplet-lab purity-scene open-play" data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="?play=open" aria-label="PURA 入口プレイ"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>OPEN PLAY</span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>OPEN PLAY</span></div></header>
+    <ModeNav current="open"/>
     <main>
       <section className="dl-stage purity-stage open-stage" aria-label="水滴で遊ぶ盤面" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="三色の雫をつかんで動かせる盤面" aria-describedby="open-help"/>
@@ -101,6 +103,6 @@ export default function OpenPlay() {
         <p>R：もう一度 · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">8ステージへ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=chapters">三つの道へ<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><span className="open-links"><a className="purity-lab-link" href="?lab=droplets">実験室<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=classic">元祖PURA<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }

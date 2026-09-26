@@ -7,6 +7,7 @@ import type { CoreStat } from '../../game/sim';
 import { clampSandboxCount, StageSimulation, stageDropHeight, STAGE_IDS, type MixRule, type StageMode, type StageScale } from './simulation';
 import type { ScoreBreakdown } from './score';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { ModeNav } from '../mode-nav';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -112,11 +113,12 @@ export default function StagePlay() {
   const next = LEVELS.find(l => l.id === stage + 1);
 
   return <div className="droplet-lab purity-scene stage-play" data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="?play=stages" aria-label="PURA ステージ"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
+    <ModeNav current={mode === 'score' ? 'score' : 'stages'} onSelect={{ stages: () => setMode('stage'), score: () => { setMode('score'); if (def.sandbox) setStage(1); } }}/>
     <main>
-      <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? '自由' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
+      <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? 'サンド' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
       {def.sandbox && <div className="stage-compare"><div><span>雫の数</span><select value={sandboxCount} onChange={e => setSandboxCount(clampSandboxCount(Number(e.target.value)))}>{Array.from({ length: (SANDBOX_COUNT.max - SANDBOX_COUNT.min) / SANDBOX_COUNT.step + 1 }, (_, i) => SANDBOX_COUNT.min + i * SANDBOX_COUNT.step).map(n => <option key={n} value={n}>{n}</option>)}</select></div></div>}
-      {!def.sandbox && <div className="stage-modes" role="group" aria-label="遊び方"><button aria-pressed={mode === 'stage'} onClick={() => setMode('stage')}>じっくり</button><button aria-pressed={mode === 'score'} onClick={() => setMode('score')}>スコアアタック</button>{mode === 'score' && <span>ベスト {bestScore[stage] ?? '—'}</span>}</div>}
+      {mode === 'score' && !def.sandbox && <p className="stage-best">スコアアタック · この面のベスト {bestScore[stage] ?? '—'}</p>}
       <p className="stage-title"><b>{def.name}</b>{def.hint}</p>
       <section className="dl-stage purity-stage stage-board" aria-label={`ステージ ${def.code} ${def.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={def.hint}/>

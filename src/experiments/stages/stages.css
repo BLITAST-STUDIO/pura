@@ -37,3 +37,4 @@
 .stage-result { position: absolute; top: 88px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 88%; text-align: center; padding: 8px 14px; border-radius: 12px; background: rgba(14, 26, 30, .72); color: #eef8f7; pointer-events: none; backdrop-filter: blur(6px); }
 .stage-result strong { display: block; font-size: 24px; font-weight: 300; font-variant-numeric: tabular-nums; }
 .stage-result small { font-size: 9px; color: #b3c9c9; }
+.stage-best { margin: -4px 0 10px; font-size: 10px; color: #9fc3bd; font-variant-numeric: tabular-nums; }
