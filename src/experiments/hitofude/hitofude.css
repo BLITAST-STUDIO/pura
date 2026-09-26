@@ -1,0 +1,10 @@
+.hitofude-play .stage-picker { grid-template-columns: repeat(3, 1fr); }
+.hitofude-play .stage-picker button { flex-direction: row; justify-content: center; gap: 8px; }
+.hitofude-play .stage-picker small { font-size: 10px; }
+.shot-meter { display: flex; align-items: center; gap: 7px; margin-top: 12px; font-size: 10px; color: #a9bfc1; }
+.shot-meter i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #5f7f84; }
+.shot-meter i.is-left { background: #8fd3d0; border-color: #8fd3d0; }
+.shot-meter small { margin-left: auto; font-variant-numeric: tabular-nums; }
+.droplet-lab[data-ui="light"] .shot-meter { color: #56666a; }
+.droplet-lab[data-ui="light"] .shot-meter i { border-color: rgba(30, 40, 44, .35); }
+.droplet-lab[data-ui="light"] .shot-meter i.is-left { background: #2f5f63; border-color: #2f5f63; }

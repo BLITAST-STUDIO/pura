@@ -52,7 +52,12 @@ function footprint(material: THREE.ShaderMaterial) {
 }
 
 type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: boolean; hue?: 'cyan' | 'rose' };
+/** A shot being aimed: launch direction (unit, board axes) and power 0..1. */
+type SceneAim = { x: number; y: number; r: number; dx: number; dy: number; power: number };
+const AIM_DOTS = 16;
 type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
+  /** Shot modes: a dotted line on the floor shows where and how hard a drop will go. */
+  aim?: () => SceneAim | null;
   /** Drop height in world units for a board radius; defaults to the approved fixed height. */
   height?: (radius: number) => number };
 export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
@@ -97,6 +102,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005);
     scene.add(mesh); return mesh;
   });
+  // Only screens that aim shots get the guide; every other scene is unchanged.
+  const aimDots = adapter.aim ? new THREE.InstancedMesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: '#2f3d41', transparent: true, opacity: .5, depthWrite: false }), AIM_DOTS) : null;
+  const aimMatrix = new THREE.Matrix4();
+  if (aimDots) { aimDots.count = 0; aimDots.position.z = -.007; aimDots.frustumCulled = false; scene.add(aimDots); }
   const bodies = new Map<number, Body>();
   const shapes = new ShapePool();
   let shapeBudget = SHAPE_UPDATES_PER_FRAME;
@@ -330,6 +339,17 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     }
     for (const d of sim.core.drops) updateBody(d, bodies.get(d.id) ?? makeBody(d), dt, impulses.get(d.id));
     for (const id of bodies.keys()) if (!sim.core.drops.some(d => d.id === id)) removeBody(id);
+    if (aimDots) {
+      // Drawn on the floor, so it also bends through any drop it passes under.
+      const aim = adapter.aim!();
+      const n = aim && aim.power > 0 ? Math.max(3, Math.round(AIM_DOTS * aim.power)) : 0;
+      for (let i = 0; i < n; i++) {
+        const along = aim!.r + 16 + i * 17, size = (3.2 - 1.6 * i / AIM_DOTS) * W;
+        aimMatrix.makeScale(size, size, 1).setPosition((aim!.x + aim!.dx * along - sim.width / 2) * W, (sim.height / 2 - aim!.y - aim!.dy * along) * W, 0);
+        aimDots.setMatrixAt(i, aimMatrix);
+      }
+      aimDots.count = n; aimDots.instanceMatrix.needsUpdate = true;
+    }
     const rect = canvas.getBoundingClientRect();
     const projectedGoals = (adapter.goals?.() ?? []).map((goal, i) => {
       const { ring, fill, label } = goalViews[i];
@@ -354,8 +374,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         screenX: (screen.x + 1) * rect.width / 2, screenY: (1 - screen.y) * rect.height / 2 };
     }));
   }
-  function cancel() {
-    const id = active; active = null; sim.release(); canvas.style.cursor = 'grab';
+  /** `letGo` is the finger lifting; everything else interrupts a hold. */
+  function cancel(letGo = false) {
+    const id = active; active = null;
+    if (letGo) sim.release(); else sim.abort();
+    canvas.style.cursor = 'grab';
     if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
   }
   function resize() {
@@ -408,7 +431,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     ray(e); if (!raycaster.ray.intersectPlane(pointerPlane, point)) return;
     sim.move(point.x / W + sim.width / 2 - offset.x, sim.height / 2 - point.y / W - offset.y); e.preventDefault();
   }
-  function up(e: PointerEvent) { if (e.pointerId === active) cancel(); }
+  function up(e: PointerEvent) { if (e.pointerId === active) cancel(e.type === 'pointerup'); }
+  function interrupt() { cancel(); }
   function prevent(e: TouchEvent) { if (e.cancelable) e.preventDefault(); }
   function visibility() { cancel(); last = 0; cancelAnimationFrame(raf); if (!document.hidden && !disposed && !lost) raf = requestAnimationFrame(loop); }
   function contextLost(e: Event) { e.preventDefault(); lost = true; cancel(); cancelAnimationFrame(raf); callbacks.onError?.('描画が中断されました。もう一度試してください。'); }
@@ -464,7 +488,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up); canvas.addEventListener('lostpointercapture', up);
   canvas.addEventListener('touchstart', prevent, { passive: false }); canvas.addEventListener('touchmove', prevent, { passive: false });
   canvas.addEventListener('webglcontextlost', contextLost); canvas.addEventListener('webglcontextrestored', contextRestored);
-  window.addEventListener('blur', cancel); document.addEventListener('visibilitychange', visibility);
+  window.addEventListener('blur', interrupt); document.addEventListener('visibilitychange', visibility);
   const observer = new ResizeObserver(resize); observer.observe(canvas);
   resize(); sim.reset(); refresh(0); render(); raf = requestAnimationFrame(loop); callbacks.onReady?.();
   return {
@@ -487,6 +511,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         floorMaterial.envMapIntensity = look.envIntensity; floorMaterial.bumpScale = look.bump;
         ambient.intensity = look.ambient; light.intensity = look.light;
         renderer.toneMappingExposure = look.exposure;
+        aimDots?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
       }
       floorMaterial.map = textures[options.inspection ? 1 : 0]; floorMaterial.bumpMap = options.inspection ? null : textures[0]; floorMaterial.needsUpdate = true;
       for (const b of bodies.values()) {
@@ -500,12 +525,13 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       if (disposed) return; cancel(); disposed = true; cancelAnimationFrame(raf); observer.disconnect();
       canvas.removeEventListener('pointerdown', down); canvas.removeEventListener('pointermove', move); canvas.removeEventListener('pointerup', up); canvas.removeEventListener('pointercancel', up); canvas.removeEventListener('lostpointercapture', up);
       canvas.removeEventListener('touchstart', prevent); canvas.removeEventListener('touchmove', prevent); canvas.removeEventListener('webglcontextlost', contextLost); canvas.removeEventListener('webglcontextrestored', contextRestored);
-      window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', visibility);
+      window.removeEventListener('blur', interrupt); document.removeEventListener('visibilitychange', visibility);
       for (const id of [...bodies.keys()]) removeBody(id);
       spray.dispose(); shapes.dispose();
       sphere.dispose(); projectionGeometry.dispose(); clay.dispose(); floor.geometry.dispose(); floorMaterial.dispose(); textures.forEach(t => t.dispose()); background.dispose(); env.dispose(); renderer.dispose();
       for (const g of goalViews) { for (const mesh of [g.ring, g.fill, g.label]) { mesh.geometry.dispose(); mesh.material.dispose(); } g.texture.dispose(); }
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
+      if (aimDots) { aimDots.geometry.dispose(); aimDots.material.dispose(); aimDots.dispose(); }
     },
   };
 }

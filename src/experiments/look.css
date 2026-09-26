@@ -15,6 +15,7 @@
 .droplet-lab[data-ui="light"] .purity-actions button { background: #f6f5f1; border-color: rgba(30, 40, 44, .14); color: #25302f; }
 .droplet-lab[data-ui="light"] .stage-picker button { background: #f6f5f1; border-color: rgba(30, 40, 44, .12); color: #2a3538; }
 .droplet-lab[data-ui="light"] .stage-picker button[aria-current] { background: #1e2629; color: #f2f1ec; border-color: #1e2629; }
+.droplet-lab[data-ui="light"] .stage-picker button[aria-current] small { color: #b9c8c9; }
 .droplet-lab[data-ui="light"] .stage-picker small, .droplet-lab[data-ui="light"] .stage-title, .droplet-lab[data-ui="light"] .stage-cores, .droplet-lab[data-ui="light"] .stage-best, .droplet-lab[data-ui="light"] .purity-details, .droplet-lab[data-ui="light"] .purity-details p, .droplet-lab[data-ui="light"] .purity-notice, .droplet-lab[data-ui="light"] .dl-footer, .droplet-lab[data-ui="light"] .dl-footer p, .droplet-lab[data-ui="light"] .free-slider, .droplet-lab[data-ui="light"] .stage-compare, .droplet-lab[data-ui="light"] .bench-phase, .droplet-lab[data-ui="light"] .bench-note { color: #5c686b; }
 .droplet-lab[data-ui="light"] .stage-title b, .droplet-lab[data-ui="light"] h1, .droplet-lab[data-ui="light"] h2, .droplet-lab[data-ui="light"] .purity-guidance h2, .droplet-lab[data-ui="light"] .purity-chapter { color: #1e2629; }
 .droplet-lab[data-ui="light"] .stage-cores i { background: rgba(30, 40, 44, .1); }
@@ -74,3 +75,6 @@
 .droplet-lab[data-look="gallery"] .dl-touch-hint { color: #4c5a5e; }
 .droplet-lab[data-look="gallery"] .stage-score, .droplet-lab[data-look="gallery"] .stage-score b { color: #1e2629; text-shadow: none; }
 .droplet-lab[data-look="gallery"] .stage-clear, .droplet-lab[data-look="gallery"] .stage-result { background: rgba(246, 245, 241, .82); color: #1e2629; }
+.droplet-lab[data-look="gallery"] .stage-clear small, .droplet-lab[data-look="gallery"] .stage-result small { color: #56666a; }
+.droplet-lab[data-look="gallery"] .stage-discovery { background: rgba(246, 245, 241, .86); color: #1e2629; }
+.droplet-lab[data-ui="light"] .stage-michi > span { color: #3b4a4e; }
