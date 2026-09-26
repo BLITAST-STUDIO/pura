@@ -62,3 +62,4 @@ PURAは、透明な色付き水滴をつかみ、滑らせ、同色を連続吸�
 - 2026-09-26追加: ユーザー承認により、`feat/sensory-feedback` の成果をプルリクエスト #1（https://github.com/BLITAST-STUDIO/pura/pull/1）でマージコミットとして `main` に統合。以後は `main` から新しい作業ブランチを切って進め、承認済みの状態はこれまでどおりタグで保存する。試遊配信（`gh-pages`）の手順は `docs/pura-v1/HOSTING.md` のまま。
 - 2026-09-26追加: ユーザー決定により、既定の見た目を白い画面（`?ui=light`）×白い展示室の盤面（`?look=gallery`）に変更。従来は `?ui=dark&look=studio`、戻し方はタグ `before-light-default-20260926`。ゲームの組み立て（ルールを元祖に統一・道を4章に再編・新しい遊び「ひとふで」）を承認し、最初は「ひとふで」の試作3面と第3章「混ぜて、分ける」の発見面を作る。詳細 `docs/pura-v1/DESIGN_DIRECTION.md`。
 - 2026-09-26追加: 見た目の既定変更をPR #2（https://github.com/BLITAST-STUDIO/pura/pull/2）で `main` に統合。Bの最初の実装として「ひとふで」（`?play=hitofude`）と道・第3章の発見面（`?play=stages&stage=31|32`）を `feat/hitofude` で試作。詳細 `docs/pura-v1/HITOFUDE.md`。
+- 2026-09-26追加: ユーザーが「ひとふで」を試遊し「普通に楽しめた、ハマる要素あり、パターゴルフ系やビリヤード系に似ている」と評価。狙い中は動かさず雫どうしの引き寄せを切る、このモード限定の設定も含めて保存点 `hitofude-liked-20260926`。
