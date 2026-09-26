@@ -4,6 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue } from '../../game/palette';
 import { HitofudeSimulation, shotLimit, type ShotResult } from './simulation';
 import { SHOT_BOARDS } from './boards';
+import { DAILY_HOLES, todaysHole } from './daily-holes';
 import { holeStrokes, relative, Round, ROUND_LABELS, roundHoles, scoreName, totals, type Card, type RoundKind } from './golf';
 import { challengeFrom, challengeOutcome, challengeText, challengeUrl } from './share';
 import { stageDropHeight } from '../stages/simulation';
@@ -22,6 +23,8 @@ import './hitofude.css';
 const RECORD_KEY = 'pura-flow-hitofude-v2';
 const PARS = SHOT_BOARDS.map(b => b.par);
 const IDS = SHOT_BOARDS.map(b => b.id);
+const ALL = [...SHOT_BOARDS, ...DAILY_HOLES];
+const isDaily = (id: number) => DAILY_HOLES.some(b => b.id === id);
 const HALVES = [{ label: 'OUT', holes: SHOT_BOARDS.slice(0, 9) }, { label: 'IN', holes: SHOT_BOARDS.slice(9, 18) }];
 /** Best strokes per hole, and the best round (against par) per kind; `round` was the front nine before the back nine existed. */
 type Records = { best: Record<number, number>; round: number | null; rounds?: Partial<Record<RoundKind, number>> };
@@ -44,7 +47,7 @@ export default function HitofudePlay() {
   const experience = useRef<ReturnType<typeof createFusionExperience> | null>(null);
   const [boardId, setBoardId] = useState(() => {
     const id = Number(new URLSearchParams(window.location.search).get('board') ?? 1);
-    return SHOT_BOARDS.some(b => b.id === id) ? id : 1;
+    return ALL.some(b => b.id === id) ? id : 1;
   });
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -63,8 +66,10 @@ export default function HitofudePlay() {
   const [look, setLook] = useState<Look>(initialLook);
   const [ui, setUi] = useState<Ui>(initialUi);
   const walls = useWalls();
-  const index = Math.max(0, SHOT_BOARDS.findIndex(b => b.id === boardId));
-  const board = SHOT_BOARDS[index];
+  const index = SHOT_BOARDS.findIndex(b => b.id === boardId);
+  const board = ALL.find(b => b.id === boardId) ?? SHOT_BOARDS[0];
+  const daily = isDaily(board.id);
+  const today = new Date();
 
   useEffect(() => {
     let alive = true;
@@ -147,7 +152,7 @@ export default function HitofudePlay() {
   const inRound = roundCard !== null;
   const kind = round.current?.kind ?? null;
   const roundIds = round.current?.ids ?? [];
-  const next = inRound ? SHOT_BOARDS.find(b => b.id === roundIds[roundIds.indexOf(board.id) + 1]) : SHOT_BOARDS[index + 1];
+  const next = inRound ? SHOT_BOARDS.find(b => b.id === roundIds[roundIds.indexOf(board.id) + 1]) : daily ? undefined : SHOT_BOARDS[index + 1];
   const roundDone = inRound && roundCard.every(s => s !== null);
   // The card shows all eighteen holes: this round's strokes, or each hole's best in practice.
   const card: Card = SHOT_BOARDS.map(b => inRound ? (roundIds.includes(b.id) ? roundCard[roundIds.indexOf(b.id)] : null) : records.best[b.id] ?? null);
@@ -156,11 +161,12 @@ export default function HitofudePlay() {
   const best = (k: RoundKind) => records.rounds?.[k];
 
   return <div className="droplet-lab purity-scene stage-play hitofude-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>ひとふで</span><span className="dl-edition-rule"/><span>HOLE <b>{board.code}</b></span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>ひとふで</span><span className="dl-edition-rule"/><span>{daily ? 'TODAY' : <>HOLE <b>{board.code}</b></>}</span></div></header>
     <ModeNav current="hitofude"/>
     <main>
-      <div className="stage-modes hitofude-modes" role="group" aria-label="回り方"><button aria-pressed={!inRound} onClick={practice}>練習</button>
+      <div className="stage-modes hitofude-modes" role="group" aria-label="回り方"><button aria-pressed={!inRound && !daily} onClick={() => { practice(); if (daily) go(SHOT_BOARDS[0].id); }}>練習</button>
         {(['out', 'in', 'full'] as const).map(k => <button key={k} aria-pressed={kind === k} onClick={() => startRound(k)}>{ROUND_LABELS[k]}</button>)}
+        <button aria-pressed={daily} onClick={() => { practice(); go(todaysHole(today).id); }}>今日</button>
         <span>{inRound ? `${Math.min(roundIds.length, sum.holes + (roundDone ? 0 : 1))}/${roundIds.length} · ${relative(sum.diff)}` : best('full') !== undefined ? `18H ベスト ${relative(best('full')!)}` : best('out') !== undefined ? `前半ベスト ${relative(best('out')!)}` : ''}</span></div>
       {HALVES.map(half => <nav key={half.label} className="stage-picker hitofude-holes" aria-label={`${half.label}のホールを選ぶ`}>{half.holes.map(b => {
         const s2 = card[IDS.indexOf(b.id)];
@@ -168,10 +174,10 @@ export default function HitofudePlay() {
           <span>{b.code}</span><small>{s2 === null ? `P${b.par}` : relative(s2 - b.par)}</small></button>;
       })}</nav>)}
       {challenge !== null && <p className="hitofude-challenge">挑戦状: この盤面を{challenge}打で決めた人がいます。</p>}
-      <p className="stage-title"><b>{board.name}</b>{board.hint}<span className="hole-par">パー{board.par}</span></p>
+      <p className="stage-title"><b>{board.name}</b>{board.hint}<span className="hole-par">{daily ? `${today.getMonth() + 1}月${today.getDate()}日 · ` : ''}パー{board.par}</span></p>
       <section className="dl-stage purity-stage stage-board" aria-label={`ひとふで ホール${board.code} ${board.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={board.hint}/>
-        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : `HOLE ${board.code} · PAR ${board.par}`}</span><span className="dl-stage-index">{reading.remaining}</span></div>
+        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : `${daily ? 'TODAY' : `HOLE ${board.code}`} · PAR ${board.par}`}</span><span className="dl-stage-index">{reading.remaining}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
@@ -206,7 +212,7 @@ export default function HitofudePlay() {
         <summary>遊び方と表示</summary>
         <p>雫に触れて、引いて、離す。雫は反対の向きへ滑り出します。遠くまで引くほど強く、床の点線が向きと強さの目安です。短く引いただけなら、打数に数えません。</p>
         <p>同じ色は触れるとひとつに、違う色ははじき合います（当てて押し出すこともできます）。石は動きません。色ごとにひとつにまとめたらホールアウト。</p>
-        <p>パーより少ない打数ほど良いスコア。1打で決めると「ひとふで」。パー+3打で決まらなければギブアップ（パー+4として数えます）。練習は何度でもやり直せます。ラウンドは前半9（1〜9番）・後半9（10〜18番）・18ホールから選び、一度ずつ回ります。決めたホールは、送るボタンから「この盤面、◯打で決めた」と友だちに送れます。</p>
+        <p>パーより少ない打数ほど良いスコア。1打で決めると「ひとふで」。パー+3打で決まらなければギブアップ（パー+4として数えます）。練習は何度でもやり直せます。ラウンドは前半9（1〜9番）・後半9（10〜18番）・18ホールから選び、一度ずつ回ります。「今日」は日替わりのホール（毎日ひとつ、一打で決められる面）。決めたホールは、送るボタンから「この盤面、◯打で決めた」と友だちに送れます。</p>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
