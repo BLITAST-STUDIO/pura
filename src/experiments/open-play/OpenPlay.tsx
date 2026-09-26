@@ -6,6 +6,7 @@ import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
+import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
@@ -34,6 +35,7 @@ export default function OpenPlay() {
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
   const [ui, setUi] = useState<Ui>(initialUi);
+  const walls = useWalls();
 
   useEffect(() => {
     let alive = true;
@@ -56,9 +58,9 @@ export default function OpenPlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', look, ripple,
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', look, walls, ripple,
       caustic });
-  }, [paused, reduced, quality, lighting, ripple, caustic, retry, look]);
+  }, [paused, reduced, quality, lighting, ripple, caustic, retry, look, walls]);
   const again = () => {
     experience.current?.restoreState(() => simulation.current?.reset());
     setPaused(false); setTouched(false);

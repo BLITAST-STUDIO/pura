@@ -26,3 +26,11 @@ test('the light page with the gallery board is the default; the earlier look sta
   assert.equal(initialLook('?look=unknown'), 'gallery');
   assert.equal(lookScene('studio', true).floor, '#c6c9c2', 'studio keeps its approved values');
 });
+
+test('walls: a rim by default for the trial; the line and the earlier invisible walls stay reachable', async () => {
+  const { initialWalls } = await import('../src/experiments/walls');
+  assert.equal(initialWalls(''), 'rim');
+  assert.equal(initialWalls('?walls=line'), 'line');
+  assert.equal(initialWalls('?walls=none'), 'none');
+  assert.equal(initialWalls('?walls=bogus'), 'rim');
+});

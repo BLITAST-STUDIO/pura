@@ -7,6 +7,7 @@ import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
+import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
@@ -48,6 +49,7 @@ export default function CurlingPlay() {
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
   const [ui, setUi] = useState<Ui>(initialUi);
+  const walls = useWalls();
   pausedRef.current = paused;
 
   useEffect(() => {
@@ -102,8 +104,8 @@ export default function CurlingPlay() {
     return () => { alive = false; cancelAnimationFrame(frame); clearTimeout(timer); experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [players, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, players, retry, look]);
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, players, retry, look, walls]);
   const newGame = () => { setRetry(v => v + 1); setPaused(false); };
   const nextEnd = () => { simulation.current?.nextEnd(); };
   const r = reading;
