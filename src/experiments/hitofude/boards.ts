@@ -114,4 +114,113 @@ export const SHOT_BOARDS: ShotBoard[] = [
       { x: 84, y: 96, r: 17, hue: 'cyan' },
     ],
   },
+  {
+    // Laid along the real path; each fusion shifts the drop toward what it swallowed, so the path sways.
+    id: 10, code: '10', name: 'うねり', hint: 'ゆれる列を、一度に。', par: 2, min: 1,
+    drops: [
+      { x: 90, y: 505, r: 22, hue: 'cyan' },
+      { x: 140, y: 419, r: 15, hue: 'cyan' },
+      { x: 144, y: 346, r: 15, hue: 'cyan' },
+      { x: 194, y: 289, r: 15, hue: 'cyan' },
+      { x: 194, y: 221, r: 15, hue: 'cyan' },
+      { x: 240, y: 176, r: 15, hue: 'cyan' },
+      { x: 238, y: 112, r: 15, hue: 'cyan' },
+    ],
+  },
+  {
+    // A heavy rose blocks the straight way; small drops barely move it.
+    id: 11, code: '11', name: 'おもし', hint: '重い雫は、動かない。', par: 3, min: 2,
+    drops: [
+      { x: 210, y: 505, r: 22, hue: 'cyan' },
+      { x: 160, y: 150, r: 16, hue: 'cyan' },
+      { x: 260, y: 150, r: 16, hue: 'cyan' },
+      { x: 210, y: 300, r: 42, hue: 'rose' },
+      { x: 350, y: 440, r: 16, hue: 'rose' },
+    ],
+  },
+  {
+    // Colours alternate along one diagonal.
+    id: 12, code: '12', name: 'まじりの列', hint: '一列に、二つの色。', par: 3, min: 1,
+    drops: [
+      { x: 90, y: 470, r: 20, hue: 'cyan' },
+      { x: 138, y: 398, r: 16, hue: 'rose' },
+      { x: 186, y: 326, r: 16, hue: 'cyan' },
+      { x: 234, y: 254, r: 16, hue: 'rose' },
+      { x: 282, y: 182, r: 16, hue: 'cyan' },
+      { x: 330, y: 110, r: 16, hue: 'rose' },
+    ],
+  },
+  {
+    // A heavy cyan cuts the rose to its partner, then the amber to its own, and runs on to the cyan.
+    id: 13, code: '13', name: 'たまつき二つ', hint: '重い一打で、二つ突く。', par: 3, min: 1,
+    drops: [
+      { x: 210, y: 505, r: 30, hue: 'cyan' },
+      { x: 198, y: 400, r: 15, hue: 'rose' },
+      { x: 150, y: 236, r: 15, hue: 'rose' },
+      { x: 241, y: 262, r: 15, hue: 'amber' },
+      { x: 298, y: 127, r: 15, hue: 'amber' },
+      { x: 223, y: 160, r: 16, hue: 'cyan' },
+    ],
+  },
+  {
+    // Two gates in a row; each lets a small drop through.
+    id: 14, code: '14', name: 'せまいみち・二', hint: '門が、ふたつ。', par: 2, min: 1,
+    stones: [{ x: 130, y: 380, r: 28 }, { x: 250, y: 380, r: 28 }, { x: 170, y: 220, r: 28 }, { x: 290, y: 220, r: 28 }],
+    drops: [
+      { x: 190, y: 500, r: 20, hue: 'cyan' },
+      { x: 230, y: 300, r: 14, hue: 'cyan' },
+      { x: 230, y: 130, r: 14, hue: 'cyan' },
+    ],
+  },
+  {
+    // A shallow hit on the left wall leaves along it; the drops wait on that line.
+    id: 15, code: '15', name: 'かべぞい', hint: '浅く当てると、壁に沿う。', par: 2, min: 1,
+    drops: [
+      { x: 150, y: 505, r: 20, hue: 'amber' },
+      { x: 47, y: 218, r: 13, hue: 'amber' },
+      { x: 58, y: 163, r: 13, hue: 'amber' },
+      { x: 67, y: 109, r: 13, hue: 'amber' },
+      { x: 75, y: 57, r: 13, hue: 'amber' },
+    ],
+  },
+  {
+    // A row of stones; one drop passes a gap, two fused do not.
+    id: 16, code: '16', name: '石のむこう', hint: '一粒ずつなら、通れる。', par: 3, min: 2,
+    stones: [{ x: 100, y: 280, r: 30 }, { x: 210, y: 280, r: 30 }, { x: 320, y: 280, r: 30 }],
+    drops: [
+      { x: 120, y: 440, r: 18, hue: 'cyan' },
+      { x: 300, y: 470, r: 18, hue: 'cyan' },
+      { x: 240, y: 130, r: 18, hue: 'cyan' },
+      { x: 210, y: 400, r: 18, hue: 'rose' },
+      { x: 90, y: 150, r: 18, hue: 'rose' },
+      { x: 340, y: 120, r: 18, hue: 'rose' },
+    ],
+  },
+  {
+    // A rack of three colours and a cue drop, as in billiards.
+    id: 17, code: '17', name: 'ブレイク', hint: 'まず、崩す。', par: 3, min: 2,
+    drops: [
+      { x: 210, y: 480, r: 20, hue: 'cyan' },
+      { x: 210, y: 170, r: 15, hue: 'amber' },
+      { x: 194, y: 198, r: 15, hue: 'rose' },
+      { x: 226, y: 198, r: 15, hue: 'cyan' },
+      { x: 178, y: 226, r: 15, hue: 'cyan' },
+      { x: 210, y: 226, r: 15, hue: 'amber' },
+      { x: 242, y: 226, r: 15, hue: 'rose' },
+    ],
+  },
+  {
+    // The finale: eight drops along one long banked, swaying path.
+    id: 18, code: '18', name: 'おおきなひとふで', hint: '長い一打。左の壁で折り返して。', par: 2, min: 1,
+    drops: [
+      { x: 365, y: 505, r: 22, hue: 'cyan' },
+      { x: 286, y: 421, r: 13, hue: 'cyan' },
+      { x: 216, y: 381, r: 13, hue: 'cyan' },
+      { x: 173, y: 318, r: 13, hue: 'cyan' },
+      { x: 84, y: 249, r: 13, hue: 'cyan' },
+      { x: 60, y: 188, r: 13, hue: 'cyan' },
+      { x: 108, y: 130, r: 13, hue: 'cyan' },
+      { x: 117, y: 64, r: 13, hue: 'cyan' },
+    ],
+  },
 ];

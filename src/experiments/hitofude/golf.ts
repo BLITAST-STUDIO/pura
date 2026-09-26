@@ -39,3 +39,10 @@ export class Round {
   record(strokes: number) { if (!this.finished) this.card[this.hole] = strokes; }
   get totals() { return totals(this.card, this.pars); }
 }
+
+/** As in golf: the front nine (OUT), the back nine (IN), or all eighteen. */
+export type RoundKind = 'out' | 'in' | 'full';
+export const ROUND_LABELS: Record<RoundKind, string> = { out: '前半9', in: '後半9', full: '18ホール' };
+export function roundHoles<T>(kind: RoundKind, holes: readonly T[]): T[] {
+  return kind === 'out' ? holes.slice(0, 9) : kind === 'in' ? holes.slice(9, 18) : holes.slice(0, 18);
+}
