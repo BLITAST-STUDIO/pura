@@ -128,6 +128,7 @@ export function createFusionMaterial(background: THREE.Texture) {
           opticalDepth+=dye(p)*max(distanceInside,0.)/8.;
         }
         transmitted*=exp(-opticalDepth);
+        vec3 glowTint=exp(-uAbsorption*.6);
 ` + material.fragmentShader.slice(end);
   return material;
 }

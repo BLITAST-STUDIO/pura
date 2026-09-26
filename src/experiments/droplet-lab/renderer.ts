@@ -87,13 +87,14 @@ export function floorTexture(inspection: boolean) {
   return texture;
 }
 
-export function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boolean) {
+/** `scale` dims the whole room (floor reflections only; drops compute their own lights). */
+export function studioEnvironment(renderer: THREE.WebGLRenderer, daylight: boolean, scale = 1) {
   const studio = new THREE.Scene();
   studio.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30),
-    new THREE.MeshBasicMaterial({ color: daylight ? '#83949a' : '#343d49', side: THREE.BackSide })));
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(daylight ? '#83949a' : '#343d49').multiplyScalar(scale), side: THREE.BackSide })));
   function softbox(w: number, h: number, x: number, y: number, z: number, rgb: [number, number, number]) {
     const panel = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(...rgb), side: THREE.DoubleSide }));
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(...rgb).multiplyScalar(scale), side: THREE.DoubleSide }));
     panel.position.set(x, y, z);
     panel.lookAt(0, 0, 0);
     studio.add(panel);
