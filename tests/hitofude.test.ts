@@ -19,6 +19,16 @@ const MIN_SOLUTIONS: Record<number, Shot[]> = {
   7: [{ id: 1004, angle: rad(31), power: 1 }, { id: 2, angle: rad(192), power: 1 }],
   8: [{ id: 1000, angle: rad(214), power: 0.8 }, { id: 4, angle: rad(332), power: 1 }],
   9: [{ id: 1000, angle: rad(288), power: 0.8 }],
+  10: [{ id: 1000, angle: rad(291), power: 0.8 }],
+  11: [{ id: 1000, angle: rad(317), power: 0.9 }, { id: 2, angle: rad(166), power: 1 }],
+  12: [{ id: 1000, angle: rad(301), power: 1 }],
+  // The heavy cyan cuts the rose, then the amber, and runs on to its own partner.
+  13: [{ id: 1000, angle: rad(270), power: 1 }],
+  14: [{ id: 1000, angle: rad(274), power: 0.8 }],
+  15: [{ id: 1000, angle: rad(247), power: 0.95 }],
+  16: [{ id: 1004, angle: rad(299), power: 0.95 }, { id: 1000, angle: rad(344), power: 1 }],
+  17: [{ id: 1000, angle: rad(51), power: 1 }, { id: 1, angle: rad(274), power: 1 }],
+  18: [{ id: 1000, angle: rad(222), power: 1 }],
 };
 
 test('every hole can be finished in its recorded minimum, and par is above it', () => {
@@ -31,7 +41,9 @@ test('every hole can be finished in its recorded minimum, and par is above it', 
     assert.deepEqual(sim.result, { cleared: true, shots: board.min }, board.name);
     assert.equal(sim.core.drops.length, new Set(board.drops.map(d => d.hue)).size, 'one drop per colour');
   }
-  assert.equal(SHOT_BOARDS.length, 9, 'a nine-hole course');
+  assert.equal(SHOT_BOARDS.length, 18, 'an eighteen-hole course');
+  assert.equal(SHOT_BOARDS.slice(0, 9).reduce((n, b) => n + b.par, 0), 23, 'OUT par');
+  assert.equal(SHOT_BOARDS.slice(9).reduce((n, b) => n + b.par, 0), 23, 'IN par');
 });
 
 test('hole 7 in order makes par: amber first, then cyan gently, then rose', () => {

@@ -42,3 +42,13 @@
 .droplet-lab[data-look="gallery"] .round-summary small, .droplet-lab[data-look="gallery"] .round-summary span { color: #56666a; }
 .droplet-lab[data-look="gallery"] .round-summary button { background: #1e2629; border-color: #1e2629; color: #f2f1ec; }
 @media (prefers-reduced-motion: reduce) { .hole-in-one { display: none; } }
+.hitofude-modes button { padding: 7px 10px; }
+.hitofude-holes { margin-bottom: 6px; }
+.hitofude-holes + .hitofude-holes { margin-bottom: 12px; }
+.hitofude-challenge { margin: 0 0 8px; font-size: 11px; color: #d9c7a0; }
+.droplet-lab[data-ui="light"] .hitofude-challenge { color: #7d6a4f; }
+.hitofude-play .stage-clear .share { padding: 5px 8px; }
+.scorecard + .scorecard { margin-top: 6px; }
+.hitofude-shared { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); margin: 0; padding: 7px 14px; border-radius: 999px; background: rgba(14, 26, 30, .7); color: #e3f2f0; font-size: 11px; white-space: nowrap; pointer-events: none; animation: hitofude-shared 2.4s ease both; }
+@keyframes hitofude-shared { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.droplet-lab[data-look="gallery"] .hitofude-shared { background: rgba(246, 245, 241, .9); color: #1e2629; }
