@@ -10,6 +10,10 @@ export type Look = 'studio' | 'night' | 'gallery';
 export const LOOKS: Look[] = ['studio', 'night', 'gallery'];
 export const LOOK_LABELS: Record<Look, string> = { studio: 'スタジオ（現在）', night: '夜の水面', gallery: '白い展示室' };
 
+/** The page around the board (menus, text), switched independently of the board. */
+export type Ui = 'dark' | 'light';
+export const UI_LABELS: Record<Ui, string> = { dark: '暗い（現在）', light: '明るい' };
+
 export type LookScene = {
   background: string; floor: string; roughness: number; metalness: number; envIntensity: number; bump: number;
   ambient: number; light: number; exposure: number; daylight: boolean;
@@ -46,6 +50,27 @@ export function storeLook(look: Look) {
   try {
     const url = new URL(location.href);
     if (look === 'studio') url.searchParams.delete('look'); else url.searchParams.set('look', look);
+    history.replaceState(history.state, '', url);
+  } catch { /* no location */ }
+}
+
+const UI_KEY = 'pura-flow-ui-v1';
+export function initialUi(search?: string): Ui {
+  try {
+    const q = new URLSearchParams(search ?? location.search).get('ui');
+    if (q === 'light' || q === 'dark') return q;
+  } catch { /* no location */ }
+  try {
+    const stored = localStorage.getItem(UI_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch { /* storage unavailable */ }
+  return 'dark';
+}
+export function storeUi(ui: Ui) {
+  try { localStorage.setItem(UI_KEY, ui); } catch { /* keeps working without storage */ }
+  try {
+    const url = new URL(location.href);
+    if (ui === 'dark') url.searchParams.delete('ui'); else url.searchParams.set('ui', ui);
     history.replaceState(history.state, '', url);
   } catch { /* no location */ }
 }

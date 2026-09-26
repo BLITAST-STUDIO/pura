@@ -7,7 +7,7 @@ import { readProgress, writeProgress, type Progress } from './progress';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
-import { initialLook, type Look } from '../look';
+import { initialLook, initialUi, type Look, type Ui } from '../look';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import './purity-scene.css';
@@ -47,6 +47,7 @@ export default function PurityScene() {
   const [notice, setNotice] = useState('');
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
+  const [ui, setUi] = useState<Ui>(initialUi);
   // Last heard goal states. Null means "adopt silently" after load, undo or reset.
   const heard = useRef<{ ready: boolean[]; delivered: boolean[] } | null>(null);
   useEffect(() => {
@@ -109,7 +110,7 @@ export default function PurityScene() {
   const multi = chapter.goals.length > 1;
   const heading = state.completed ? (multi ? 'ふたつの色が、届きました。' : '澄んだ一滴が、届きました。') : state.contaminated ? '混ざっても、やり直せる。' : state.ready ? (multi ? 'それぞれの輪へ、そっと。' : '光の輪へ、そっと。') : multi ? '色ごとに、ひとつに。' : 'シアンを、ひとつに。';
   const guidance = state.completed ? 'このまま眺めても、もう一度触れても。' : state.contaminated ? '別の色が入りました。一手戻して、違う道を試せます。' : state.ready ? '同じ色名の輪に収め、指を離して落ち着かせます。' : chapter.hint;
-  return <div className="droplet-lab purity-scene" data-look={look} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
+  return <div className="droplet-lab purity-scene" data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>CHAPTER <b>{String(chapterId).padStart(2, '0')}</b></span></div></header>
     <ModeNav current="chapters"/>
     <main>
@@ -138,7 +139,7 @@ export default function PurityScene() {
           </div>)}
           <p className="purity-target">目標：{multi ? '二色それぞれ' : 'シアン'}を全部集め、純度90%以上で輪の中へ。</p>
           {state.completed && <div className="purity-completion" role="status">{chapterId < 3 ? <button onClick={() => selectChapter(chapterId + 1)}>次の面へ <ArrowUpRight size={15}/></button> : <><p>{progress.completed.length === 3 ? '三つの道の、最後まで。' : 'ふたつの色が、そろいました。'}<br/>別の道を選ぶか、自由な混色へ。</p><a href="?lab=fusion&mixing=bloom">自由に混ぜる <ArrowUpRight size={15}/></a></>}</div>}
-          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><LookPicker look={look} onChange={setLook}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => {
+          <details className="purity-details"><summary>遊び方と表示</summary><p>異なる色も触れると混ざります。すべての雫は動かせます。2面目の丸い石だけは動かせません。「一手戻す」は、掴む前の配置と色へ戻し、動きを止めます。</p><p>輪には雫全体を収めて、ゆっくり指を離します。達成後も自由に触れられます。</p><label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label><LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label><label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label><label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => {
             setRipple(e.target.checked);
             writeLookQuery('ripple', rippleQuery(e.target.checked));
           }}/></label><label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => {

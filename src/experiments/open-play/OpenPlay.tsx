@@ -6,7 +6,7 @@ import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
-import { initialLook, type Look } from '../look';
+import { initialLook, initialUi, type Look, type Ui } from '../look';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -33,6 +33,7 @@ export default function OpenPlay() {
   const [reading, setReading] = useState<Reading>({ count: 12, held: null });
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
+  const [ui, setUi] = useState<Ui>(initialUi);
 
   useEffect(() => {
     let alive = true;
@@ -74,7 +75,7 @@ export default function OpenPlay() {
   }, []);
   const held = reading.held;
 
-  return <div className="droplet-lab purity-scene open-play" data-look={look} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
+  return <div className="droplet-lab purity-scene open-play" data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>OPEN PLAY</span></div></header>
     <ModeNav current="open"/>
     <main>
@@ -97,7 +98,7 @@ export default function OpenPlay() {
           <p>混ざった雫は、すばやく2回タップすると、入った色を取り出せます。</p>
         </div>
         <label><span>光</span><select value={lighting} onChange={e => setLighting(e.target.value as FusionOptions['lighting'])}><option value="studio">スタジオ</option><option value="daylight">自然光</option></select></label>
-        <LookPicker look={look} onChange={setLook}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
+        <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => { setRipple(e.target.checked); writeLookQuery('ripple', rippleQuery(e.target.checked)); }}/></label>
         <label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => { setCaustic(e.target.checked ? 'shape' : 'artistic'); writeLookQuery('caustic', causticQuery(e.target.checked)); }}/></label>
