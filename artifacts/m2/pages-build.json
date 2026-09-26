@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-09-17T01:55:58.138068+00:00",
+  "url": "https://blitast-studio.github.io/pura/?lab=fusion",
+  "sourceCommit": "d71e027a0567222a68e004fbf689fb95c3468d03",
+  "deployCommit": "9e7e76a971c53cdddce765b011e2f3f0f6600104",
+  "pagesStatus": "built",
+  "files": [
+    {
+      "path": "assets/DropletLab-CS23nfV-.js",
+      "status": 200,
+      "sha256": "d0df26e38eb18a9264b28a99364423bea693a75da57c6518be5155de58431a12",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/FusionLab-CKUHyZX8.js",
+      "status": 200,
+      "sha256": "4ba1f72ca5fbd5daa56d6394bcef1c95ea9337228e76699d2ad2753d835a6370",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/droplet-lab-CR0OYHkI.js",
+      "status": 200,
+      "sha256": "9c874c9995085aebbc314906d0b9cf3561a71e338b0c60e129349708ba5b5f4a",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-DM0b9xJG.js",
+      "status": 200,
+      "sha256": "56f0ada73c60df610e6c58bc09ee43e9dace38b3f37c0a2b721095e4f4c8189a",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-D8qYFVwN.css",
+      "status": 200,
+      "sha256": "daa11207eb96f85e7b006429097d0845e30df0eb7ab07c1482ced26bea0bab56",
+      "matchesLocal": true
+    },
+    {
+      "path": "favicon.svg",
+      "status": 200,
+      "sha256": "1135c8a4e260adfde0cb166f2f33b7010a94e770701763bdbfb1b7af85065b88",
+      "matchesLocal": true
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "cb9b97e8d09b90077277285465b88ae98e44e24f671897cbae0a0b2b98aa27ff",
+      "matchesLocal": true
+    },
+    {
+      "path": "og.jpg",
+      "status": 200,
+      "sha256": "c85b46622f4212cc5c8f9f33e74737ecb09a8cbe8ebbc4525bf8d7b10330a76f",
+      "matchesLocal": true
+    }
+  ]
+}

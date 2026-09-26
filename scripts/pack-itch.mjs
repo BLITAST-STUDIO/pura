@@ -1,84 +1,67 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import {
-  copyFileSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-  statSync,
-} from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = dirname(fileURLToPath(new URL("../package.json", import.meta.url)));
-const outDir = join(root, "dist");
-const artifacts = join(root, "artifacts");
-const zipPath = join(artifacts, "pura-html.zip");
 
-mkdirSync(artifacts, { recursive: true });
-
-const build = spawnSync("npx", ["vite", "build"], {
-  cwd: root,
-  stdio: "inherit",
-  env: process.env,
-});
-if (build.status !== 0) process.exit(build.status ?? 1);
-
-copyFileSync(join(root, "public", "favicon.svg"), join(outDir, "favicon.svg"));
-
-const assetDir = join(outDir, "assets");
-const assets = readdirSync(assetDir);
-const jsName = assets.find((f) => f.endsWith(".js"));
-const cssName = assets.find((f) => f.endsWith(".css"));
-if (!jsName || !cssName) {
-  console.error("missing js/css in", assets);
-  process.exit(1);
+function listFiles(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    return entry.isDirectory()
+      ? listFiles(join(directory, entry.name), relative)
+      : [relative];
+  }).sort();
 }
 
-copyFileSync(join(assetDir, jsName), join(outDir, "game.js"));
-copyFileSync(join(assetDir, cssName), join(outDir, "game.css"));
-rmSync(assetDir, { recursive: true, force: true });
+/** Keep Vite's HTML, module imports, styles and relative asset paths intact. */
+export function packageBuild(buildDirectory, destination) {
+  const files = listFiles(buildDirectory);
+  if (!files.includes("index.html")) throw new Error("Build output is missing index.html.");
+  const css = files.filter((name) => name.endsWith(".css"))
+    .map((name) => readFileSync(join(buildDirectory, name), "utf8")).join("\n");
+  const absoluteUtilities = (css.match(/\.absolute\b/g) || []).length;
+  const flexUtilities = (css.match(/\.flex\b/g) || []).length;
+  if (absoluteUtilities === 0 || flexUtilities === 0) {
+    throw new Error(`Build CSS missing utilities (absolute=${absoluteUtilities} flex=${flexUtilities}). Tailwind @source failed.`);
+  }
 
-const cssText = readFileSync(join(outDir, "game.css"), "utf8");
-const absHits = (cssText.match(/\.absolute\b/g) || []).length;
-const flexHits = (cssText.match(/\.flex\b/g) || []).length;
-if (absHits === 0 || flexHits === 0) {
-  console.error(
-    `game.css missing utilities (absolute=${absHits} flex=${flexHits}). Tailwind @source failed.`,
-  );
-  process.exit(1);
+  mkdirSync(dirname(destination), { recursive: true });
+  // Python is already used by the original packaging command. Arguments keep
+  // filesystem paths out of executable source, including paths with spaces.
+  const zip = spawnSync("python3", ["-c", `
+import pathlib, sys, zipfile
+root = pathlib.Path(sys.argv[1])
+with zipfile.ZipFile(sys.argv[2], "w", zipfile.ZIP_DEFLATED) as archive:
+    for path in sorted(root.rglob("*")):
+        if path.is_file():
+            archive.write(path, path.relative_to(root).as_posix())
+`, resolve(buildDirectory), resolve(destination)], { encoding: "utf8" });
+  if (zip.error) throw zip.error;
+  if (zip.status !== 0) throw new Error(zip.stderr || `ZIP creation failed (${zip.status}).`);
+  return { files, bytes: statSync(destination).size, absoluteUtilities, flexUtilities };
 }
-console.log(`css ok  absolute=${absHits} flex=${flexHits}  ${(cssText.length / 1024).toFixed(1)} KB`);
 
-let html = readFileSync(join(outDir, "index.html"), "utf8");
-html = html.replace(/<script type="module"[^>]*><\/script>\s*/g, "");
-html = html.replace(/<link rel="modulepreload"[^>]*>\s*/g, "");
-html = html.replace(/<link[^>]*href="\.\/assets\/[^"]+"[^>]*>\s*/g, "");
-html = html.replace("</head>", `    <link rel="stylesheet" href="./game.css" />\n  </head>`);
-if (!html.includes('src="./game.js"')) {
-  html = html.replace(
-    "</body>",
-    `    <script src="./game.js" defer onerror="__puraFail('game.js を読み込めません')"></script>\n  </body>`,
-  );
+function main() {
+  const build = spawnSync("npx", ["vite", "build"], {
+    cwd: root,
+    stdio: "inherit",
+    env: process.env,
+  });
+  if (build.error) throw build.error;
+  if (build.status !== 0) process.exit(build.status ?? 1);
+
+  const zipPath = join(root, "artifacts", "pura-html.zip");
+  const result = packageBuild(join(root, "dist"), zipPath);
+  console.log(`css ok  absolute=${result.absoluteUtilities} flex=${result.flexUtilities}`);
+  console.log(`packed ${zipPath} (${(result.bytes / 1024).toFixed(1)} KB, ${result.files.length} files)`);
 }
-writeFileSync(join(outDir, "index.html"), html);
 
-rmSync(zipPath, { force: true });
-const py = `
-import zipfile, os
-root = ${JSON.stringify(outDir)}
-out = ${JSON.stringify(zipPath)}
-keep = {"index.html", "game.js", "game.css", "favicon.svg"}
-with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-    for dirpath, _, files in os.walk(root):
-        for name in files:
-            rel = os.path.relpath(os.path.join(dirpath, name), root).replace("\\\\", "/")
-            if rel in keep:
-                z.write(os.path.join(dirpath, name), os.path.basename(name))
-print("wrote", out, os.path.getsize(out), zipfile.ZipFile(out).namelist())
-`;
-const zip = spawnSync("python3", ["-c", py], { cwd: root, stdio: "inherit" });
-if (zip.status !== 0) process.exit(zip.status ?? 1);
-console.log(`packed ${zipPath} (${(statSync(zipPath).size / 1024).toFixed(1)} KB)`);
+// Importing the helper in tests must not trigger a build or replace an archive.
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  try { main(); } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  }
+}

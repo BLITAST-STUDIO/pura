@@ -1,0 +1,175 @@
+{
+  "checkedAt": "2026-09-16T11:26:34.064Z",
+  "source": "src/experiments/droplet-lab/renderer.ts",
+  "method": "Reproduce the renderer camera-fit equations; independently project the actual Three SphereGeometry vertices through THREE.PerspectiveCamera at each sampled shape and legal center corner. This is mathematical projection validation, not a browser screenshot or frame-rate test.",
+  "assumptions": {
+    "radiusLogical": 88,
+    "worldScale": 0.01,
+    "cameraTiltRadians": 0.47,
+    "cameraVerticalFovDegrees": 34,
+    "safeMaxAbsNdc": 0.97,
+    "canvasEdgeMarginFraction": 0.015,
+    "stretchRange": [
+      -0.26,
+      0.26
+    ],
+    "stretchSamples": [
+      -0.26,
+      0,
+      0.26
+    ],
+    "stretchRangeEnforcedInRenderer": true,
+    "squashRange": [
+      0,
+      0.25
+    ],
+    "squashSamples": [
+      0,
+      0.25
+    ],
+    "rotationSamplesDegrees": [
+      0,
+      22.5,
+      45,
+      67.5,
+      90,
+      112.5,
+      135,
+      157.5,
+      180,
+      202.5,
+      225,
+      247.5,
+      270,
+      292.5,
+      315,
+      337.5
+    ],
+    "legalCenterCorners": 4,
+    "geometry": "SphereGeometry(1,96,64), clipped z=max(.007,(sphereZ+.64)*.62), actual renderer scale and taper equations",
+    "fitBound": "All rotations are bounded by the maximum XY scale (1.3356) as a circular ellipsoid; taper displacement is bounded separately in XY and Z. Four perspective frustum inequalities use the ellipsoid support function at the worst legal center corner. Vertex checks sample stretch/squash/rotation; the analytical envelope provides the continuous bound.",
+    "scope": "Visible droplet geometry including its height; game physics, radius and logical bounds are unchanged."
+  },
+  "results": [
+    {
+      "canvasCssPixels": [
+        1194,
+        343
+      ],
+      "logicalBoard": [
+        1200,
+        344.7236180904523
+      ],
+      "cameraDistance": 6.800529382269528,
+      "ratioToOriginalDistance": 1.2062593760404086,
+      "maxAbsNdc": 0.9478891894976859,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "projectedVertices": 2421120,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": 0.26,
+        "squash": 0,
+        "angleDegrees": 202.5,
+        "vertex": 3146,
+        "ndc": [
+          -0.9478891894976859,
+          -0.39070818117322464
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        1100,
+        620
+      ],
+      "logicalBoard": [
+        1166,
+        657.2
+      ],
+      "cameraDistance": 12.691240829904372,
+      "ratioToOriginalDistance": 1.1807978415954465,
+      "maxAbsNdc": 0.9543972161628854,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "projectedVertices": 2421120,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": 0.26,
+        "squash": 0,
+        "angleDegrees": 202.5,
+        "vertex": 3343,
+        "ndc": [
+          -0.9543972161628854,
+          -0.6025682159939236
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        348,
+        368
+      ],
+      "logicalBoard": [
+        550,
+        581.6091954022988
+      ],
+      "cameraDistance": 11.504812263752175,
+      "ratioToOriginalDistance": 1.2095318028862798,
+      "maxAbsNdc": 0.9462926706686752,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "projectedVertices": 2421120,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": 0.26,
+        "squash": 0,
+        "angleDegrees": 180,
+        "vertex": 2956,
+        "ndc": [
+          -0.9462926706686752,
+          -0.4761161032962569
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        390,
+        560
+      ],
+      "logicalBoard": [
+        550,
+        789.7435897435897
+      ],
+      "cameraDistance": 15.632753417741236,
+      "ratioToOriginalDistance": 1.210370661453039,
+      "maxAbsNdc": 0.9488757959155212,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "projectedVertices": 2421120,
+      "worstCase": {
+        "corner": [
+          -1,
+          -1
+        ],
+        "stretch": 0.26,
+        "squash": 0,
+        "angleDegrees": 180,
+        "vertex": 3053,
+        "ndc": [
+          -0.9488757959155212,
+          -0.5606885605003344
+        ]
+      }
+    }
+  ]
+}

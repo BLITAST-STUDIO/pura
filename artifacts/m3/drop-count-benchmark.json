@@ -1,0 +1,85 @@
+{
+ "device": "Mac Apple M1 GPU (ANGLE Metal), headless Chrome, 390x844 @2x, vsync off, one drop wiggled in place (6 px circle) so the count holds; not a phone",
+ "results": [
+  {
+   "quality": "high",
+   "drops": 12,
+   "liveDrops": 11,
+   "medianFrameMs": 2.6,
+   "p95FrameMs": 5.1,
+   "logs": 0
+  },
+  {
+   "quality": "high",
+   "drops": 24,
+   "liveDrops": 24,
+   "medianFrameMs": 3.8,
+   "p95FrameMs": 7.2,
+   "logs": 0
+  },
+  {
+   "quality": "high",
+   "drops": 36,
+   "liveDrops": 36,
+   "medianFrameMs": 4.2,
+   "p95FrameMs": 7.6,
+   "logs": 0
+  },
+  {
+   "quality": "high",
+   "drops": 48,
+   "liveDrops": 48,
+   "medianFrameMs": 5.2,
+   "p95FrameMs": 7.5,
+   "logs": 0
+  },
+  {
+   "quality": "high",
+   "drops": 60,
+   "liveDrops": 60,
+   "medianFrameMs": 5.8,
+   "p95FrameMs": 8,
+   "logs": 0
+  },
+  {
+   "quality": "balanced",
+   "drops": 12,
+   "liveDrops": 11,
+   "medianFrameMs": 1.7,
+   "p95FrameMs": 3.9,
+   "logs": 0
+  },
+  {
+   "quality": "balanced",
+   "drops": 24,
+   "liveDrops": 24,
+   "medianFrameMs": 2.1,
+   "p95FrameMs": 2.7,
+   "logs": 0
+  },
+  {
+   "quality": "balanced",
+   "drops": 36,
+   "liveDrops": 36,
+   "medianFrameMs": 2.6,
+   "p95FrameMs": 3.2,
+   "logs": 0
+  },
+  {
+   "quality": "balanced",
+   "drops": 48,
+   "liveDrops": 48,
+   "medianFrameMs": 3.2,
+   "p95FrameMs": 3.8,
+   "logs": 0
+  },
+  {
+   "quality": "balanced",
+   "drops": 60,
+   "liveDrops": 60,
+   "medianFrameMs": 3.9,
+   "p95FrameMs": 4.6,
+   "logs": 0
+  }
+ ]
+}

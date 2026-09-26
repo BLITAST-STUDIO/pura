@@ -1,0 +1,12 @@
+{
+  "purpose": "Ripple off (the default) must render exactly as the approved build",
+  "method": "Headless Chrome, ANGLE Metal on Apple M1, 900x820, 2.5 s after load without input; canvas crop compared per RGBA channel",
+  "approved": "https://blitast-studio.github.io/pura/ (Pages c4eee52)",
+  "candidate": "local dev server, working tree after rim ripple",
+  "results": {
+    "lab=droplets": { "maxChannelDiff": 0, "differingChannels": 0, "size": [798, 311] },
+    "play=chapters&chapter=3": { "maxChannelDiff": 0, "differingChannels": 0, "size": [454, 388] },
+    "approved vs approved (noise floor)": { "maxChannelDiff": 0, "differingChannels": 0 }
+  },
+  "limits": "Static frame only; moving frames with ripple off share code paths whose uniforms are identity, but were compared visually, not per pixel."
+}

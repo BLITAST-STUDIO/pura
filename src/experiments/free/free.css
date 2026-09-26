@@ -1,0 +1,5 @@
+.free-settings { margin-top: 14px; display: grid; gap: 4px; }
+.free-slider { display: grid; grid-template-columns: 64px 44px 1fr 44px; align-items: center; gap: 8px; min-height: 36px; font-size: 10px; color: #a9bfc1; }
+.free-slider small { font-size: 9px; color: #7f989c; text-align: center; }
+.free-slider input { width: 100%; accent-color: #8cc2bd; }
+.free-presets { flex-wrap: wrap; }

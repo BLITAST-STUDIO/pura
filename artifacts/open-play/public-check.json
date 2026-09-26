@@ -1,0 +1,36 @@
+{
+ "afterPair": {
+  "count": 11,
+  "sensory": {
+   "grab": 1,
+   "impact": 0,
+   "fusion": 1,
+   "ready": 0,
+   "delivered": 0,
+   "rewind": 0,
+   "split": 0
+  }
+ },
+ "afterBounce": {
+  "count": 11,
+  "sensory": {
+   "grab": 2,
+   "impact": 4,
+   "fusion": 1,
+   "ready": 0,
+   "delivered": 0,
+   "rewind": 0,
+   "split": 0
+  }
+ },
+ "stats": {
+  "count": 11,
+  "cyan": 1,
+  "rose": 0,
+  "merged": false,
+  "fps": 59.88023952095874,
+  "p95": 16.800000000000182
+ },
+ "helpVisible": true,
+ "logs": []
+}

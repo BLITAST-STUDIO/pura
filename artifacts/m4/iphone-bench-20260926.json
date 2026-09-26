@@ -1,0 +1,15 @@
+{
+ "source": "RYO's iPhone via ?play=bench (Pages 51a75e6), pasted in chat 2026-09-26",
+ "at": "2026-09-26T05:19:44.621Z",
+ "readyMs": 1589,
+ "env": { "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3 Mobile/15E148 Safari/604.1", "gpu": "Apple GPU", "dpr": 3, "screen": "402×874", "cores": 4 },
+ "timing": { "warmupMs": 3000, "measureMs": 8000 },
+ "results": [
+  { "count": 12, "quality": "high", "frames": 480, "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "canvas": [630, 567] },
+  { "count": 24, "quality": "high", "frames": 480, "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "canvas": [630, 567] },
+  { "count": 60, "quality": "high", "frames": 366, "fps": 42, "medianMs": 24, "p95Ms": 28, "over33": 2, "over50": 0, "canvas": [630, 567] },
+  { "count": 12, "quality": "balanced", "frames": 61, "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "canvas": [360, 324], "note": "only 61 frames recorded: the page was likely hidden briefly; not used for decisions" },
+  { "count": 24, "quality": "balanced", "frames": 477, "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "canvas": [360, 324] },
+  { "count": 60, "quality": "balanced", "frames": 480, "fps": 59, "medianMs": 17, "p95Ms": 18, "over33": 0, "over50": 0, "canvas": [360, 324] }
+ ]
+}

@@ -34,6 +34,25 @@ export type Particle = {
   rgb: [number, number, number];
 };
 
+export type ContactKind = "wall" | "obstacle" | "drop";
+
+/**
+ * Player-adjustable physics for the free mode. The defaults are the legacy
+ * constants, so every other mode behaves exactly as before.
+ */
+export type Tuning = {
+  /** Velocity kept per 1/60 s step (legacy 0.992): lower is more viscous. */
+  damp: number;
+  /** Spring from finger to held drop (legacy 36) and its damping (legacy 10). */
+  grabK: number;
+  grabDamp: number;
+  /** Constant sliding friction, board units per second² (legacy 0). */
+  friction: number;
+  /** Multiplier on the legacy weak same-colour pull and other-colour push (legacy 1). */
+  attraction: number;
+};
+export const LEGACY_TUNING: Readonly<Tuning> = Object.freeze({ damp: 0.992, grabK: 36, grabDamp: 10, friction: 0, attraction: 1 });
+
 export type CoreStat = {
   hue: HueId;
   mass: number;
@@ -70,12 +89,12 @@ export type RenderFrame = {
 const STEP = 1 / 60;
 const MASS_K = 1;
 const MIN_R = 7;
-const DAMP = 0.992;
 const REST = 0.38;
 const MIX_MERGE = 0.58;
 const MIX_SPEED = 200;
 const MAX_SPEED = 760;
 const MAX_PARTICLES = 180;
+const PRESS_MIX_SECONDS = 0.35;
 
 function massOfR(r: number): number {
   return r * r * MASS_K;
@@ -106,6 +125,20 @@ export class PuraSim {
   time = 0;
   reducedMotion = false;
   sandboxTotal: number = SANDBOX_COUNT.fallback;
+  /** Opt-in material study; normal gameplay keeps its original collision rules. */
+  /**
+   * 'held-press' (opt-in, open play): the legacy rules, plus a reachable G-06.
+   * The legacy overlap threshold cannot be reached by large drops because each
+   * substep resolves the overlap; here a held drop that keeps pressing into a
+   * different colour slowly for PRESS_MIX_SECONDS mixes with it.
+   */
+  fusionPolicy: 'legacy' | 'all-colors' | 'held-press' = 'legacy';
+  tuning: Tuning = { ...LEGACY_TUNING };
+  private pressPartner: number | null = null;
+  private pressTime = 0;
+  private pressedThisStep = false;
+  /** Optional solid circular islands, used only by the new chapter scenes. */
+  obstacles: ReadonlyArray<{ x: number; y: number; r: number }> = [];
   private nextId = 1;
   private acc = 0;
   private last: Drop[] = [];
@@ -115,6 +148,14 @@ export class PuraSim {
   private seeded = false;
   onWin: ((stars: number, time: number, purity: number) => void) | null = null;
   onMerge: ((mass: number, mixed: boolean) => void) | null = null;
+  /** Detached snapshots for presentation; observers cannot alter the simulation. */
+  onFusion: ((a: Drop, b: Drop, result: Drop) => void) | null = null;
+  /**
+   * Presentation-only contact observation. The vector is the velocity change
+   * the contact applied, in board units per second; it points away from the
+   * surface that was hit. Observers receive numbers, not the live drop.
+   */
+  onContact: ((id: number, impulseX: number, impulseY: number, kind: ContactKind) => void) | null = null;
   onGrab: (() => void) | null = null;
   onSplit: (() => void) | null = null;
   onBounce: (() => void) | null = null;
@@ -260,6 +301,11 @@ export class PuraSim {
     this.pointer = null;
   }
 
+  /** The legacy double-tap separation, for callers that detect the double tap themselves. */
+  splitAt(x: number, y: number): boolean {
+    return this.trySplit(x, y);
+  }
+
   private trySplit(x: number, y: number): boolean {
     let target: Drop | null = null;
     let best = Infinity;
@@ -367,12 +413,13 @@ export class PuraSim {
   }
 
   private physics(dt: number) {
+    this.pressedThisStep = false;
     const grabbed = this.drops.find((d) => d.id === this.grabbedId) ?? null;
     const p = this.pointer;
 
     if (grabbed && p) {
-      const k = 36;
-      const damp = 10;
+      const k = this.tuning.grabK;
+      const damp = this.tuning.grabDamp;
       const ax = (p.x - grabbed.x) * k - grabbed.vx * damp;
       const ay = (p.y - grabbed.y) * k - grabbed.vy * damp;
       grabbed.vx += ax * dt;
@@ -396,14 +443,19 @@ export class PuraSim {
         if (dist < 240) {
           const same = dominantHue(d.pigment) === gHue;
           const fall = 1 / (dist2 + 1400);
-          const mag = (same ? 4800 : -2200) * fall;
+          const mag = (same ? 4800 : -2200) * fall * this.tuning.attraction;
           d.vx += (dx / dist) * mag * dt;
           d.vy += (dy / dist) * mag * dt;
         }
       }
 
-      d.vx *= DAMP;
-      d.vy *= DAMP;
+      d.vx *= this.tuning.damp;
+      d.vy *= this.tuning.damp;
+      if (this.tuning.friction > 0 && d.id !== this.grabbedId) {
+        const speed = Math.hypot(d.vx, d.vy);
+        const slow = Math.min(speed, this.tuning.friction * dt);
+        if (speed > 0) { d.vx -= (d.vx / speed) * slow; d.vy -= (d.vy / speed) * slow; }
+      }
       this.stabilize(d);
       d.freshness = Math.max(0, d.freshness - dt * 1.6);
     }
@@ -420,31 +472,62 @@ export class PuraSim {
       for (const d of this.drops) {
         d.x += d.vx * sdt;
         d.y += d.vy * sdt;
-        this.clamp(d);
+        this.clamp(d, true);
       }
       this.collide(sdt);
+      // Iterate shared contacts so a large drop cannot remain embedded between two islands.
+      if (this.obstacles.length) for (let pass = 0; pass < 12; pass++) {
+        let corrected = false;
+        for (const d of this.drops) for (const obstacle of this.obstacles) {
+        const dx = d.x - obstacle.x, dy = d.y - obstacle.y;
+        const distance = Math.hypot(dx, dy), reach = d.r + obstacle.r;
+        if (distance >= reach - 1e-8) continue;
+        corrected = true;
+        const nx = distance > 1e-8 ? dx / distance : 0;
+        const ny = distance > 1e-8 ? dy / distance : 1;
+        d.x = obstacle.x + nx * reach; d.y = obstacle.y + ny * reach;
+        const approach = d.vx * nx + d.vy * ny;
+        if (approach < 0) {
+          d.vx -= (1 + REST) * approach * nx; d.vy -= (1 + REST) * approach * ny;
+          this.onContact?.(d.id, -(1 + REST) * approach * nx, -(1 + REST) * approach * ny, "obstacle");
+        }
+        }
+        if (!corrected) break;
+      }
     }
+    // A press only counts while it continues without a break.
+    if (!this.pressedThisStep) { this.pressTime = 0; this.pressPartner = null; }
   }
 
-  private clamp(d: Drop) {
+  private clamp(d: Drop, report = false) {
     const minX = this.pad + d.r;
     const maxX = this.w - this.pad - d.r;
     const minY = this.pad + d.r;
     const maxY = this.h - this.pad - d.r;
+    const vx = d.vx;
+    const vy = d.vy;
+    let ix = 0;
+    let iy = 0;
     if (d.x < minX) {
       d.x = minX;
       d.vx = Math.abs(d.vx) * REST;
+      ix = Math.abs(d.vx - vx);
     } else if (d.x > maxX) {
       d.x = maxX;
       d.vx = -Math.abs(d.vx) * REST;
+      ix = -Math.abs(d.vx - vx);
     }
     if (d.y < minY) {
       d.y = minY;
       d.vy = Math.abs(d.vy) * REST;
+      iy = Math.abs(d.vy - vy);
     } else if (d.y > maxY) {
       d.y = maxY;
       d.vy = -Math.abs(d.vy) * REST;
+      iy = -Math.abs(d.vy - vy);
     }
+    // Resize and split also clamp; only physics substeps are real contacts.
+    if (report && (ix || iy)) this.onContact?.(d.id, ix, iy, "wall");
   }
 
   private closestApproach(a: Drop, b: Drop, dt: number): number {
@@ -480,17 +563,18 @@ export class PuraSim {
         const grabbedPair = this.grabbedId === a.id || this.grabbedId === b.id;
         const rel = Math.hypot(b.vx - a.vx, b.vy - a.vy);
 
-        const swept = sameDom && this.closestApproach(a, b, dt) < min + 1.5;
+        const canContactMerge = sameDom || this.fusionPolicy === 'all-colors';
+        const swept = canContactMerge && this.closestApproach(a, b, dt) < min + 1.5;
         const touching = dist < min + 2.2;
 
-        if (sameDom && (touching || swept || dist2 < 1e-6)) {
+        if (canContactMerge && (touching || swept || dist2 < 1e-6)) {
           this.merge(a, b, merged);
           continue;
         }
 
         if (dist2 >= min * min) {
           if (sameDom && dist < min + 12) {
-            const pull = ((min + 12 - dist) / min) * 90;
+            const pull = ((min + 12 - dist) / min) * 90 * this.tuning.attraction;
             const nx = dx / (dist + 1e-6);
             const ny = dy / (dist + 1e-6);
             a.vx += nx * pull * dt;
@@ -509,6 +593,23 @@ export class PuraSim {
         const overlap = min - dist;
         const slowMix =
           grabbedPair && overlap > MIX_MERGE * Math.min(a.r, b.r) && rel < MIX_SPEED;
+
+        if (!slowMix && this.fusionPolicy === 'held-press' && grabbedPair && rel < MIX_SPEED && this.pointer) {
+          const held = this.grabbedId === a.id ? a : b;
+          const other = held === a ? b : a;
+          const toward = Math.hypot(other.x - held.x, other.y - held.y) || 1;
+          const push = ((this.pointer.x - held.x) * (other.x - held.x) + (this.pointer.y - held.y) * (other.y - held.y)) / toward;
+          if (push > held.r * 0.25) {
+            this.pressTime = this.pressPartner === other.id ? this.pressTime + dt : dt;
+            this.pressPartner = other.id;
+            this.pressedThisStep = true;
+            if (this.pressTime >= PRESS_MIX_SECONDS) {
+              this.pressTime = 0; this.pressPartner = null;
+              this.merge(a, b, merged);
+              continue;
+            }
+          }
+        }
 
         if (slowMix) {
           this.merge(a, b, merged);
@@ -530,6 +631,12 @@ export class PuraSim {
           a.vy -= (jimp / Math.max(1e-6, a.mass)) * ny;
           b.vx += (jimp / Math.max(1e-6, b.mass)) * nx;
           b.vy += (jimp / Math.max(1e-6, b.mass)) * ny;
+          if (this.onContact) {
+            const ja = jimp / Math.max(1e-6, a.mass);
+            const jb = jimp / Math.max(1e-6, b.mass);
+            this.onContact(a.id, -ja * nx, -ja * ny, "drop");
+            this.onContact(b.id, jb * nx, jb * ny, "drop");
+          }
           this.capSpeed(a);
           this.capSpeed(b);
           if (overlap > 3) this.onBounce?.();
@@ -571,6 +678,10 @@ export class PuraSim {
     this.burst(drop.x, drop.y, mixRgb(pigment), mixed ? 10 : 14);
     this.trauma = Math.min(1, this.trauma + (mixed ? 0.18 : 0.28) * Math.min(1, r / 50));
     this.onMerge?.(mass, mixed);
+    if (this.onFusion) {
+      const copy = (d: Drop): Drop => ({ ...d, pigment: { ...d.pigment } });
+      this.onFusion(copy(a), copy(b), copy(drop));
+    }
   }
 
   private burst(x: number, y: number, rgb: [number, number, number], n: number) {

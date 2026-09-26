@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-17",
+  "sourceCommit": "01059a317e32cb8feee70868bdc516d304760320",
+  "kind": "design calculation using existing palette functions; not a gameplay or perceptual test",
+  "examples": [
+    {
+      "cyan": 1,
+      "rose": 1,
+      "totalAmount": 2,
+      "cyanGoalFraction": 0.5,
+      "dominantHue": "cyan",
+      "dominantPurity": 0.5,
+      "pureCyanNeededFor90Percent": 8
+    },
+    {
+      "cyan": 4,
+      "rose": 1,
+      "totalAmount": 5,
+      "cyanGoalFraction": 0.8,
+      "dominantHue": "cyan",
+      "dominantPurity": 0.8,
+      "pureCyanNeededFor90Percent": 5
+    },
+    {
+      "cyan": 1,
+      "rose": 4,
+      "totalAmount": 5,
+      "cyanGoalFraction": 0.2,
+      "dominantHue": "rose",
+      "dominantPurity": 0.8,
+      "pureCyanNeededFor90Percent": 35
+    },
+    {
+      "cyan": 1,
+      "rose": 9,
+      "totalAmount": 10,
+      "cyanGoalFraction": 0.1,
+      "dominantHue": "rose",
+      "dominantPurity": 0.9,
+      "pureCyanNeededFor90Percent": 80
+    },
+    {
+      "cyan": 10,
+      "rose": 1,
+      "totalAmount": 11,
+      "cyanGoalFraction": 0.9090909090909091,
+      "dominantHue": "cyan",
+      "dominantPurity": 0.9090909090909091,
+      "pureCyanNeededFor90Percent": 0
+    }
+  ],
+  "threeColorSequence": {
+    "cyan": 1,
+    "rose": 1,
+    "amber": 1
+  },
+  "radiusRatio2": {
+    "legacyAmountRatio": 4,
+    "similar3DVolumeRatio": 8
+  },
+  "sameColorFusion": {
+    "before": {
+      "cyan": 1
+    },
+    "added": {
+      "cyan": 1
+    },
+    "finalConcentration": 1
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "checkedAt": "2026-09-16T14:35:17.554Z",
+  "source": "src/experiments/droplet-lab/renderer.ts",
+  "sourceSha256": "89d349de51c7776a432e5e3a8da5e8fb399e77392d2c59bf2960c44868d319e2",
+  "surfaceResponseSha256": "6b8411cb3c5362990f737d741c3213f79d06038833fbaf7eff94f6484641f760",
+  "surfaceShapeSha256": "e07708690f69a1cb3eb127db2f6ee43457a22004f7d7f868c7f05f03acfd3bfc",
+  "method": "Independent numerical projection of every vertex of actual SphereGeometry(1,96,64), with clipped Z, local height shear, reciprocal volume scales, wobble rotation, manual pull affine, and all four legal body corners. Camera fit and projection arithmetic independently reproduced from renderer. This is geometry/code-review evidence, not a browser or phone performance result.",
+  "assumptions": {
+    "stretchSamples": [
+      -0.26,
+      0,
+      0.26
+    ],
+    "squashSamples": [
+      0,
+      0.25
+    ],
+    "pressSamples": [
+      0,
+      0.028
+    ],
+    "wobbleDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "pullDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "bendWorldDegrees": [
+      null,
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "pullStrength": 0.24,
+    "bendWorldStrength": 0.065,
+    "localBendClampedTo": 0.065,
+    "safeMaxAbsNdc": 0.97,
+    "geometryVertices": 6305
+  },
+  "allFinite": true,
+  "testedVolumeError": 1.1102230246251565e-16,
+  "localSphereMax": 1.0160300843424583,
+  "configuredLocalPickSphere": {
+    "center": [
+      0,
+      0,
+      0.5
+    ],
+    "radius": 1.16
+  },
+  "maxTransformedPickSphereRatio": 0.9214337573172046,
+  "codeReview": {
+    "camera": "The circular XY envelope includes sqrt(1+MAX_PRESS), maximum independent pull stretch/translation, and the larger of baseline taper or the refined local shear offset. Z bounds cover both baseline and reciprocal-volume refined scales. Its support-function bound covers all angles continuously at enforced parameter limits; vertex samples check representative extrema.",
+    "matrixOrder": "bodyTranslation * pullAffine * wobbleRotation * volumeScale * heightShear(localVertex)",
+    "normals": "CPU local normals apply the shear inverse transpose (nz -= 2*h*dot(bend,nxy)), then custom material applies the complete affine inverse transpose. Analytic exit uses the same inverse shear field/gradient. The mesh retains interpolated geometric normals at the clipped rim, so this is not a claim of exact smooth-surface equality at all rasterized pixels.",
+    "handedness": "Simulation down-positive Y is flipped once in surface response; inverse wobble rotation and division by XY scales align local bend with world finger direction before pull affine. All scales and determinant remain positive.",
+    "picking": "Raycast uses the deformed CPU mesh and current world transforms. Explicit enlarged bounding sphere covers sampled actual local vertices and the transformed Three.js sphere covers all sampled world vertices; hit.point produces a world-space normalized grab anchor. The ground projection offset continues to prevent a body jump on touch.",
+    "contact": "Height shear fixes the contact plane; contactGroup carries bodyTranslation * pullAffine and matching wobble rotation/XY scale, remaining registered with the bottom. Contact/caustic are artistic approximations, not traced caustics.",
+    "background": "Custom liquid hides only dropGroup for a linear NoToneMapping background pass, leaving floor/contact visible. It restores target/toneMapping/drop visibility before the final render. Clay and physical material skip that pass, and returning to liquid refreshes optical matrices/background each frame.",
+    "clay": "Standard gray rough material uses transformed geometry normals; caustic is hidden in clay and restored when clay is disabled. The custom material is restored through setOptions; no stale normal/visibility issue identified.",
+    "finding": "No blocking correctness issue identified in camera, matrix order, normal handedness, picking or gray/transparent material switch. Actual-phone perception and frame pacing remain for browser/user verification."
+  },
+  "results": [
+    {
+      "canvasCssPixels": [
+        348,
+        412
+      ],
+      "logicalBoard": [
+        550,
+        651.1494252873564
+      ],
+      "cameraDistance": 14.270231644458839,
+      "maxAbsNdc": 0.9340569529841779,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9855457993335339,
+        0.9893107069253132
+      ],
+      "minCameraDepth": 12.16563773754479,
+      "projectedVertices": 174320640,
+      "worstCase": {
+        "stretch": -0.26,
+        "squash": 0.25,
+        "press": 0.028,
+        "wobbleDegrees": 90,
+        "pullDegrees": 0,
+        "bendDegrees": 0,
+        "bendLocal": [
+          5.304762387681319e-18,
+          -0.0468083197693767
+        ],
+        "corner": [
+          1,
+          -1
+        ],
+        "vertex": 6031,
+        "ndc": [
+          0.9340569529841779,
+          -0.4520030398715758,
+          0.9865753134522242
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        502,
+        382
+      ],
+      "logicalBoard": [
+        550,
+        418.5258964143426
+      ],
+      "cameraDistance": 9.19704549127648,
+      "maxAbsNdc": 0.9248751177309121,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9757262912922247,
+        0.9823256519672277
+      ],
+      "minCameraDepth": 7.619211613777779,
+      "projectedVertices": 174320640,
+      "worstCase": {
+        "stretch": -0.26,
+        "squash": 0.25,
+        "press": 0.028,
+        "wobbleDegrees": 90,
+        "pullDegrees": 0,
+        "bendDegrees": 0,
+        "bendLocal": [
+          5.304762387681319e-18,
+          -0.0468083197693767
+        ],
+        "corner": [
+          1,
+          -1
+        ],
+        "vertex": 5933,
+        "ndc": [
+          0.9248751177309121,
+          -0.2979697475009726,
+          0.9781850790766471
+        ]
+      }
+    },
+    {
+      "canvasCssPixels": [
+        1194,
+        343
+      ],
+      "logicalBoard": [
+        1200,
+        344.7236180904523
+      ],
+      "cameraDistance": 7.448970339979953,
+      "maxAbsNdc": 0.9165159507990983,
+      "insideCanvas": true,
+      "insideDeclaredMargin": true,
+      "ndcDepthRange": [
+        0.9688467038019835,
+        0.9777631229099546
+      ],
+      "minCameraDepth": 6.038256660894346,
+      "projectedVertices": 174320640,
+      "worstCase": {
+        "stretch": -0.26,
+        "squash": 0.25,
+        "press": 0.028,
+        "wobbleDegrees": 0,
+        "pullDegrees": 270,
+        "bendDegrees": 270,
+        "bendLocal": [
+          -1.5914287163043954e-17,
+          -0.0468083197693767
+        ],
+        "corner": [
+          -1,
+          -1
+        ],
+        "vertex": 6183,
+        "ndc": [
+          -0.7367139247832308,
+          -0.9165159507990983,
+          0.969967606207351
+        ]
+      }
+    }
+  ]
+}

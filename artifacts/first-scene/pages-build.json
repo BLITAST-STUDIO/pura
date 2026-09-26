@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-09-17T03:51:21.556454+00:00",
+  "sourceCommit": "d9985f6ec5f671363ceaf0f7a07189920e427731",
+  "deployCommit": "5855eb2989ce73725bb75b3f5ce850019011524c",
+  "status": "built",
+  "files": [
+    {
+      "path": "assets/DropletLab-Be_y1UDv.js",
+      "status": 200,
+      "sha256": "48df3db856dd35db5e0c4a2ac4491b1322fea9e6b87252f8a8edc4ea43082acb",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/FusionLab-BTPv_Qxn.js",
+      "status": 200,
+      "sha256": "b525cd3e01bd2d2fd32c32653928de3a903220f3105eb9ee66d83bb9b54ab3bf",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/PurityScene-D-HYKs7p.js",
+      "status": 200,
+      "sha256": "0c5bbce13db0f8d26d19b31bfedc04643cb8588592939dc97285cf0e097d40a0",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/droplet-lab-YP24xoyW.js",
+      "status": 200,
+      "sha256": "74769fd29c26ba413d67a383b30c2630f53a5b7a99d4c2021421580e4c9857e9",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-B946Bxyy.js",
+      "status": 200,
+      "sha256": "9e33ed5ba856d96ce85dd5e8605eedbd66abb766797cbb65a7c0d399bce34a7f",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/renderer-bEhmt4ek.js",
+      "status": 200,
+      "sha256": "f7ca650944463b766f86573e6ba1cc162948af561272fa17fb9454b3b9de3397",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-D6xKmEiU.css",
+      "status": 200,
+      "sha256": "597a705e0e535c3d8d4e3f5ed2b1badff2300b6c980461cb126e99cf0663d26d",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/x-B3fFk4KM.js",
+      "status": 200,
+      "sha256": "285bac8f329b3a488f5f575776ff2a317141732a76eba7f4800f158681e3e17c",
+      "matchesLocal": true
+    },
+    {
+      "path": "favicon.svg",
+      "status": 200,
+      "sha256": "1135c8a4e260adfde0cb166f2f33b7010a94e770701763bdbfb1b7af85065b88",
+      "matchesLocal": true
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "e4bcbbf3efea9b853aaf9ff6170ecd967bd3b57c7b8cc442852bd618d02f4aa1",
+      "matchesLocal": true
+    },
+    {
+      "path": "og.jpg",
+      "status": 200,
+      "sha256": "c85b46622f4212cc5c8f9f33e74737ecb09a8cbe8ebbc4525bf8d7b10330a76f",
+      "matchesLocal": true
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "url": "https://blitast-studio.github.io/pura/?lab=fusion&mixing=bloom",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "input": "Mac mouse; not physical touch",
+  "drops": [
+    {
+      "age": 0.2,
+      "correction": 0.9533528890337992,
+      "fractions": {
+        "amber": 0,
+        "cyan": 0.5,
+        "rose": 0.5
+      },
+      "grabbed": false,
+      "id": 1,
+      "lobes": 2,
+      "mass": 9248,
+      "pigment": {
+        "amber": 0,
+        "cyan": 4624,
+        "rose": 4624
+      },
+      "r": 96.16652224137046,
+      "screenX": 212.47072758433157,
+      "screenY": 194.3693181664837,
+      "vx": 160.79347097124065,
+      "vy": 8.107409584977578,
+      "x": 348.74049157632265,
+      "y": 322.4440197373176
+    }
+  ],
+  "flow": "bloom",
+  "logs": []
+}

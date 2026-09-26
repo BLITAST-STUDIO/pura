@@ -1,0 +1,55 @@
+{
+ "chapter2": {
+  "squash": 0.046273426120378526,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 1,
+    "impact": 1,
+    "fusion": 0,
+    "ready": 0,
+    "delivered": 0,
+    "rewind": 0
+   }
+  },
+  "dropAfter": {
+   "x": 229,
+   "y": 443
+  },
+  "logs": []
+ },
+ "droplets": {
+  "squash": 0.07227309621120877,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 1,
+    "impact": 1,
+    "fusion": 0,
+    "ready": 0,
+    "delivered": 0,
+    "rewind": 0
+   }
+  },
+  "logs": []
+ },
+ "fusion": {
+  "count": 1,
+  "squash": 0.11015913729873025,
+  "sensory": {
+   "audio": "running",
+   "haptics": "none",
+   "counts": {
+    "grab": 2,
+    "impact": 1,
+    "fusion": 1,
+    "ready": 0,
+    "delivered": 0,
+    "rewind": 0
+   }
+  },
+  "logs": []
+ }
+}

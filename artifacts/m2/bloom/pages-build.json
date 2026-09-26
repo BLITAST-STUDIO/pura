@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-09-17T02:47:25.371342+00:00",
+  "sourceCommit": "b8e2ad411620cfede739523b95d6efbf63db192c",
+  "deployCommit": "0d9bca35f028cb1edbe947ccd1d578d1d7c0ef6e",
+  "status": "built",
+  "files": [
+    {
+      "path": "assets/DropletLab-CAGUmKgB.js",
+      "status": 200,
+      "sha256": "4029f7bdaaa1c2f065ffa79c61ab33afd074cf2451dfbef86d5a5f7e25ab48c1",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/FusionLab-krt7gjhB.js",
+      "status": 200,
+      "sha256": "8cb2dab6f3df13f96d45e7fb94399b72767d8309a84107e23730b0e3ecc858e7",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/droplet-lab-B7udbGCH.js",
+      "status": 200,
+      "sha256": "9692485fee31fcac3dffa2bd8bb27fb53f04d6512026bc0928744b6fe69d9c43",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/index-8l53M6VJ.js",
+      "status": 200,
+      "sha256": "5630951f4fd6398dd49e09f4ed96166e188fd9053c1bf376e0592867e135a68b",
+      "matchesLocal": true
+    },
+    {
+      "path": "assets/style-CDcg6BJM.css",
+      "status": 200,
+      "sha256": "5b0b3934bd3a1ef2bd0893629042944ba169ed6fc83a9c3cc887316e71f7f86a",
+      "matchesLocal": true
+    },
+    {
+      "path": "favicon.svg",
+      "status": 200,
+      "sha256": "1135c8a4e260adfde0cb166f2f33b7010a94e770701763bdbfb1b7af85065b88",
+      "matchesLocal": true
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "b9a17b75f8519d5005871a71a446e319eb8fdf7b62174466cea2deffc6971ef5",
+      "matchesLocal": true
+    },
+    {
+      "path": "og.jpg",
+      "status": 200,
+      "sha256": "c85b46622f4212cc5c8f9f33e74737ecb09a8cbe8ebbc4525bf8d7b10330a76f",
+      "matchesLocal": true
+    }
+  ]
+}

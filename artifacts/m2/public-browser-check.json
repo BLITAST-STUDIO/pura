@@ -1,0 +1,36 @@
+{
+  "url": "https://blitast-studio.github.io/pura/?lab=fusion",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "input": "Mac browser mouse drag; not physical phone touch",
+  "mixOneToFour": [
+    {
+      "age": 0.0985,
+      "correction": 0.9445545367337536,
+      "fractions": {
+        "amber": 0,
+        "cyan": 0.2,
+        "rose": 0.7999999999999999
+      },
+      "grabbed": false,
+      "id": 1,
+      "lobes": 2,
+      "mass": 9248,
+      "pigment": {
+        "amber": 0,
+        "cyan": 1849.6,
+        "rose": 7398.4
+      },
+      "r": 96.16652224137046,
+      "screenX": 220.80543376454625,
+      "screenY": 194.17171322779333,
+      "vx": 63.82429984352997,
+      "vy": 6.424474991293717,
+      "x": 364.8624211556634,
+      "y": 321.1231598023227
+    }
+  ],
+  "logs": []
+}

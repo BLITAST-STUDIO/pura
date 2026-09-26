@@ -1,0 +1,43 @@
+{
+ "droplets": {
+  "ripplePeak": 0.03606765898527452,
+  "anchorPeak": 0.06044129474202365,
+  "settingChecked": true,
+  "sensory": {
+   "grab": 1,
+   "impact": 1,
+   "fusion": 0,
+   "ready": 0,
+   "delivered": 0,
+   "rewind": 0
+  },
+  "fps": 60,
+  "logs": []
+ },
+ "?play=chapters&chapter=1&ripple=on": {
+  "drops": 4,
+  "sensory": {
+   "grab": 1,
+   "impact": 0,
+   "fusion": 1,
+   "ready": 0,
+   "delivered": 0,
+   "rewind": 0
+  },
+  "fps": 60,
+  "logs": []
+ },
+ "?lab=fusion&ripple=on": {
+  "drops": 1,
+  "sensory": {
+   "grab": 1,
+   "impact": 0,
+   "fusion": 1,
+   "ready": 0,
+   "delivered": 0,
+   "rewind": 0
+  },
+  "fps": 60,
+  "logs": []
+ }
+}
