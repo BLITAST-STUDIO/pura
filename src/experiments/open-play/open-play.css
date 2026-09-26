@@ -2,3 +2,8 @@
 .open-play .open-stage { aspect-ratio: 600 / 700; margin-top: 8px; }
 .open-play .open-reading { font-variant-numeric: tabular-nums; }
 .open-play .open-details { margin-top: 18px; }
+/* The first-visit line (intro-line.tsx): rises, rests, leaves. */
+.intro-line { position: absolute; left: 0; right: 0; top: 42%; margin: 0; text-align: center; font-size: clamp(15px, 4.6vw, 20px); font-weight: 300; letter-spacing: .32em; text-indent: .32em; color: #f3f8f7; text-shadow: 0 2px 18px rgba(12, 22, 26, .45); pointer-events: none; animation: intro-line 6.5s ease both; }
+@keyframes intro-line { 0% { opacity: 0; transform: translateY(8px); } 22% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; } }
+.droplet-lab[data-look="gallery"] .intro-line { color: #1e2629; text-shadow: 0 2px 16px rgba(255, 255, 255, .85); }
+@media (prefers-reduced-motion: reduce) { .intro-line { animation: none; } }

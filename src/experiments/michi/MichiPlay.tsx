@@ -8,6 +8,7 @@ import { chapterOf, MICHI, MICHI_BOARDS, michiBoard, nextBoard } from './boards'
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -115,7 +116,7 @@ export default function MichiPlay() {
   const discovery = board.discovery && !reading.won && reading.separations === 0 && reading.elapsed > board.discovery.after ? board.discovery.text : null;
 
   return <div className="droplet-lab purity-scene stage-play michi-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>道</span><span className="dl-edition-rule"/><span>BOARD <b>{board.code}</b></span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>道</span><span className="dl-edition-rule"/><span><b>{board.code}</b></span></div></header>
     <ModeNav current="michi"/>
     <main>
       <nav className="michi-chapters" aria-label="章を選ぶ">{MICHI.map(c => {
@@ -129,10 +130,11 @@ export default function MichiPlay() {
       <p className="stage-title"><b>{board.name}</b>{board.hint}</p>
       <section className="dl-stage purity-stage stage-board" aria-label={`道 ${board.code} ${board.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={board.hint}/>
-        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : reading.won ? 'CLEAR' : `MICHI ${board.code}`}</span><span className="dl-stage-index">{reading.count}</span></div>
+        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : reading.won ? 'CLEAR' : `PATH ${board.code}`}</span><span className="dl-stage-index">{reading.count}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
+        <ClearGlow show={!!reading.won}/>
         {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next && <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button>}</div>}
         {discovery && <p className="stage-discovery" role="status">{discovery}</p>}
         <div className="dl-stage-bottom"><output aria-live="polite">{reading.held ? `${HUE_NAMES[reading.held.hue]} · 純度 ${Math.floor(reading.held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>純度 {Math.round(board.purity * 100)}% 以上</span></div>
@@ -158,6 +160,6 @@ export default function MichiPlay() {
         <p>R：やり直す · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>道、四つの章。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">元祖8ステージ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=chapters">三つの道（旧）<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>四つの章で、雫を知る。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">元祖8ステージ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=chapters">三つの道（旧）<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }

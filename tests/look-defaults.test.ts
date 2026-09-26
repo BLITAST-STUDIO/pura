@@ -34,3 +34,12 @@ test('walls: a rim by default for the trial; the line and the earlier invisible 
   assert.equal(initialWalls('?walls=none'), 'none');
   assert.equal(initialWalls('?walls=bogus'), 'rim');
 });
+
+test('the first-visit line shows once, and again only on request', async () => {
+  const { shouldShowIntro } = await import('../src/experiments/intro-line');
+  const empty = { getItem: () => null }, seen = { getItem: () => '1' };
+  assert.equal(shouldShowIntro(empty, ''), true);
+  assert.equal(shouldShowIntro(seen, ''), false);
+  assert.equal(shouldShowIntro(seen, '?intro=1'), true);
+  assert.equal(shouldShowIntro({ getItem: () => { throw Error('blocked'); } }, ''), false, 'no storage: stay quiet rather than repeat');
+});
