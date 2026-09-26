@@ -85,7 +85,7 @@ export function createSparkPoints() {
   geometry.setAttribute('fade', new THREE.BufferAttribute(fade, 2).setUsage(THREE.DynamicDrawUsage));
   geometry.setDrawRange(0, 0);
   const material = new THREE.ShaderMaterial({
-    name: 'Pura split spray', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    name: 'Pura split spray', toneMapped: false, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { uPixels: { value: 30 } },
     vertexShader: /* glsl */ `
       attribute vec3 color; attribute vec2 fade;

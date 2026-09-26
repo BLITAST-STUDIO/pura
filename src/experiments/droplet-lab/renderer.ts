@@ -129,6 +129,9 @@ export function setRim(material: THREE.ShaderMaterial, coefficients: RimCoeffici
 
 export function contactMaterial() {
   return new THREE.ShaderMaterial({
+    // No tone-mapping chunk in this shader: marking it untoned keeps one program for
+    // both the linear background capture and the screen pass (no per-pass program switch).
+    toneMapped: false,
     transparent: true, depthWrite: false,
     uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 1 }, ...rimUniforms() },
     vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
@@ -148,6 +151,7 @@ export function contactMaterial() {
 export function causticMaterial() {
   // Artistic, local light footprint. This is not a traced caustic solver.
   return new THREE.ShaderMaterial({
+    toneMapped: false,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { color: { value: new THREE.Color(COLORS.cyan) }, gain: { value: 0.34 }, ...rimUniforms() },
     vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',

@@ -38,6 +38,7 @@ export function projectedCausticGeometry() {
 export function projectedCausticMaterial() {
   return new THREE.ShaderMaterial({
     name: 'Pura surface-projected floor light',
+    toneMapped: false,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: {
       uDropToWorld: { value: new THREE.Matrix4() },

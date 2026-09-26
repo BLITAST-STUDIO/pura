@@ -11,6 +11,7 @@ import { routeKey, type RouteKey } from "./route-key";
 type Route = () => Promise<ComponentType>;
 const routes: Record<RouteKey, Route> = {
   "play=classic": async () => (await import("@/components/game-app")).GameApp,
+  "play=bench": async () => (await import("./experiments/bench/BenchPlay")).default,
   "play=free": async () => (await import("./experiments/free/FreePlay")).default,
   "play=stages": async () => (await import("./experiments/stages/StagePlay")).default,
   "play=open": async () => (await import("./experiments/open-play/OpenPlay")).default,

@@ -33,8 +33,16 @@ export function smoothUnion(a: number, b: number, k: number) {
 export function shapeField(x: number, y: number, z: number, lobes: Lobe[], k: number) {
   let distance = 1e5;
   for (const lobe of lobes) {
-    const ellipsoid = (Math.hypot((x - lobe.x) / lobe.r, (y - lobe.y) / lobe.r, (z - .3968) / .62) - 1) * Math.min(lobe.r, .62);
-    distance = smoothUnion(distance, ellipsoid, k);
+    // Math.hypot is several times slower than sqrt of squares in V8; this runs
+    // for every grid cell of every merging drop, every frame.
+    const ex = (x - lobe.x) / lobe.r, ey = (y - lobe.y) / lobe.r, ez = (z - .3968) / .62;
+    const ellipsoid = (Math.sqrt(ex * ex + ey * ey + ez * ez) - 1) * Math.min(lobe.r, .62);
+    // smoothUnion inlined, with its exact flat cases (h = 0 or 1) short-circuited.
+    const diff = ellipsoid - distance;
+    if (diff >= k) continue;
+    if (diff <= -k) { distance = ellipsoid; continue; }
+    const h = .5 + .5 * diff / k;
+    distance = ellipsoid * (1 - h) + distance * h - k * h * (1 - h);
   }
   return Math.max(distance, BOTTOM - z);
 }
@@ -49,9 +57,19 @@ export function meshVolume(positions: THREE.BufferAttribute, count: number) {
   return Math.abs(volume / 6);
 }
 /** Finite mesh of a single union surface, including its closed floor. */
+/**
+ * Grid resolution for a merging drop of this board radius. Large drops keep
+ * the original 40³; small ones need far fewer cells for the same on-screen detail.
+ */
+export function shapeResolution(radius: number) { return radius >= 50 ? 40 : radius >= 30 ? 32 : 24; }
+
 export class FusionShape {
-  private marcher = new MarchingCubes(40, new THREE.MeshBasicMaterial(), false, false, 18000);
-  readonly geometry = this.marcher.geometry;
+  private marcher: MarchingCubes;
+  readonly geometry: THREE.BufferGeometry;
+  constructor(readonly resolution = 40) {
+    this.marcher = new MarchingCubes(resolution, new THREE.MeshBasicMaterial(), false, false, 18000);
+    this.geometry = this.marcher.geometry;
+  }
   correction = 1;
   volume = UNIT_VOLUME;
   update(lobes: Lobe[], blend: number) {
@@ -70,13 +88,19 @@ export class FusionShape {
     for (let i = 0; i < count; i++) {
       p.setXYZ(i, p.getX(i) * bound, p.getY(i) * bound, p.getZ(i) * .75 + .5);
       const nx = normal.getX(i) / bound, ny = normal.getY(i) / bound, nz = normal.getZ(i) / .75;
-      const len = Math.hypot(nx, ny, nz) || 1;
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
       normal.setXYZ(i, nx / len, ny / len, nz / len);
     }
     this.volume = meshVolume(p, count);
     this.correction = Math.sqrt(UNIT_VOLUME / this.volume);
-    p.needsUpdate = normal.needsUpdate = true;
-    this.geometry.computeBoundingSphere();
+    // Upload only the triangles drawn, not the whole 18000-triangle buffer.
+    for (const attribute of [p, normal]) {
+      attribute.clearUpdateRanges();
+      attribute.addUpdateRange(0, count * 3);
+      attribute.needsUpdate = true;
+    }
+    // Picking only needs a conservative bound; scanning the full buffer each frame is wasted work.
+    this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, .5), Math.hypot(bound * Math.SQRT2, .75));
   }
   dispose() { this.geometry.dispose(); (this.marcher.material as THREE.Material).dispose(); }
 }
@@ -103,3 +127,17 @@ export const FIELD_GLSL = `
    return normalize(vec3(field(p+e.xyy)-field(p-e.xyy),field(p+e.yxy)-field(p-e.yxy),field(p+e.yyx)-field(p-e.yyx)));
  }
 `;
+
+/** Reuses marching-cube grids instead of allocating one per fusion. */
+export class ShapePool {
+  private free = new Map<number, FusionShape[]>();
+  acquire(radius: number): FusionShape {
+    const resolution = shapeResolution(radius);
+    return this.free.get(resolution)?.pop() ?? new FusionShape(resolution);
+  }
+  release(shape: FusionShape) {
+    const list = this.free.get(shape.resolution) ?? [];
+    if (list.length < 6) { list.push(shape); this.free.set(shape.resolution, list); } else shape.dispose();
+  }
+  dispose() { for (const list of this.free.values()) for (const shape of list) shape.dispose(); this.free.clear(); }
+}

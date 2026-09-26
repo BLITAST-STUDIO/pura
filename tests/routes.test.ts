@@ -7,6 +7,7 @@ test('the bare URL opens instant play; the original PURA stays at ?play=classic'
   assert.equal(routeKey('?play=classic'), 'play=classic');
   assert.equal(routeKey('?play=stages&mode=score&stage=3'), 'play=stages');
   assert.equal(routeKey('?play=free'), 'play=free');
+  assert.equal(routeKey('?play=bench'), 'play=bench');
   assert.equal(routeKey('?play=chapters&chapter=2'), 'play=chapters');
   assert.equal(routeKey('?lab=droplets&feel=baseline'), 'lab=droplets');
   assert.equal(routeKey('?lab=fusion&mixing=bloom'), 'lab=fusion');

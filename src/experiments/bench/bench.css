@@ -1,0 +1,8 @@
+.bench-phase { font-size: 11px; color: #bfe3dd; margin: 0 0 8px; }
+.bench-board { max-height: 42vh; margin: 0 auto; }
+.bench-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11px; color: #c9dadb; font-variant-numeric: tabular-nums; }
+.bench-table th { font-weight: 400; color: #86a1a5; text-align: right; padding: 6px 4px; border-bottom: 1px solid #2a4046; }
+.bench-table td { text-align: right; padding: 6px 4px; border-bottom: 1px solid #1d2f33; }
+.bench-table th:nth-child(-n+2), .bench-table td:nth-child(-n+2) { text-align: left; }
+.bench-table .is-slow td { color: #f0c0cc; }
+.bench-note { font-size: 9px; color: #7f989c; line-height: 1.7; margin: 10px 0; word-break: break-all; }

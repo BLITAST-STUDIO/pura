@@ -95,3 +95,22 @@ test('the connected neck has no unpaired mesh edges', () => {
     for(const count of edges.values()) assert.equal(count,2);
   } finally { shape.dispose(); }
 });
+
+test('coarser grids for small merging drops stay closed and volume-corrected; pooled grids are reused', async () => {
+  const { shapeResolution, ShapePool } = await import('../src/experiments/fusion-lab/shape');
+  assert.equal(shapeResolution(60), 40); assert.equal(shapeResolution(40), 32); assert.equal(shapeResolution(20), 24);
+  for (const resolution of [24, 32]) {
+    const shape = new FusionShape(resolution);
+    try {
+      const lobes = [-1, 1].map(side => ({ x: side * .5, y: 0, r: .71, amount: 1, absorption: [1, 0, 0] as [number, number, number] }));
+      shape.update(lobes, .08);
+      assert.ok(shape.geometry.drawRange.count > 100);
+      near(shape.volume * shape.correction ** 2, UNIT_VOLUME);
+    } finally { shape.dispose(); }
+  }
+  const pool = new ShapePool();
+  const a = pool.acquire(20); pool.release(a);
+  assert.equal(pool.acquire(22), a, 'same resolution is reused');
+  assert.notEqual(pool.acquire(60).resolution, a.resolution);
+  pool.dispose();
+});
