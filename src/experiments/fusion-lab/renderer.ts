@@ -8,6 +8,7 @@ import { floorTexture, studioEnvironment, contactMaterial, causticMaterial, setR
 import { contactAnchor, DropletRim } from '../droplet-lab/rim-response';
 import { createSparkPoints, SplitSparks } from './split-sparks';
 import { AdaptiveResolution } from './adaptive-resolution';
+import { lookScene, type Look } from '../look';
 import { CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES, projectedCausticGeometry, projectedCausticMaterial, projectedPointSize } from '../droplet-lab/projected-caustic';
 import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
@@ -18,7 +19,9 @@ import type { SensoryFeedback } from '../sensory/feedback';
 
 export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape';
   /** 'high' quality lowers its pixel ratio while frames are late (default on). */
-  adaptive?: boolean };
+  adaptive?: boolean;
+  /** Visual direction proposal; 'studio' is the approved look. */
+  look?: Look };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; shapeReady: boolean; shapeLobes: Lobe[]; shapeBlend: number; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim; appear: number };
@@ -233,7 +236,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       b.material.uniforms.uMix.value = options.reducedMotion ? 1 : THREE.MathUtils.smoothstep(b.age, .2, 2.5);
     }
     b.material.uniforms.uAbsorption.value.fromArray(absorptionOf(d.pigment));
-    b.material.uniforms.uDaylight.value = options.lighting === 'daylight' ? 1 : 0;
+    b.material.uniforms.uDaylight.value = lookScene(options.look ?? 'studio', options.lighting === 'daylight').daylight ? 1 : 0;
     b.group.position.set((d.x - sim.width / 2) * W, (sim.height / 2 - d.y) * W, 0);
     // Deform along travel without rotating the captured contact axis or dye regions.
     b.mesh.rotation.z = 0;
@@ -268,6 +271,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     }
     const absorption = absorptionOf(d.pigment);
     b.caustic.material.uniforms.color.value.setRGB(...absorption.map(v => Math.exp(-v * .8)) as [number, number, number]);
+    // On the dark night floor the coloured light under each drop is what lets
+    // the drop glow from within (and keeps the three colours readable).
+    const floorLight = options.look === 'night' ? 3 : 1;
+    b.material.uniforms.uGlow.value = options.look === 'night' ? 0.22 : 0;
+    b.caustic.material.uniforms.gain.value = 0.34 * floorLight;
     b.projected.visible = options.caustic === 'shape' && !options.clay;
     b.caustic.visible = !options.clay && !b.projected.visible;
     b.group.updateMatrixWorld(true);
@@ -283,6 +291,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       pu.uBlend.value = mu.uBlend.value;
       for (let i = 0; i < 5; i++) pu.uLobes.value[i].copy(mu.uLobes.value[i]);
       pu.uAbsorption.value.fromArray(absorption);
+      pu.uGain.value = 0.08 * floorLight;
       const center = new THREE.Vector3().setFromMatrixPosition(b.mesh.matrixWorld).project(camera);
       const edge = new THREE.Vector3(1, 0, 0).applyMatrix4(b.mesh.matrixWorld).project(camera);
       const sampleCount = options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES;
@@ -462,7 +471,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     restoreState(restore: () => void) { cancel(); restore(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
-      const lightingChanged = next.lighting !== undefined && next.lighting !== options.lighting;
+      const lightingChanged = (next.lighting !== undefined && next.lighting !== options.lighting)
+        || (next.look !== undefined && next.look !== options.look);
       const qualityChanged = (next.quality !== undefined && next.quality !== options.quality)
         || (next.adaptive !== undefined && next.adaptive !== options.adaptive);
       Object.assign(options, next);
@@ -470,9 +480,13 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       projectionGeometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
       if (options.paused) cancel();
       if (lightingChanged) {
-        const old = env; env = studioEnvironment(renderer, options.lighting === 'daylight'); scene.environment = env.texture; old.dispose();
-        floorMaterial.color.set(options.lighting === 'daylight' ? '#c6c9c2' : '#455157'); ambient.intensity = options.lighting === 'daylight' ? 1.35 : 1;
-        renderer.toneMappingExposure = options.lighting === 'daylight' ? 1.13 : 1.05;
+        const look = lookScene(options.look ?? 'studio', options.lighting === 'daylight');
+        const old = env; env = studioEnvironment(renderer, look.daylight, look.room); scene.environment = env.texture; old.dispose();
+        (scene.background as THREE.Color).set(look.background);
+        floorMaterial.color.set(look.floor); floorMaterial.roughness = look.roughness; floorMaterial.metalness = look.metalness;
+        floorMaterial.envMapIntensity = look.envIntensity; floorMaterial.bumpScale = look.bump;
+        ambient.intensity = look.ambient; light.intensity = look.light;
+        renderer.toneMappingExposure = look.exposure;
       }
       floorMaterial.map = textures[options.inspection ? 1 : 0]; floorMaterial.bumpMap = options.inspection ? null : textures[0]; floorMaterial.needsUpdate = true;
       for (const b of bodies.values()) {

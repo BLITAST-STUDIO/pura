@@ -5,6 +5,8 @@ import { FREE_DEFAULTS, FREE_PRESETS, FreeSimulation, normalizeFree, type FreeMi
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { LookPicker } from '../look-picker';
+import { initialLook, type Look } from '../look';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -36,6 +38,7 @@ export default function FreePlay() {
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [count, setCount] = useState(settings.count);
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
+  const [look, setLook] = useState<Look>(initialLook);
 
   // The board is re-dealt only when the number or colours change.
   useEffect(() => {
@@ -51,8 +54,8 @@ export default function FreePlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [deal, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, deal, retry]);
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, deal, retry, look]);
   const change = (next: Partial<FreeSettings>) => {
     const merged = normalizeFree({ ...settings, ...next });
     setSettings(merged); writeSettings(merged);
@@ -73,7 +76,7 @@ export default function FreePlay() {
   const slider = (label: string, left: string, right: string, key: 'viscosity' | 'inertia' | 'friction' | 'attraction', max = 1) =>
     <label className="free-slider"><span>{label}</span><small>{left}</small><input type="range" min={0} max={max} step={0.05} value={settings[key]} onChange={e => change({ [key]: Number(e.target.value) })}/><small>{right}</small></label>;
 
-  return <div className="droplet-lab purity-scene stage-play free-play" data-lighting="studio" data-hue="cyan"><div className="dl-shell">
+  return <div className="droplet-lab purity-scene stage-play free-play" data-look={look} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
     <ModeNav current="free"/>
     <main>
@@ -98,7 +101,7 @@ export default function FreePlay() {
       </div>
       <details className="purity-details open-details">
         <summary>表示</summary>
-        <label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
+        <LookPicker look={look} onChange={setLook}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
         <p>雫の数と色を変えると並べ直します。ほかの設定は触ったまま変わります。R：並べ直す · Esc：一時停止</p>

@@ -1,0 +1,39 @@
+/* ---------- 夜の水面: the reference image's world ---------- */
+.droplet-lab[data-look="night"] { --dl-bg: #030506; background: radial-gradient(ellipse at 50% -10%, #0e171a 0, transparent 60%), #030506; }
+.droplet-lab[data-look="night"] .dl-header { border-bottom-color: rgba(200, 220, 230, .06); }
+.droplet-lab[data-look="night"] .dl-brand { font-weight: 200; letter-spacing: .55em; font-size: 22px; }
+.droplet-lab[data-look="night"] .dl-brand-period, .droplet-lab[data-look="night"] .dl-brand-symbol { display: none; }
+/* The board has no card: it dissolves into the dark around it. */
+.droplet-lab[data-look="night"] .dl-stage { border: 0; border-radius: 0; background: #030506; box-shadow: none; }
+.droplet-lab[data-look="night"] .dl-stage .dl-canvas { -webkit-mask-image: radial-gradient(ellipse 72% 70% at 50% 50%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 72% 70% at 50% 50%, #000 58%, transparent 100%); }
+.droplet-lab[data-look="night"] .dl-corner { display: none; }
+.droplet-lab[data-look="night"] .dl-stage-top, .droplet-lab[data-look="night"] .dl-stage-bottom { color: rgba(214, 228, 232, .5); letter-spacing: .3em; }
+.droplet-lab[data-look="night"] .mode-nav a { border-color: transparent; background: transparent; color: #8a9da1; letter-spacing: .12em; }
+.droplet-lab[data-look="night"] .mode-nav a[aria-current="page"] { background: transparent; border-color: transparent; color: #eef6f5; box-shadow: inset 0 -1px 0 #9fd6d2; border-radius: 0; }
+.droplet-lab[data-look="night"] .purity-actions button { background: rgba(20, 30, 34, .55); border-color: rgba(160, 200, 205, .16); }
+.droplet-lab[data-look="night"] .stage-picker button { background: transparent; border-color: rgba(160, 200, 205, .12); }
+.droplet-lab[data-look="night"] .stage-picker button[aria-current] { background: rgba(40, 70, 72, .35); border-color: rgba(159, 214, 210, .45); }
+
+/* ---------- 白い展示室: a pale, matte exhibition space ---------- */
+.droplet-lab[data-look="gallery"] { --dl-bg: #ecebe6; --dl-fg: #1e2629; --dl-dim: #6f7a7d; --dl-line: rgba(30, 40, 44, .1); --dl-accent: #3f8f93; background: #ecebe6; color: #1e2629; }
+.droplet-lab[data-look="gallery"] .dl-brand, .droplet-lab[data-look="gallery"] .dl-edition > span:first-child, .droplet-lab[data-look="gallery"] .dl-edition b { color: #1e2629; }
+.droplet-lab[data-look="gallery"] .dl-brand { font-weight: 300; letter-spacing: .12em; }
+.droplet-lab[data-look="gallery"] .dl-brand-symbol { border-color: #6b8f92; box-shadow: none; }
+.droplet-lab[data-look="gallery"] .dl-stage { background: #e6e3dc; border-color: rgba(30, 40, 44, .08); box-shadow: 0 30px 60px -40px rgba(40, 50, 55, .35); border-radius: 4px; }
+.droplet-lab[data-look="gallery"] .dl-stage-top, .droplet-lab[data-look="gallery"] .dl-stage-bottom { color: rgba(40, 52, 56, .55); }
+.droplet-lab[data-look="gallery"] .dl-corner { border-color: rgba(40, 52, 56, .25); }
+.droplet-lab[data-look="gallery"] .mode-nav a { background: transparent; border-color: rgba(30, 40, 44, .14); color: #4c5a5e; }
+.droplet-lab[data-look="gallery"] .mode-nav a[aria-current="page"] { background: #1e2629; border-color: #1e2629; color: #f2f1ec; }
+.droplet-lab[data-look="gallery"] .purity-actions button { background: #f6f5f1; border-color: rgba(30, 40, 44, .14); color: #25302f; }
+.droplet-lab[data-look="gallery"] .stage-picker button { background: #f6f5f1; border-color: rgba(30, 40, 44, .12); color: #2a3538; }
+.droplet-lab[data-look="gallery"] .stage-picker button[aria-current] { background: #1e2629; color: #f2f1ec; border-color: #1e2629; }
+.droplet-lab[data-look="gallery"] .stage-picker small, .droplet-lab[data-look="gallery"] .stage-title, .droplet-lab[data-look="gallery"] .stage-cores, .droplet-lab[data-look="gallery"] .purity-details, .droplet-lab[data-look="gallery"] .purity-details p, .droplet-lab[data-look="gallery"] .purity-notice, .droplet-lab[data-look="gallery"] .dl-footer, .droplet-lab[data-look="gallery"] .dl-footer p { color: #5c686b; }
+.droplet-lab[data-look="gallery"] .stage-title b, .droplet-lab[data-look="gallery"] h1, .droplet-lab[data-look="gallery"] h2, .droplet-lab[data-look="gallery"] .purity-guidance h2 { color: #1e2629; }
+.droplet-lab[data-look="gallery"] .stage-cores i { background: rgba(30, 40, 44, .1); }
+.droplet-lab[data-look="gallery"] .stage-compare button, .droplet-lab[data-look="gallery"] .stage-compare select, .droplet-lab[data-look="gallery"] .purity-details select { background: #f6f5f1; color: #25302f; border-color: rgba(30, 40, 44, .14); }
+.droplet-lab[data-look="gallery"] .stage-compare button[aria-pressed="true"] { background: #1e2629; color: #f2f1ec; }
+.droplet-lab[data-look="gallery"] .purity-lab-link, .droplet-lab[data-look="gallery"] .dl-footer a { color: #3b4a4e; }
+.droplet-lab[data-look="gallery"] .dl-touch-hint { color: #4c5a5e; }
+.droplet-lab[data-look="gallery"] .stage-score, .droplet-lab[data-look="gallery"] .stage-score b { color: #1e2629; text-shadow: none; }
+.droplet-lab[data-look="gallery"] .stage-clear, .droplet-lab[data-look="gallery"] .stage-result { background: rgba(246, 245, 241, .82); color: #1e2629; }
+.droplet-lab[data-look="gallery"] .purity-companion { color: #3b4a4e; }

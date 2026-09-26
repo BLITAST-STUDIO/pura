@@ -21,6 +21,8 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uRimB: { value: new THREE.Vector2() },
       uRimActive: { value: 0 },
       // 1: light seen through the drop is softened; ?glint=classic keeps the earlier look.
+      // Night look only: a faint in-body glow tinted by the liquid (0 = off, exact).
+      uGlow: { value: 0 },
       uThroughSoft: { value: typeof location !== 'undefined' && new URLSearchParams(location.search).get('glint') === 'classic' ? 0 : 1 },
     },
     depthWrite: true,
@@ -57,6 +59,7 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
       uniform float uIor;
       uniform vec2 uSurfaceBend;
       uniform float uThroughSoft;
+      uniform float uGlow;
       ${RIM_GLSL}
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
@@ -232,8 +235,10 @@ export function createLiquidMaterial(background: THREE.Texture): THREE.ShaderMat
         float peak = max(max(uTint.r, uTint.g), max(uTint.b, 0.001));
         vec3 transmissionColor = mix(vec3(1.0), uTint / peak, 0.68);
         vec3 absorption = -log(max(transmissionColor, vec3(0.035))) * 1.65;
+        vec3 glowTint = transmissionColor;
         transmitted *= exp(-absorption * max(distanceInside, 0.0));
         vec3 color = reflected * entryFresnel + transmitted * (1.0 - entryFresnel);
+        color += uGlow * glowTint * (1.0 - exp(-max(distanceInside, 0.0) * 2.0)) * (1.0 - entryFresnel);
         gl_FragColor = vec4(max(color, vec3(0.0)), 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
