@@ -150,6 +150,6 @@ export default function StagePlay() {
         <p>R：やり直す · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>元祖の8ステージ、テストプレイ。</p></div><a className="purity-lab-link" href="?play=open">三色で自由に<ArrowUpRight size={14}/></a></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>元祖の8ステージ、テストプレイ。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=free">自由モード<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=open">三色で自由に<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }

@@ -104,3 +104,7 @@ rg --count '\.absolute' dist --glob '*.css'
 ## 元祖8ステージ（テストプレイ）
 
 [8ステージを遊ぶ](https://blitast-studio.github.io/pura/?play=stages) — 元祖の8ステージとサンドボックス。雫の大きさ（大きめ／元祖）と混ぜ方（押し込み／元祖の判定）を画面上で切り替えて比べられます。[内容と検証](docs/pura-v1/STAGES_TEST_PLAY.md)。
+
+## 自由モード
+
+[自由に遊ぶ](https://blitast-studio.github.io/pura/?play=free) — 目標も点数もなし。雫の数と色、混ざり方、粘度・慣性・摩擦・引き寄せを好きに変えられます。「ゴゴゴ」で60個を一気に集めることも。[設定と検証](docs/pura-v1/FREE_MODE.md)。

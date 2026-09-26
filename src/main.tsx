@@ -5,7 +5,14 @@ import "@/styles.css";
 async function boot() {
   const el = document.getElementById("root");
   if (!el) return;
-  if (new URLSearchParams(window.location.search).get('play') === 'stages') {
+  if (new URLSearchParams(window.location.search).get('play') === 'free') {
+    try {
+      const { default: FreePlay } = await import('./experiments/free/FreePlay');
+      createRoot(el).render(<FreePlay />);
+    } catch {
+      el.textContent = '水滴の準備ができませんでした。ページを再読み込みしてください。';
+    }
+  } else if (new URLSearchParams(window.location.search).get('play') === 'stages') {
     try {
       const { default: StagePlay } = await import('./experiments/stages/StagePlay');
       createRoot(el).render(<StagePlay />);
