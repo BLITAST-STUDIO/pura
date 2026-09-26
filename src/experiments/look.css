@@ -77,5 +77,3 @@
 .droplet-lab[data-look="gallery"] .stage-score, .droplet-lab[data-look="gallery"] .stage-score b { color: #1e2629; text-shadow: none; }
 .droplet-lab[data-look="gallery"] .stage-clear, .droplet-lab[data-look="gallery"] .stage-result { background: rgba(246, 245, 241, .82); color: #1e2629; }
 .droplet-lab[data-look="gallery"] .stage-clear small, .droplet-lab[data-look="gallery"] .stage-result small { color: #56666a; }
-.droplet-lab[data-look="gallery"] .stage-discovery { background: rgba(246, 245, 241, .86); color: #1e2629; }
-.droplet-lab[data-ui="light"] .stage-michi > span { color: #3b4a4e; }

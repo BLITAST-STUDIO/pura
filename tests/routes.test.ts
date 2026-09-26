@@ -8,6 +8,8 @@ test('the bare URL opens instant play; the original PURA stays at ?play=classic'
   assert.equal(routeKey('?play=stages&mode=score&stage=3'), 'play=stages');
   assert.equal(routeKey('?play=free'), 'play=free');
   assert.equal(routeKey('?play=hitofude&board=2'), 'play=hitofude');
+  assert.equal(routeKey('?play=michi&board=31'), 'play=michi');
+  assert.equal(routeKey('?play=curling&vs=two'), 'play=curling');
   assert.equal(routeKey('?play=bench'), 'play=bench');
   assert.equal(routeKey('?play=chapters&chapter=2'), 'play=chapters');
   assert.equal(routeKey('?lab=droplets&feel=baseline'), 'lab=droplets');

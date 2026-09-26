@@ -1,0 +1,18 @@
+.curling-board { margin: 0 0 12px; }
+.curling-board tbody th { white-space: nowrap; }
+.curling-board .team-dot, .curling-stones i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.curling-board [data-team="cyan"] .team-dot { background: #6fd0dc; }
+.curling-board [data-team="rose"] .team-dot { background: #e38aab; }
+.curling-board .hammer { margin-left: 5px; font-size: 7px; vertical-align: 2px; }
+.curling-stones { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; font-size: 10px; color: #a9bfc1; }
+.curling-stones > div { display: flex; align-items: center; gap: 6px; }
+.curling-stones i { margin: 0; border: 1px solid #5f7f84; }
+.curling-stones [data-team="cyan"] i.is-left { background: #6fd0dc; border-color: #6fd0dc; }
+.curling-stones [data-team="rose"] i.is-left { background: #e38aab; border-color: #e38aab; }
+.curling-note { bottom: 44px; }
+.droplet-lab[data-ui="light"] .curling-stones { color: #56666a; }
+.droplet-lab[data-ui="light"] .curling-stones i { border-color: rgba(30, 40, 44, .3); }
+.droplet-lab[data-ui="light"] .curling-stones [data-team="cyan"] i.is-left { background: #3f9fa9; border-color: #3f9fa9; }
+.droplet-lab[data-ui="light"] .curling-stones [data-team="rose"] i.is-left { background: #b0647f; border-color: #b0647f; }
+/* Centred by left: 50%, the pill would otherwise wrap at half the sheet's width. */
+.curling-play .stage-clear { width: max-content; max-width: calc(100% - 24px); white-space: nowrap; }

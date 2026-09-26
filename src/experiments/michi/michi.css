@@ -1,0 +1,18 @@
+.michi-chapters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 4px 0 8px; }
+.michi-chapters button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px; background: #142327; border: 1px solid #30494d; border-radius: 8px; color: #b8cecd; cursor: pointer; min-width: 0; }
+.michi-chapters button span { font-size: 9px; letter-spacing: .08em; color: #8fb3b0; }
+.michi-chapters button b { font-size: 12px; font-weight: 400; white-space: nowrap; }
+.michi-chapters button small { font-size: 9px; color: #8fb3b0; font-variant-numeric: tabular-nums; }
+.michi-chapters button[aria-current] { border-color: #7baba8; background: #223c40; }
+.michi-lead { margin: 0 0 8px; font-size: 11px; color: #92aaae; letter-spacing: .04em; }
+.stage-discovery { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); margin: 0; padding: 7px 14px; border-radius: 999px; background: rgba(14, 26, 30, .6); color: #e3f2f0; font-size: 11px; letter-spacing: .05em; white-space: nowrap; pointer-events: none; animation: stage-discovery-in 1.6s ease both; }
+@keyframes stage-discovery-in { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .stage-discovery { animation: none; } }
+
+.droplet-lab[data-ui="light"] .michi-chapters button { background: #f6f5f1; border-color: rgba(30, 40, 44, .12); color: #2a3538; }
+.droplet-lab[data-ui="light"] .michi-chapters button span, .droplet-lab[data-ui="light"] .michi-chapters button small { color: #5f6f73; }
+.droplet-lab[data-ui="light"] .michi-chapters button[aria-current] { background: #1e2629; border-color: #1e2629; color: #f2f1ec; }
+.droplet-lab[data-ui="light"] .michi-chapters button[aria-current] span, .droplet-lab[data-ui="light"] .michi-chapters button[aria-current] small { color: #b9c8c9; }
+.droplet-lab[data-ui="light"] .michi-lead { color: #56666a; }
+.droplet-lab[data-look="gallery"] .stage-discovery { background: rgba(246, 245, 241, .86); color: #1e2629; }
+@media (max-width: 430px) { .michi-chapters button { padding: 8px 1px; } .michi-chapters button b { font-size: 11px; letter-spacing: -.02em; } }

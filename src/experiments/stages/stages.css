@@ -1,4 +1,5 @@
-.stage-play .dl-shell { max-width: 560px; }
+/* Three classes: in the production bundle the chapters stylesheet (1060px) loads later. */
+.droplet-lab.stage-play .dl-shell { max-width: 560px; }
 .stage-picker { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin: 4px 0 12px; }
 .stage-picker button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px; background: #142327; border: 1px solid #30494d; border-radius: 7px; color: #b8cecd; font-size: 12px; cursor: pointer; min-width: 0; }
 .stage-picker button[aria-current] { border-color: #7baba8; background: #223c40; }
@@ -42,10 +43,3 @@
 .stage-result strong { display: block; font-size: 24px; font-weight: 300; font-variant-numeric: tabular-nums; }
 .stage-result small { font-size: 9px; color: #b3c9c9; }
 .stage-best { margin: -4px 0 10px; font-size: 10px; color: #9fc3bd; font-variant-numeric: tabular-nums; }
-/* 道 (reorganised course) trial boards, under the legacy eight. */
-.stage-picker.stage-michi { grid-template-columns: 2.2fr 1fr 1fr; margin-top: -4px; }
-.stage-michi > span { display: flex; flex-direction: column; justify-content: center; gap: 3px; font-size: 11px; color: #a9c1c1; letter-spacing: .04em; }
-.stage-michi > span small { font-size: 9px; }
-.stage-discovery { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); margin: 0; padding: 7px 14px; border-radius: 999px; background: rgba(14, 26, 30, .6); color: #e3f2f0; font-size: 11px; letter-spacing: .05em; white-space: nowrap; pointer-events: none; animation: stage-discovery-in 1.6s ease both; }
-@keyframes stage-discovery-in { from { opacity: 0; transform: translate(-50%, 4px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@media (prefers-reduced-motion: reduce) { .stage-discovery { animation: none; } }
