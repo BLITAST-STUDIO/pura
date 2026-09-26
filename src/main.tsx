@@ -15,6 +15,7 @@ const routes: Record<RouteKey, Route> = {
   "play=free": async () => (await import("./experiments/free/FreePlay")).default,
   "play=hitofude": async () => (await import("./experiments/hitofude/HitofudePlay")).default,
   "play=michi": async () => (await import("./experiments/michi/MichiPlay")).default,
+  "play=curling": async () => (await import("./experiments/curling/CurlingPlay")).default,
   "play=stages": async () => (await import("./experiments/stages/StagePlay")).default,
   "play=open": async () => (await import("./experiments/open-play/OpenPlay")).default,
   "play=first": async () => (await import("./experiments/purity-scene/PurityScene")).default,

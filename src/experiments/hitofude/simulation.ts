@@ -40,12 +40,12 @@ export const shotLimit = (par: number) => par + 3;
 export type Aim = { id: number; x: number; y: number; r: number; dx: number; dy: number; power: number };
 export type ShotResult = { cleared: boolean; shots: number };
 
-/** Launch velocity for a pull from the drop's centre to the finger. */
-export function launch(pullX: number, pullY: number): { vx: number; vy: number; power: number } | null {
+/** Launch velocity for a pull from the drop's centre to the finger (`speed` at full power). */
+export function launch(pullX: number, pullY: number, speed = SHOT_SPEED): { vx: number; vy: number; power: number } | null {
   const length = Math.hypot(pullX, pullY);
   if (!(length >= MIN_PULL)) return null;
   const power = Math.min(1, length / MAX_PULL);
-  return { vx: -pullX / length * SHOT_SPEED * power, vy: -pullY / length * SHOT_SPEED * power, power };
+  return { vx: -pullX / length * speed * power, vy: -pullY / length * speed * power, power };
 }
 
 export class HitofudeSimulation extends FusionSimulation {

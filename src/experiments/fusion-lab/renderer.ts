@@ -58,6 +58,8 @@ const AIM_DOTS = 16;
 type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
   /** Shot modes: a dotted line on the floor shows where and how hard a drop will go. */
   aim?: () => SceneAim | null;
+  /** Fixed floor lines (curling's house rings and hog line), in board units. */
+  markings?: { rings: { x: number; y: number; r: number; fill?: boolean }[]; lines: { x0: number; y0: number; x1: number; y1: number }[] };
   /** Drop height in world units for a board radius; defaults to the approved fixed height. */
   height?: (radius: number) => number };
 export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Callbacks = {}, adapter: SceneAdapter = {}) {
@@ -106,6 +108,21 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const aimDots = adapter.aim ? new THREE.InstancedMesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: '#2f3d41', transparent: true, opacity: .5, depthWrite: false }), AIM_DOTS) : null;
   const aimMatrix = new THREE.Matrix4();
   if (aimDots) { aimDots.count = 0; aimDots.position.z = -.007; aimDots.frustumCulled = false; scene.add(aimDots); }
+  // Thin lines painted on the floor; like the goal rings they bend through the drops above them.
+  const markingMaterial = adapter.markings ? new THREE.MeshBasicMaterial({ color: '#2f3d41', transparent: true, opacity: .32, depthWrite: false }) : null;
+  const markingMeshes = (adapter.markings && markingMaterial) ? [
+    ...adapter.markings.rings.map(ring => {
+      const mesh = new THREE.Mesh(ring.fill ? new THREE.CircleGeometry(ring.r * W, 64) : new THREE.RingGeometry(ring.r * W - .007, ring.r * W, 128), markingMaterial);
+      mesh.position.set((ring.x - sim.width / 2) * W, (sim.height / 2 - ring.y) * W, -.0095); return mesh;
+    }),
+    ...adapter.markings.lines.map(line => {
+      const length = Math.hypot(line.x1 - line.x0, line.y1 - line.y0);
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(length * W, .007), markingMaterial);
+      mesh.position.set(((line.x0 + line.x1) / 2 - sim.width / 2) * W, (sim.height / 2 - (line.y0 + line.y1) / 2) * W, -.0095);
+      mesh.rotation.z = -Math.atan2(line.y1 - line.y0, line.x1 - line.x0); return mesh;
+    }),
+  ] : [];
+  if (markingMeshes.length) scene.add(...markingMeshes);
   const bodies = new Map<number, Body>();
   const shapes = new ShapePool();
   let shapeBudget = SHAPE_UPDATES_PER_FRAME;
@@ -513,6 +530,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         ambient.intensity = look.ambient; light.intensity = look.light;
         renderer.toneMappingExposure = look.exposure;
         aimDots?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
+        markingMaterial?.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
       }
       floorMaterial.map = textures[options.inspection ? 1 : 0]; floorMaterial.bumpMap = options.inspection ? null : textures[0]; floorMaterial.needsUpdate = true;
       for (const b of bodies.values()) {
@@ -533,6 +551,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       for (const g of goalViews) { for (const mesh of [g.ring, g.fill, g.label]) { mesh.geometry.dispose(); mesh.material.dispose(); } g.texture.dispose(); }
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
       if (aimDots) { aimDots.geometry.dispose(); aimDots.material.dispose(); aimDots.dispose(); }
+      for (const mesh of markingMeshes) mesh.geometry.dispose();
+      markingMaterial?.dispose();
     },
   };
 }
