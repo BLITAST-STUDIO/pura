@@ -16,3 +16,6 @@
 .droplet-lab[data-ui="light"] .curling-stones [data-team="rose"] i.is-left { background: #b0647f; border-color: #b0647f; }
 /* Centred by left: 50%, the pill would otherwise wrap at half the sheet's width. */
 .curling-play .stage-clear { width: max-content; max-width: calc(100% - 24px); white-space: nowrap; }
+.curling-strength, .curling-spin { margin-top: -4px; }
+.curling-strength small, .curling-spin small { min-width: 64px; font-size: 10px; letter-spacing: .04em; }
+.curling-spin { margin: 12px 0 0; }
