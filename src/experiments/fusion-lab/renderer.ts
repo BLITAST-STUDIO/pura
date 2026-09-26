@@ -21,7 +21,9 @@ export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boole
   /** 'high' quality lowers its pixel ratio while frames are late (default on). */
   adaptive?: boolean;
   /** Visual direction proposal; 'studio' is the approved look. */
-  look?: Look };
+  look?: Look;
+  /** How the physics walls are shown: a low rim, a fine inlaid line, or not at all (the default here). */
+  walls?: 'rim' | 'line' | 'none' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; shapeReady: boolean; shapeLobes: Lobe[]; shapeBlend: number; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim; appear: number };
@@ -37,6 +39,21 @@ const APPEAR_SECONDS = 0.16;
 const SHAPE_UPDATES_PER_FRAME = 6;
 /** Below this share of the result, the smaller drop is absorbed without a merged surface. */
 const MINOR_MERGE = 0.12;
+
+/** A rounded rectangle in world units, for the inlaid wall line. */
+function roundedRect<T extends THREE.Path>(path: T, x0: number, y0: number, x1: number, y1: number, r: number): T {
+  path.moveTo(x0 + r, y0); path.lineTo(x1 - r, y0); path.quadraticCurveTo(x1, y0, x1, y0 + r);
+  path.lineTo(x1, y1 - r); path.quadraticCurveTo(x1, y1, x1 - r, y1); path.lineTo(x0 + r, y1);
+  path.quadraticCurveTo(x0, y1, x0, y1 - r); path.lineTo(x0, y0 + r); path.quadraticCurveTo(x0, y0, x0 + r, y0);
+  return path;
+}
+/** A band between two rounded rectangles offset `inner`..`outer` (world units) from the given one. */
+function band(x0: number, y0: number, x1: number, y1: number, r: number, inner: number, outer: number) {
+  const shape = roundedRect(new THREE.Shape(), x0 - outer, y0 - outer, x1 + outer, y1 + outer, Math.max(r * .1, r + outer));
+  // A zero radius would repeat corner points, which breaks the triangulation into a stray diagonal.
+  shape.holes.push(roundedRect(new THREE.Path(), x0 - inner, y0 - inner, x1 + inner, y1 + inner, Math.max(r * .1, r + inner)));
+  return new THREE.ShapeGeometry(shape, 12);
+}
 
 function footprint(material: THREE.ShaderMaterial) {
   material.uniforms.lobeCount = { value: 0 };
@@ -123,6 +140,59 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     }),
   ] : [];
   if (markingMeshes.length) scene.add(...markingMeshes);
+  // The play area's edge, where the physics walls are (pad inside the board).
+  let wallGroup: THREE.Group | null = null, wallKey = '';
+  function disposeWalls() {
+    if (!wallGroup) return;
+    scene.remove(wallGroup);
+    wallGroup.traverse(o => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); } });
+    wallGroup = null;
+  }
+  function buildWalls() {
+    const mode = options.walls ?? 'none';
+    const look = lookScene(options.look ?? 'studio', options.lighting === 'daylight');
+    const pad = sim.core.pad;
+    const key = [mode, sim.width, sim.height, pad, look.floor].join(':');
+    if (key === wallKey) return;
+    wallKey = key; disposeWalls();
+    if (mode === 'none') return;
+    const x0 = (pad - sim.width / 2) * W, x1 = (sim.width / 2 - pad) * W;
+    const y0 = (pad - sim.height / 2) * W, y1 = (sim.height / 2 - pad) * W;
+    const group = new THREE.Group();
+    const shade = (inner: number, outer: number, opacity: number, color = '#1e2629') => {
+      const mesh = new THREE.Mesh(band(x0, y0, x1, y1, 10 * W, inner * W, outer * W), new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false }));
+      mesh.position.z = -.0094; group.add(mesh);
+    };
+    if (mode === 'rim') {
+      // Four low capsules meeting in rounded corners; the inner face is the wall line.
+      const R = 6 * W;
+      const night = look.floor === '#1d2427';
+      const material = new THREE.MeshStandardMaterial({ color: look.daylight ? '#77736b' : night ? '#1b2326' : '#56646a', roughness: night ? .32 : .9, metalness: 0, envMapIntensity: night ? .9 : look.envIntensity });
+      const side = (length: number, x: number, y: number, horizontal: boolean) => {
+        const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(R, length, 6, 20), material);
+        if (horizontal) mesh.rotation.z = Math.PI / 2;
+        mesh.position.set(x, y, R * .2); mesh.scale.z = .62; group.add(mesh);
+      };
+      side(x1 - x0 + 2 * R, 0, y0 - R, true); side(x1 - x0 + 2 * R, 0, y1 + R, true);
+      side(y1 - y0 + 2 * R, x0 - R, 0, false); side(y1 - y0 + 2 * R, x1 + R, 0, false);
+      // Soft contact shadows on the floor, inside and outside the rim, so it stands rather than floats.
+      const dark = look.daylight ? 1 : .6;
+      shade(-2, 0, .12 * dark); shade(-7, -2, .045 * dark);
+      shade(12, 14, .1 * dark); shade(14, 19, .035 * dark);
+    } else {
+      // A hairline on the wall line, a finer one just outside, and a faint shade inside: an inlay.
+      const ink = look.daylight ? '#26343a' : '#e4f1ef';
+      const layer = (geometry: THREE.BufferGeometry, opacity: number, z: number) => {
+        const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: ink, transparent: true, opacity, depthWrite: false }));
+        mesh.position.z = z; group.add(mesh);
+      };
+      const r = 10 * W;
+      layer(band(x0, y0, x1, y1, r, -.8 * W, .8 * W), .55, -.0092);
+      layer(band(x0, y0, x1, y1, r, 5.4 * W, 6.2 * W), .3, -.0092);
+      for (let i = 0; i < 3; i++) layer(band(x0, y0, x1, y1, r, -(i + 1) * 5 * W, -i * 5 * W - .8 * W), [.05, .03, .015][i], -.0094);
+    }
+    wallGroup = group; scene.add(group);
+  }
   const bodies = new Map<number, Body>();
   const shapes = new ShapePool();
   let shapeBudget = SHAPE_UPDATES_PER_FRAME;
@@ -411,6 +481,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const tilt = .47, tangent = Math.tan(34 * Math.PI / 360);
     const distance = Math.max(sim.width * W / (2 * tangent * aspect), sim.height * W / (2 * tangent)) * 1.13 + 1.25;
     camera.position.set(0, -Math.sin(tilt) * distance, Math.cos(tilt) * distance); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+    buildWalls();
     // A bead of about 0.065 world units (6.5 board units) at its drawn distance.
     (spray.points.material as THREE.ShaderMaterial).uniforms.uPixels.value = 0.065 * canvas.height / (2 * tangent);
     last = 0; samples = []; refresh(0);
@@ -538,6 +609,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         b.projected.visible = options.caustic === 'shape' && !options.clay;
         b.caustic.visible = !options.clay && !b.projected.visible;
       }
+      buildWalls();
       if (qualityChanged) resize(); refresh(0); last = 0;
     },
     dispose() {
@@ -552,6 +624,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
       if (aimDots) { aimDots.geometry.dispose(); aimDots.material.dispose(); aimDots.dispose(); }
       for (const mesh of markingMeshes) mesh.geometry.dispose();
+      disposeWalls();
       markingMaterial?.dispose();
     },
   };

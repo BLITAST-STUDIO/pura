@@ -9,6 +9,7 @@ import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
+import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
@@ -51,6 +52,7 @@ export default function HitofudePlay() {
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
   const [ui, setUi] = useState<Ui>(initialUi);
+  const walls = useWalls();
   const index = Math.max(0, SHOT_BOARDS.findIndex(b => b.id === boardId));
   const board = SHOT_BOARDS[index];
 
@@ -100,8 +102,8 @@ export default function HitofudePlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [boardId, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, boardId, retry, look]);
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, boardId, retry, look, walls]);
   const again = () => { if (round.current) return; experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
