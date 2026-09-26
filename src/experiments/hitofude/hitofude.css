@@ -1,10 +1,44 @@
-.hitofude-play .stage-picker { grid-template-columns: repeat(3, 1fr); }
-.hitofude-play .stage-picker button { flex-direction: row; justify-content: center; gap: 8px; }
-.hitofude-play .stage-picker small { font-size: 10px; }
+.hitofude-play .stage-picker button:disabled { opacity: .45; cursor: default; }
+.hitofude-play .stage-picker small { font-variant-numeric: tabular-nums; }
+.hole-par { margin-left: 10px; font-size: 10px; letter-spacing: .08em; }
 .shot-meter { display: flex; align-items: center; gap: 7px; margin-top: 12px; font-size: 10px; color: #a9bfc1; }
 .shot-meter i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #5f7f84; }
 .shot-meter i.is-left { background: #8fd3d0; border-color: #8fd3d0; }
-.shot-meter small { margin-left: auto; font-variant-numeric: tabular-nums; }
-.droplet-lab[data-ui="light"] .shot-meter { color: #56666a; }
+.shot-meter small { margin-left: auto; }
+.hole-score { font-size: 13px; letter-spacing: .06em; }
+/* Centred by left: 50%, the pill would otherwise wrap at half the board's width. */
+.hitofude-play .stage-clear { width: max-content; max-width: calc(100% - 24px); white-space: nowrap; }
+
+/* The scorecard: par, strokes, running total against par. */
+.scorecard { width: 100%; margin-top: 12px; border-collapse: collapse; table-layout: fixed; font-size: 10px; font-variant-numeric: tabular-nums; color: #a9bfc1; }
+.scorecard th, .scorecard td { padding: 5px 0; text-align: center; border-bottom: 1px solid rgba(160, 200, 205, .12); font-weight: 400; }
+.scorecard tr > :first-child { width: 17%; text-align: left; letter-spacing: .04em; }
+.scorecard tr > :last-child { width: 11%; }
+.scorecard thead th.is-current { color: #e9f6f4; font-weight: 600; }
+.scorecard td[data-under] { color: #8fd3d0; }
+.scorecard td[data-one] { font-weight: 600; }
+
+/* Hole-in-one: a ring widening across the board and the mode's name. */
+.hole-in-one { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.hole-in-one i { position: absolute; width: 40%; aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .8); animation: hole-in-one-ring 1.6s cubic-bezier(.2, .7, .2, 1) both; }
+.hole-in-one b { font-weight: 300; font-size: clamp(26px, 8vw, 40px); letter-spacing: .5em; text-indent: .5em; color: #fff; text-shadow: 0 2px 18px rgba(20, 40, 44, .35); animation: hole-in-one-word 2.6s ease both; }
+@keyframes hole-in-one-ring { from { transform: scale(.2); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+@keyframes hole-in-one-word { 0% { opacity: 0; transform: translateY(6px); } 18% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; } }
+
+.round-summary { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 26px; border-radius: 14px; background: rgba(14, 26, 30, .76); color: #e9f6f4; backdrop-filter: blur(6px); }
+.round-summary strong { font-size: 34px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.round-summary small, .round-summary span { font-size: 11px; color: #b7cccb; }
+.round-summary button { margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border: 1px solid #7fb4ae; background: #22403f; color: #e4f4f2; border-radius: 999px; font-size: 11px; cursor: pointer; }
+
+.droplet-lab[data-ui="light"] .shot-meter, .droplet-lab[data-ui="light"] .scorecard { color: #56666a; }
 .droplet-lab[data-ui="light"] .shot-meter i { border-color: rgba(30, 40, 44, .35); }
 .droplet-lab[data-ui="light"] .shot-meter i.is-left { background: #2f5f63; border-color: #2f5f63; }
+.droplet-lab[data-ui="light"] .scorecard th, .droplet-lab[data-ui="light"] .scorecard td { border-bottom-color: rgba(30, 40, 44, .1); }
+.droplet-lab[data-ui="light"] .scorecard thead th.is-current { color: #1e2629; }
+.droplet-lab[data-ui="light"] .scorecard td[data-under] { color: #2f7a6c; }
+.droplet-lab[data-look="gallery"] .hole-in-one i { border-color: rgba(47, 95, 99, .55); }
+.droplet-lab[data-look="gallery"] .hole-in-one b { color: #1e2629; text-shadow: 0 2px 16px rgba(255, 255, 255, .8); }
+.droplet-lab[data-look="gallery"] .round-summary { background: rgba(246, 245, 241, .9); color: #1e2629; }
+.droplet-lab[data-look="gallery"] .round-summary small, .droplet-lab[data-look="gallery"] .round-summary span { color: #56666a; }
+.droplet-lab[data-look="gallery"] .round-summary button { background: #1e2629; border-color: #1e2629; color: #f2f1ec; }
+@media (prefers-reduced-motion: reduce) { .hole-in-one { display: none; } }

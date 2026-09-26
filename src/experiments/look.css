@@ -20,7 +20,8 @@
 .droplet-lab[data-ui="light"] .stage-title b, .droplet-lab[data-ui="light"] h1, .droplet-lab[data-ui="light"] h2, .droplet-lab[data-ui="light"] .purity-guidance h2, .droplet-lab[data-ui="light"] .purity-chapter { color: #1e2629; }
 .droplet-lab[data-ui="light"] .stage-cores i { background: rgba(30, 40, 44, .1); }
 .droplet-lab[data-ui="light"] .stage-compare button, .droplet-lab[data-ui="light"] .stage-compare select, .droplet-lab[data-ui="light"] .purity-details select, .droplet-lab[data-ui="light"] .stage-modes button { background: #f6f5f1; color: #25302f; border-color: rgba(30, 40, 44, .14); }
-.droplet-lab[data-ui="light"] .stage-compare button[aria-pressed="true"] { background: #1e2629; color: #f2f1ec; }
+.droplet-lab[data-ui="light"] .stage-compare button[aria-pressed="true"], .droplet-lab[data-ui="light"] .stage-modes button[aria-pressed="true"] { background: #1e2629; color: #f2f1ec; border-color: #1e2629; }
+.droplet-lab[data-ui="light"] .stage-modes { color: #56666a; }
 .droplet-lab[data-ui="light"] .purity-lab-link, .droplet-lab[data-ui="light"] .dl-footer a { color: #3b4a4e; }
 .droplet-lab[data-ui="light"] .purity-companion { color: #3b4a4e; }
 .droplet-lab[data-ui="light"] .purity-chapters button { background: #f6f5f1; border-color: rgba(30, 40, 44, .12); color: #2a3538; }

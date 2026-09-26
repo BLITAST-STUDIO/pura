@@ -349,6 +349,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         aimDots.setMatrixAt(i, aimMatrix);
       }
       aimDots.count = n; aimDots.instanceMatrix.needsUpdate = true;
+      canvas.dataset.aim = aim && aim.power > 0 ? JSON.stringify({ dx: aim.dx, dy: aim.dy, power: aim.power }) : '';
     }
     const rect = canvas.getBoundingClientRect();
     const projectedGoals = (adapter.goals?.() ?? []).map((goal, i) => {

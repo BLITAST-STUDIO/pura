@@ -7,7 +7,7 @@ import { boardDrops, type BoardDrop } from '../boards';
 /**
  * ひとふで (one stroke): the original concept's core — a flicked drop slides
  * like a curling stone and swallows the same colour on its way. Each board
- * allows a few shots; stars come from how few were used.
+ * is a hole with a par, scored against it as in mini golf (golf.ts).
  *
  * A shot is aimed by pulling back from the drop and letting go: the drop
  * leaves in the opposite direction, faster the farther it was pulled. While
@@ -29,11 +29,16 @@ export const SHOT_SPEED = 720;
 export const AIMABLE_SPEED = 30;
 const REST_SPEED = 4;
 
-export type ShotBoard = { id: number; code: string; name: string; hint: string; shots: number; par: number; drops: BoardDrop[] };
+export type Stone = { x: number; y: number; r: number };
+/**
+ * A hole. `par` is the expected good score; `min` is the fewest shots the
+ * search found (a hole may have a hard one-shot below its par).
+ */
+export type ShotBoard = { id: number; code: string; name: string; hint: string; par: number; min: number; drops: BoardDrop[]; stones?: Stone[] };
+/** Strokes allowed on a hole, as in mini golf's pick-up rule. */
+export const shotLimit = (par: number) => par + 3;
 export type Aim = { id: number; x: number; y: number; r: number; dx: number; dy: number; power: number };
-export type ShotResult = { cleared: boolean; shots: number; stars: number };
-
-export function starsFor(shots: number, par: number) { return shots <= par ? 3 : shots <= par + 1 ? 2 : 1; }
+export type ShotResult = { cleared: boolean; shots: number };
 
 /** Launch velocity for a pull from the drop's centre to the finger. */
 export function launch(pullX: number, pullY: number): { vx: number; vy: number; power: number } | null {
@@ -67,6 +72,7 @@ export class HitofudeSimulation extends FusionSimulation {
     this.core.tuning = { ...LEGACY_TUNING, grabK: 0, grabDamp: 0, attraction: 0 };
     this.core.resize(this.width, this.height);
     this.core.drops = boardDrops(this.board.drops);
+    this.core.obstacles = this.board.stones ?? [];
     this.core.quota = { cyan: 0, rose: 0, amber: 0 };
     for (const d of this.core.drops) for (const hue of ['cyan', 'rose', 'amber'] as const) this.core.quota[hue] += d.pigment[hue];
     this.observe();
@@ -76,7 +82,7 @@ export class HitofudeSimulation extends FusionSimulation {
     this.abort(); this.core.resize(this.width, this.height);
   }
 
-  get shotsLeft() { return Math.max(0, (this.board?.shots ?? 0) - this.shots); }
+  get shotsLeft() { return Math.max(0, shotLimit(this.board?.par ?? 0) - this.shots); }
 
   /** Colours on the board and how many separate drops each still has. */
   groups(): Map<HueId, number> {
@@ -140,7 +146,7 @@ export class HitofudeSimulation extends FusionSimulation {
       if (d) { d.x = a.x; d.y = a.y; d.vx = 0; d.vy = 0; } else this.abort();
     }
     if (this.result || !this.board) return;
-    if (this.remaining === 0) this.result = { cleared: true, shots: this.shots, stars: starsFor(this.shots, this.board.par) };
-    else if (this.shotsLeft === 0 && !this.aiming && this.atRest) this.result = { cleared: false, shots: this.shots, stars: 0 };
+    if (this.remaining === 0) this.result = { cleared: true, shots: this.shots };
+    else if (this.shotsLeft === 0 && !this.aiming && this.atRest) this.result = { cleared: false, shots: this.shots };
   }
 }
