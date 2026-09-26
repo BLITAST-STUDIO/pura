@@ -15,6 +15,7 @@ test('benchmark summary reports median, p95 and long frames; ignores junk interv
 });
 
 test('the plan covers 12, 24 and 60 drops at both qualities', () => {
+  assert.ok(BENCH_SCENARIOS.some(s => s.count === 60 && s.quality === 'auto'), 'and the adaptive row');
   for (const count of [12, 24, 60]) for (const quality of ['high', 'balanced']) {
     assert.ok(BENCH_SCENARIOS.some(s => s.count === count && s.quality === quality));
   }

@@ -4,12 +4,17 @@
  * reference procedure in requirement 11.2, and recorded as such.
  */
 export const BENCH_TIMING = { warmupMs: 3000, measureMs: 8000 };
-export type BenchScenario = { count: number; quality: 'high' | 'balanced' };
+/** 'auto' is 'high' with adaptive resolution; the other rows are fixed (adaptation off). */
+export type BenchScenario = { count: number; quality: 'high' | 'balanced' | 'auto' };
 export const BENCH_SCENARIOS: BenchScenario[] = [
   { count: 12, quality: 'high' }, { count: 24, quality: 'high' }, { count: 60, quality: 'high' },
   { count: 12, quality: 'balanced' }, { count: 24, quality: 'balanced' }, { count: 60, quality: 'balanced' },
+  { count: 60, quality: 'auto' },
 ];
+/** The adaptive row needs time to settle before it is measured. */
+export const AUTO_SETTLE_MS = 7000;
 export type BenchResult = BenchScenario & {
+  pixelRatio?: number;
   frames: number; fps: number; medianMs: number; p95Ms: number; over33: number; over50: number;
   liveDrops: number; canvas: { width: number; height: number };
 };

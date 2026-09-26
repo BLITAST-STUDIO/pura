@@ -7,6 +7,7 @@ import { createFusionMaterial } from './material';
 import { floorTexture, studioEnvironment, contactMaterial, causticMaterial, setRim } from '../droplet-lab/renderer';
 import { contactAnchor, DropletRim } from '../droplet-lab/rim-response';
 import { createSparkPoints, SplitSparks } from './split-sparks';
+import { AdaptiveResolution } from './adaptive-resolution';
 import { CAUSTIC_BALANCED_SAMPLES, CAUSTIC_SAMPLES, projectedCausticGeometry, projectedCausticMaterial, projectedPointSize } from '../droplet-lab/projected-caustic';
 import { DropletMotion } from '../droplet-lab/motion';
 import { DropletPull } from '../droplet-lab/pull-response';
@@ -15,7 +16,9 @@ import { purityOf } from '../../game/palette';
 import type { ContactKind } from '../../game/sim';
 import type { SensoryFeedback } from '../sensory/feedback';
 
-export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape' };
+export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape';
+  /** 'high' quality lowers its pixel ratio while frames are late (default on). */
+  adaptive?: boolean };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; shapeReady: boolean; shapeLobes: Lobe[]; shapeBlend: number; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim; appear: number };
@@ -102,6 +105,18 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   const options: FusionOptions = { lighting: 'studio', inspection: false, paused: false, reducedMotion: false, quality: 'high', clay: false, dyeFlow: 'classic' };
   let disposed = false, lost = false, raf = 0, last = 0, statTime = 0;
   let loopFault = false;
+  const adaptive = new AdaptiveResolution(1.75);
+  let adaptWindow: number[] = [], adaptWork: number[] = [], adaptWindowMs = 0, adaptWarmup = 3;
+  const adaptiveOn = () => options.quality === 'high' && options.adaptive !== false;
+  const targetPixelRatio = () => options.quality === 'high'
+    ? (adaptiveOn() ? adaptive.pixelRatio(devicePixelRatio) : Math.min(devicePixelRatio || 1, 1.75))
+    : Math.min(devicePixelRatio || 1, 1);
+  /** Changes only the drawing resolution: no board resize, and a held drop stays held. */
+  function applyPixelRatio() {
+    const rect = canvas.getBoundingClientRect(); if (!rect.width || !rect.height) return;
+    renderer.setPixelRatio(targetPixelRatio()); renderer.setSize(rect.width, rect.height, false);
+    background.setSize(canvas.width, canvas.height);
+  }
   // Monotonic across undo/reset, which replace the simulation's own clock.
   let clock = 0;
   const feedback = adapter.feedback;
@@ -337,7 +352,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function resize() {
     if (disposed || lost) return;
     const rect = canvas.getBoundingClientRect(); if (!rect.width || !rect.height) return;
-    cancel(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, options.quality === 'high' ? 1.75 : 1)); renderer.setSize(rect.width, rect.height, false);
+    cancel(); renderer.setPixelRatio(targetPixelRatio()); renderer.setSize(rect.width, rect.height, false);
     background.setSize(canvas.width, canvas.height);
     const aspect = rect.width / rect.height;
     const width = Math.max(550, Math.min(1100, rect.width * 1.06));
@@ -401,6 +416,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     if (disposed || lost || document.hidden) return;
     const interval = last ? now - last : 0; last = now;
     const dt = Math.min(interval / 1000, 1 / 12);
+    const workStart = performance.now();
     try {
       if (!options.paused) { sim.tick(dt); refresh(dt); }
       render();
@@ -409,6 +425,15 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       if (!loopFault) { loopFault = true; console.error('PURA render step failed', error); }
     }
     if (interval > 0 && !options.paused) { samples.push(interval); if (samples.length > 240) samples.shift(); }
+    if (interval > 0 && !options.paused && adaptiveOn()) {
+      adaptWindow.push(interval); adaptWork.push(performance.now() - workStart); adaptWindowMs += interval;
+      if (adaptWindowMs >= 1000) {
+        // Skip the first windows after a start: shader compilation is not load.
+        if (adaptWarmup > 0) adaptWarmup--;
+        else if (adaptive.window(adaptWindow, adaptWork) !== 'hold') applyPixelRatio();
+        adaptWindow = []; adaptWork = []; adaptWindowMs = 0;
+      }
+    }
     if (now - statTime > 200) {
       statTime = now;
       const selected = sim.core.drops.find(d => d.id === sim.core.grabbedId) ?? (sim.core.drops.length === 1 ? sim.core.drops[0] : undefined);
@@ -416,6 +441,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       const sorted = [...samples].sort((a, b) => a - b);
       const stats = { count: sim.core.drops.length, cyan: f.cyan, rose: f.rose, merged: !!selected && f.rose > 0 && f.cyan > 0, fps: sorted.length ? 1000 / sorted[Math.floor(sorted.length * .5)] : 0, p95: sorted[Math.floor(sorted.length * .95)] ?? 0 };
       canvas.dataset.stats = JSON.stringify(stats); callbacks.onStats?.(stats);
+      canvas.dataset.resolution = JSON.stringify({ pixelRatio: renderer.getPixelRatio(), level: adaptive.level, adaptive: adaptiveOn(), width: canvas.width, height: canvas.height });
       if (feedback) canvas.dataset.sensory = JSON.stringify(feedback.status());
       // Resource counts for long-session checks (P-05): these must not climb.
       canvas.dataset.memory = JSON.stringify({ geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
@@ -437,8 +463,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = next.lighting !== undefined && next.lighting !== options.lighting;
-      const qualityChanged = next.quality !== undefined && next.quality !== options.quality;
+      const qualityChanged = (next.quality !== undefined && next.quality !== options.quality)
+        || (next.adaptive !== undefined && next.adaptive !== options.adaptive);
       Object.assign(options, next);
+      if (qualityChanged) { adaptive.reset(); adaptWindow = []; adaptWork = []; adaptWindowMs = 0; adaptWarmup = 3; }
       projectionGeometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
       if (options.paused) cancel();
       if (lightingChanged) {
