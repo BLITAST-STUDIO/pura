@@ -1,4 +1,4 @@
 {
-  "sourceCommit": "49d85e3cf133c0a77069461031899a97aa171acd",
-  "preview": "walls trial: rim by default, ?walls=line, ?walls=none"
+  "sourceCommit": "39e0f42d477ad07fb37f45323313b231aa769e99",
+  "preview": "main: walls rim default; ?walls=line|none"
 }
