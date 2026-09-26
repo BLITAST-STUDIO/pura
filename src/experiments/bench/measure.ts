@@ -14,7 +14,9 @@ export const BENCH_SCENARIOS: BenchScenario[] = [
 /** The adaptive row needs time to settle before it is measured. */
 export const AUTO_SETTLE_MS = 7000;
 export type BenchResult = BenchScenario & {
+  /** Pixel ratio at the end, and the share of measured frames drawn at each ratio. */
   pixelRatio?: number;
+  pixelRatioShare?: Record<string, number>;
   frames: number; fps: number; medianMs: number; p95Ms: number; over33: number; over50: number;
   liveDrops: number; canvas: { width: number; height: number };
 };
@@ -32,4 +34,12 @@ export function summarize(scenario: BenchScenario, intervals: number[], liveDrop
     over33: valid.filter(v => v > 33.4).length, over50: valid.filter(v => v > 50).length,
     liveDrops, canvas,
   };
+}
+
+/** Share of frames at each pixel ratio, rounded to whole percent. */
+export function shareOf(ratios: number[]): Record<string, number> {
+  const counts = new Map<string, number>();
+  for (const r of ratios) if (Number.isFinite(r) && r > 0) counts.set(String(r), (counts.get(String(r)) ?? 0) + 1);
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  return Object.fromEntries([...counts.entries()].sort((a, b) => Number(b[0]) - Number(a[0])).map(([k, v]) => [k, Math.round(100 * v / total)]));
 }

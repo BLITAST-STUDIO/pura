@@ -1,0 +1,17 @@
+{
+ "source": "RYO's iPhone via ?play=bench (Pages 14cb985), pasted in chat 2026-09-26",
+ "at": "2026-09-26T06:11:41.700Z",
+ "readyMs": 1401,
+ "env": { "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.3 Mobile/15E148 Safari/604.1", "gpu": "Apple GPU", "dpr": 3, "screen": "402×874", "cores": 4 },
+ "timing": { "warmupMs": 3000, "measureMs": 8000, "autoSettleMs": 7000 },
+ "results": [
+  { "count": 12, "quality": "high", "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "pixelRatio": 1.75 },
+  { "count": 24, "quality": "high", "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 1, "over50": 0, "pixelRatio": 1.75 },
+  { "count": 60, "quality": "high", "fps": 40, "medianMs": 25, "p95Ms": 28, "over33": 0, "over50": 0, "pixelRatio": 1.75 },
+  { "count": 12, "quality": "balanced", "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 0, "over50": 0, "pixelRatio": 1 },
+  { "count": 24, "quality": "balanced", "fps": 59, "medianMs": 17, "p95Ms": 17, "over33": 1, "over50": 0, "pixelRatio": 1 },
+  { "count": 60, "quality": "balanced", "fps": 59, "medianMs": 17, "p95Ms": 18, "over33": 0, "over50": 0, "pixelRatio": 1 },
+  { "count": 60, "quality": "auto", "frames": 470, "fps": 59, "medianMs": 17, "p95Ms": 20, "over33": 0, "over50": 0, "pixelRatio": 1.75,
+    "note": "pixelRatio is the value at the end of the window. 59 fps at 60 drops is only reached below 1.75× (fixed 1.75× gave 40 fps), so most of the window ran at a lower step and the end caught an upward probe; the slightly higher p95 fits that. The bench now records the share of frames per ratio." }
+ ]
+}

@@ -4,7 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { FreeSimulation } from '../free/simulation';
 import { stageDropHeight } from '../stages/simulation';
 import { initialCaustic, initialRipple } from '../look-defaults';
-import { AUTO_SETTLE_MS, BENCH_SCENARIOS, BENCH_TIMING, summarize, type BenchResult } from './measure';
+import { AUTO_SETTLE_MS, BENCH_SCENARIOS, BENCH_TIMING, shareOf, summarize, type BenchResult } from './measure';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
 import '../stages/stages.css';
@@ -55,13 +55,17 @@ export default function BenchPlay() {
         sim.grab(target.id);
         const origin = { x: target.x, y: target.y };
         const intervals: number[] = [];
+        const ratios: number[] = [];
         let last = 0, frame = 0, measuring = false;
         const start = performance.now();
         const tick = (now: number) => {
           if (cancelled) return;
           const t = (now - start) / 1000;
           sim.move(origin.x + Math.cos(t * 5) * 8, origin.y + Math.sin(t * 5) * 8);
-          if (measuring && last && !document.hidden) intervals.push(now - last);
+          if (measuring && last && !document.hidden) {
+            intervals.push(now - last);
+            ratios.push(Number(JSON.parse(canvas.current?.dataset.resolution ?? '{}').pixelRatio ?? 0));
+          }
           last = now; frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
@@ -74,7 +78,7 @@ export default function BenchPlay() {
         cancelAnimationFrame(frame);
         const c = canvas.current!;
         const result = { ...summarize(scenario, intervals, sim.core.drops.length, { width: c.width, height: c.height }),
-          pixelRatio: Number(JSON.parse(c.dataset.resolution ?? '{}').pixelRatio ?? 0) };
+          pixelRatio: Number(JSON.parse(c.dataset.resolution ?? '{}').pixelRatio ?? 0), pixelRatioShare: shareOf(ratios) };
         experience.dispose();
         if (cancelled) return;
         setResults(previous => [...previous, result]);
@@ -94,7 +98,7 @@ export default function BenchPlay() {
       <p className="bench-phase" role="status">{phase}</p>
       <section className="dl-stage purity-stage stage-board bench-board" aria-label="計測中の盤面"><canvas ref={canvas} className="dl-canvas" aria-hidden="true"/></section>
       <table className="bench-table"><thead><tr><th>個数</th><th>画質</th><th>fps</th><th>中央値</th><th>p95</th><th>50ms超</th></tr></thead>
-        <tbody>{results.map(r => <tr key={`${r.count}-${r.quality}`} className={r.medianMs > 20 ? 'is-slow' : ''}><td>{r.count}</td><td>{r.quality === 'high' ? '美しさ' : r.quality === 'auto' ? `自動 ${r.pixelRatio}×` : '軽さ'}</td><td>{r.fps}</td><td>{r.medianMs} ms</td><td>{r.p95Ms} ms</td><td>{r.over50}</td></tr>)}</tbody></table>
+        <tbody>{results.map(r => <tr key={`${r.count}-${r.quality}`} className={r.medianMs > 20 ? 'is-slow' : ''}><td>{r.count}</td><td>{r.quality === 'high' ? '美しさ' : r.quality === 'auto' ? `自動 ${Object.entries(r.pixelRatioShare ?? {}).map(([k, v]) => `${k}×${v}%`).join(' ')}` : '軽さ'}</td><td>{r.fps}</td><td>{r.medianMs} ms</td><td>{r.p95Ms} ms</td><td>{r.over50}</td></tr>)}</tbody></table>
       <p className="bench-note">表示まで {readyMs ?? '—'} ms · DPR {env.current.dpr} · {env.current.gpu}</p>
       <div className="purity-actions"><button onClick={copy} disabled={!done}><Copy size={15}/><span>{copied ? 'コピーしました' : '結果をコピー'}</span></button><button onClick={() => setRun(v => v + 1)} disabled={!done} aria-label="もう一度計測"><RotateCcw size={15}/></button></div>
       <p className="bench-note">端末が省電力モードのときは画面更新が30fpsに制限されることがあります。スマホの結果とPCの結果は比べられません。</p>

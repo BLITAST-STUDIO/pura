@@ -20,3 +20,9 @@ test('the plan covers 12, 24 and 60 drops at both qualities', () => {
     assert.ok(BENCH_SCENARIOS.some(s => s.count === count && s.quality === quality));
   }
 });
+
+test('pixel ratio shares add up and ignore missing readings', async () => {
+  const { shareOf } = await import('../src/experiments/bench/measure');
+  assert.deepEqual(shareOf([1.75, 1.5, 1.5, 1.5, 0, Number.NaN]), { '1.75': 25, '1.5': 75 });
+  assert.deepEqual(shareOf([]), {});
+});
