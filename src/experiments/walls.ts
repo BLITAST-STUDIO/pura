@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 /**
  * How the play area's edge is shown (2026-09-27, RYO: the walls should be
  * visible, especially where drops are banked). Physics is the same in all:
- * - rim: a low, rounded rim standing on the wall line (trial default),
+ * - rim: a low, rounded rim standing on the wall line (the default, chosen by RYO),
  * - line: a fine double line inlaid in the floor,
  * - none: the walls stay invisible (the look before 2026-09-27).
  */

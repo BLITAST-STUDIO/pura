@@ -14,7 +14,7 @@ export function LookPicker({ look, onChange, ui, onUi }: { look: Look; onChange:
     <label><span>盤面</span><select value={look} onChange={e => { const next = e.target.value as Look; storeLook(next); onChange(next); }}>
       {LOOKS.map(l => <option key={l} value={l}>{LOOK_LABELS[l]}</option>)}
     </select></label>
-    <label><span>壁（試作）</span><select value={walls} onChange={e => setWalls(e.target.value as Walls)}>
+    <label><span>壁</span><select value={walls} onChange={e => setWalls(e.target.value as Walls)}>
       {WALLS.map(w => <option key={w} value={w}>{WALL_LABELS[w]}</option>)}
     </select></label>
   </>;
