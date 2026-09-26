@@ -10,7 +10,7 @@
 
 一粒の保存比較: https://blitast-studio.github.io/pura/?lab=droplets&feel=refined
 
-GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配信。HTTPS有効。Mac・トンネル・ローカルプロセスは不要。通常の `/pura/` は旧ゲームを維持し、新版はクエリ `lab=fusion`、一粒の比較は `lab=droplets` で開く。
+GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配信。HTTPS有効。Mac・トンネル・ローカルプロセスは不要。2026-09-26から通常の `/pura/` は新しい入口プレイ、元祖は `?play=classic`（それ以前は通常URLが元祖）。
 
 ## 更新
 
@@ -112,3 +112,9 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 ## 自由モード（2026-09-26）
 
 - ソース `06fd147`、配信 `02baf45`。`?play=free`。全17ファイルSHA-256一致。公開版で「ゴゴゴ」60個→1個（融合59回）、スライダーで盤面を保つ、60 fps、警告エラー0。
+
+## 通常URLの切り替え（2026-09-26）
+
+- ソース `a147c7b`、配信 `b6980eb`。通常URLは入口プレイ、元祖は `?play=classic`。全22ファイルSHA-256一致。公開版で通常URL・モード移動・ステージ⇄スコアの面保持・元祖の表示を確認、警告エラー0。
+- 戻す場合: `gh-pages` の `b6980eb` をrevert（直前の配信 `02baf45` 相当）、またはタグ `before-root-switch-20260926` をビルドして配信。
+
