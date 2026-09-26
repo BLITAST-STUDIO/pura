@@ -5,6 +5,7 @@ import { FREE_DEFAULTS, FREE_PRESETS, FreeSimulation, normalizeFree, type FreeMi
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -35,6 +36,7 @@ export default function FreePlay() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
+  const play = usePhonePlay(paused, setPaused);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [count, setCount] = useState(settings.count);
@@ -57,15 +59,15 @@ export default function FreePlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [deal, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, deal, retry, look, walls]);
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, deal, retry, look, walls, play.phone]);
   const change = (next: Partial<FreeSettings>) => {
     const merged = normalizeFree({ ...settings, ...next });
     setSettings(merged); writeSettings(merged);
     if (merged.count !== deal.count || merged.colors !== deal.colors) setDeal({ count: merged.count, colors: merged.colors });
     else simulation.current?.configure(merged);
   };
-  const again = () => { experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); };
+  const again = () => { experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); play.played(); };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.repeat || e.altKey || e.metaKey || e.ctrlKey) return;
@@ -79,7 +81,7 @@ export default function FreePlay() {
   const slider = (label: string, left: string, right: string, key: 'viscosity' | 'inertia' | 'friction' | 'attraction', max = 1) =>
     <label className="free-slider"><span>{label}</span><small>{left}</small><input type="range" min={0} max={max} step={0.05} value={settings[key]} onChange={e => change({ [key]: Number(e.target.value) })}/><small>{right}</small></label>;
 
-  return <div className="droplet-lab purity-scene stage-play free-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play free-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>自由</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
     <ModeNav current="free"/>
     <main>
@@ -87,6 +89,7 @@ export default function FreePlay() {
       <div className="stage-modes free-presets" role="group" aria-label="おすすめの設定">{PRESET_LABELS.map(([id, label]) => <button key={id} onClick={() => change({ ...FREE_DEFAULTS, ...FREE_PRESETS[id], ...(id === 'gather' ? {} : { count: settings.count, colors: settings.colors }) })}>{label}</button>)}</div>
       <section className="dl-stage purity-stage stage-board" aria-label="自由に遊ぶ盤面" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="雫をつかんで自由に動かせる盤面"/>
+        <PhoneBar play={play} onRetry={again}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : 'FREE PLAY'}</span><span className="dl-stage-index">{count}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}

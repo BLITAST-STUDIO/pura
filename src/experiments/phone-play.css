@@ -1,0 +1,34 @@
+/* Phone play (phone-play.tsx): the board is the screen; the rest of the page is the menu. */
+.droplet-lab.is-phone { padding: 0 20px; }
+.droplet-lab.is-phone:not(.menu-open) { overflow: hidden; }
+.droplet-lab.is-phone:not(.menu-open) .dl-shell > :not(main),
+.droplet-lab.is-phone:not(.menu-open) main > :not(.dl-stage) { display: none; }
+
+/* The board takes the whole screen (the renderer fits the play area inside it). */
+.droplet-lab.is-phone main .dl-stage { position: fixed; inset: 0; z-index: 1; width: auto; height: auto; min-height: 0; max-width: none; aspect-ratio: auto; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+.droplet-lab.is-phone.menu-open main .dl-stage { visibility: hidden; }
+.droplet-lab.is-phone .dl-corner { display: none; }
+.droplet-lab.is-phone .dl-stage-top { top: calc(env(safe-area-inset-top, 0px) + 26px); left: 64px; right: 64px; }
+.droplet-lab.is-phone .dl-stage-bottom { bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); left: 22px; right: 22px; font-size: 10px; letter-spacing: .06em; }
+.droplet-lab.is-phone .dl-stage-label, .droplet-lab.is-phone .dl-stage-index { font-size: 10px; letter-spacing: .12em; }
+.droplet-lab.is-phone .stage-clear { top: calc(env(safe-area-inset-top, 0px) + 70px); }
+.droplet-lab.is-phone .stage-discovery, .droplet-lab.is-phone .hitofude-shared { bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+
+.phone-bar { position: absolute; z-index: 4; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; right: 12px; display: flex; justify-content: space-between; pointer-events: none; }
+.phone-bar button, .phone-menu-close { pointer-events: auto; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: rgba(20, 32, 36, .55); color: #eef6f5; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.phone-bar button:only-child { margin-right: auto; }
+/* The menu: the page as it was, with a way back pinned to the top. */
+.droplet-lab.is-phone.menu-open { padding-top: calc(env(safe-area-inset-top, 0px) + 56px); }
+.phone-menu-close { position: fixed; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px; width: auto; height: 40px; padding: 0 16px 0 12px; border-radius: 999px; display: inline-flex; gap: 6px; font-size: 12px; }
+
+/* On-board essentials that would otherwise be in the menu. */
+.phone-cores { position: absolute; z-index: 2; left: 22px; right: 22px; bottom: calc(env(safe-area-inset-bottom, 0px) + 44px); display: flex; gap: 8px; pointer-events: none; }
+.phone-cores i { flex: 1; height: 3px; border-radius: 3px; background: rgba(30, 40, 44, .14); overflow: hidden; }
+.phone-cores b { display: block; height: 100%; border-radius: 3px; transition: width .2s; }
+.phone-cores [data-color="cyan"] b { background: #5fbfcb; }
+.phone-cores [data-color="rose"] b { background: #d77f9f; }
+.phone-cores [data-color="amber"] b { background: #dcae5b; }
+.phone-chip { position: absolute; z-index: 3; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); transform: translateX(-50%); padding: 9px 16px; border-radius: 999px; background: rgba(20, 32, 36, .55); color: #eef6f5; font-size: 12px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+.droplet-lab[data-look="gallery"] .phone-bar button, .droplet-lab[data-look="gallery"] .phone-menu-close, .droplet-lab[data-look="gallery"] .phone-chip { background: rgba(246, 245, 241, .78); color: #1e2629; box-shadow: 0 2px 10px rgba(30, 40, 44, .12); }
+.droplet-lab[data-ui="light"] .phone-menu-close { background: #1e2629; color: #f2f1ec; }

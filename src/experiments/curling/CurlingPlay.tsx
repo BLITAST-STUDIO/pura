@@ -6,6 +6,7 @@ import { Planner, STRENGTH_LABELS, type Strength } from './ai';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -57,6 +58,7 @@ export default function CurlingPlay() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
+  const play = usePhonePlay(paused, setPaused);
   const pausedRef = useRef(false);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
@@ -72,6 +74,7 @@ export default function CurlingPlay() {
 
   useEffect(() => {
     let alive = true, thinking = false, frame = 0, timer = 0, counted = false;
+    play.played();
     setStatus('loading'); setError('');
     const url = new URL(window.location.href);
     url.searchParams.set('play', 'curling'); if (players === 'two') url.searchParams.set('vs', 'two'); else url.searchParams.delete('vs');
@@ -130,8 +133,8 @@ export default function CurlingPlay() {
   // The chosen turn applies to the person's next delivery.
   useEffect(() => { if (simulation.current) simulation.current.spin = spin; }, [spin, reading?.turn, reading?.phase]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, players, retry, look, walls]);
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, players, retry, look, walls, play.phone]);
   const newGame = () => { setRetry(v => v + 1); setPaused(false); };
   const nextEnd = () => { simulation.current?.nextEnd(); };
   const r = reading;
@@ -142,7 +145,7 @@ export default function CurlingPlay() {
     : '';
   const movingLine = r?.phase === 'moving' && r.sweeping ? '滑っている先の床をこすると、スイープ' : '';
 
-  return <div className="droplet-lab purity-scene stage-play curling-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play curling-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>カーリング</span><span className="dl-edition-rule"/><span>END <b>{r ? Math.min(r.end, columns) : 1}</b></span></div></header>
     <ModeNav current="curling"/>
     <main>
@@ -159,7 +162,8 @@ export default function CurlingPlay() {
       </table>
       <section className="dl-stage purity-stage stage-board" aria-label="カーリングのシート" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="引いて離すと、雫がハウスへ滑る"/>
-        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : `END ${r?.end ?? 1}${r && r.end > ENDS ? ' · EXTRA' : ''}`}</span><span className="dl-stage-index">{r ? `${r.left.cyan + r.left.rose}` : ''}</span></div>
+        <PhoneBar play={play}/>
+        <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : `END ${r?.end ?? 1}${r && r.end > ENDS ? ' · EXTRA' : ''}${r ? ` · ${r.totals.cyan}–${r.totals.rose}` : ''}`}</span><span className="dl-stage-index">{r ? `${r.left.cyan + r.left.rose}` : ''}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
@@ -167,6 +171,7 @@ export default function CurlingPlay() {
         {r?.phase === 'scored' && r.lastEnd && <div className="stage-clear" role="status"><span className="hole-score">{r.lastEnd.team ? `${you(r.lastEnd.team)} ${r.lastEnd.points}点` : 'ブランク（0点）'}</span><small>第{r.end}エンド</small><button onClick={nextEnd}>{r.ends.length >= ENDS && r.totals.cyan !== r.totals.rose ? '結果へ' : '次のエンドへ'}</button></div>}
         <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
         {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button></div>}
+        {play.phone && r?.phase === 'aim' && (players === 'two' || r.turn === 'cyan') && <button className="phone-chip" onClick={() => setSpin(s => (s === 1 ? -1 : s + 1) as Spin)}>{SPIN_LABELS[spin]}</button>}
         <div className="dl-stage-bottom"><output aria-live="polite">{turnLine || movingLine}</output><span>{r && r.phase === 'aim' && r.standing.team ? `いま ${NAMES[r.standing.team]} ${r.standing.points}点` : ''}</span></div>
       </section>
       <div className="stage-modes curling-spin" role="group" aria-label="次の一投の回転"><small>回転</small>{([-1, 0, 1] as const).map(v =>

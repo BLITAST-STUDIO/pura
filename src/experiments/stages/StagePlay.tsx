@@ -8,6 +8,7 @@ import { clampSandboxCount, StageSimulation, stageDropHeight, STAGE_IDS, type Mi
 import type { ScoreBreakdown } from './score';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -50,6 +51,7 @@ export default function StagePlay() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
+  const play = usePhonePlay(paused, setPaused);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [reading, setReading] = useState<Reading>({ cores: [], held: null, count: 0, won: null, score: null });
@@ -104,9 +106,9 @@ export default function StagePlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [stage, scale, mix, sandboxCount, mode, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, stage, scale, mix, sandboxCount, mode, retry, look, walls]);
-  const again = () => { experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); };
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, stage, scale, mix, sandboxCount, mode, retry, look, walls, play.phone]);
+  const again = () => { experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); play.played(); };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.repeat || e.altKey || e.metaKey || e.ctrlKey) return;
@@ -117,10 +119,10 @@ export default function StagePlay() {
     };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
-  const choose = (id: number) => { setStage(id); setPaused(false); window.scrollTo(0, 0); };
+  const choose = (id: number) => { setStage(id); setPaused(false); window.scrollTo(0, 0); play.played(); };
   const next = LEVELS.find(l => l.id === stage + 1);
 
-  return <div className="droplet-lab purity-scene stage-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>{mode === 'score' ? 'スコア' : '元祖8ステージ'}</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
     <ModeNav current={mode === 'score' ? 'score' : 'stages'} onSelect={{ stages: () => setMode('stage'), score: () => { setMode('score'); if (def.sandbox) setStage(1); } }}/>
     <main>
@@ -130,12 +132,14 @@ export default function StagePlay() {
       <p className="stage-title"><b>{def.name}</b>{def.hint}</p>
       <section className="dl-stage purity-stage stage-board" aria-label={`ステージ ${def.code} ${def.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={def.hint}/>
+        <PhoneBar play={play} onRetry={again}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : reading.won ? 'CLEAR' : `STAGE ${def.code}`}</span><span className="dl-stage-index">{reading.count}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {reading.score && !reading.score.result && <div className="stage-score" aria-live="off"><b>{reading.score.running}</b>{reading.score.combo > 1 && <span className="is-combo">コンボ ×{reading.score.combo}</span>}{reading.score.note && <span className={reading.score.note.kind === 'spit' ? 'is-spit' : 'is-gain'}>{reading.score.note.kind === 'spit' ? `吐き出し ${reading.score.note.value}` : `+${reading.score.note.value}`}</span>}</div>}
         {reading.score?.result && <div className="stage-result" role="status"><strong>{reading.score.result.total}</strong><small>クリア {reading.score.result.clear} · 純度 {reading.score.result.purity} · 速さ {reading.score.result.speed} · コンボ {reading.score.result.combo} · 吐き出し {reading.score.result.spit}</small></div>}
+        {play.phone && !def.sandbox && <div className="phone-cores" aria-hidden="true">{reading.cores.map(c => <i key={c.hue} data-color={c.hue}><b style={{ width: `${Math.min(100, c.mass / c.target * 100)}%` }}/></i>)}</div>}
         <ClearGlow show={!!reading.won}/>
         {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next && <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button>}</div>}
         <div className="dl-stage-bottom"><output aria-live="polite">{reading.held ? `${HUE_NAMES[reading.held.hue]} · 純度 ${Math.floor(reading.held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>{def.sandbox ? 'SANDBOX' : `純度 ${Math.round(def.purity * 100)}% 以上`}</span></div>
