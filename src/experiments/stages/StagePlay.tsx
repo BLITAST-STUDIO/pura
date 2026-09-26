@@ -3,7 +3,6 @@ import { ArrowUpRight, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-r
 import { createFusionExperience, type FusionOptions } from '../fusion-lab/renderer';
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { getLevel, LEVELS, SANDBOX_COUNT } from '../../game/levels';
-import { isMichi, MICHI_IDS, MICHI_STAGES, stageLevel } from './michi';
 import type { CoreStat } from '../../game/sim';
 import { clampSandboxCount, StageSimulation, stageDropHeight, STAGE_IDS, type MixRule, type StageMode, type StageScale } from './simulation';
 import type { ScoreBreakdown } from './score';
@@ -19,7 +18,7 @@ import './stages.css';
 const HUE_NAMES: Record<HueId, string> = { cyan: 'シアン', rose: 'ローズ', amber: 'アンバー' };
 const BEST_KEY = 'pura-flow-stages-v1';
 const SCORE_KEY = 'pura-flow-score-v1';
-type Reading = { cores: CoreStat[]; held: { hue: HueId; purity: number } | null; count: number; won: { stars: number; time: number } | null; elapsed: number; separations: number;
+type Reading = { cores: CoreStat[]; held: { hue: HueId; purity: number } | null; count: number; won: { stars: number; time: number } | null;
   score: { running: number; combo: number; spits: number; note: { kind: 'combo' | 'spit'; value: number } | null; result: ScoreBreakdown | null } | null };
 
 function readBest(key = BEST_KEY): Record<number, number> {
@@ -39,7 +38,7 @@ export default function StagePlay() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const simulation = useRef<StageSimulation | null>(null);
   const experience = useRef<ReturnType<typeof createFusionExperience> | null>(null);
-  const [stage, setStage] = useState(() => { const id = Number(query.get('stage') ?? 1); return STAGE_IDS.includes(id) || MICHI_IDS.includes(id) ? id : 1; });
+  const [stage, setStage] = useState(() => { const id = Number(query.get('stage') ?? 1); return STAGE_IDS.includes(id) ? id : 1; });
   const [scale, setScale] = useState<StageScale>(() => query.get('scale') === 'original' ? 'original' : 'large');
   const [mix, setMix] = useState<MixRule>(() => query.get('mix') === 'legacy' ? 'legacy' : 'press');
   const [mode, setMode] = useState<StageMode>(() => query.get('mode') === 'score' ? 'score' : 'stage');
@@ -51,12 +50,12 @@ export default function StagePlay() {
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
-  const [reading, setReading] = useState<Reading>({ cores: [], held: null, count: 0, won: null, elapsed: 0, separations: 0, score: null });
+  const [reading, setReading] = useState<Reading>({ cores: [], held: null, count: 0, won: null, score: null });
   const [best, setBest] = useState(readBest);
   const { feedback, preferences: sensory, change: changeSensory } = useSensoryFeedback();
   const [look, setLook] = useState<Look>(initialLook);
   const [ui, setUi] = useState<Ui>(initialUi);
-  const def = stageLevel(stage)!;
+  const def = getLevel(stage)!;
 
   useEffect(() => {
     let alive = true;
@@ -86,7 +85,7 @@ export default function StagePlay() {
       }
       if (!sim.won) celebrated = false;
       const held = sim.core.drops.find(d => d.id === sim.core.grabbedId);
-      setReading({ cores, count: sim.core.drops.length, won: sim.won ? { stars: sim.won.stars, time: sim.won.time } : null, elapsed: sim.core.elapsed, separations: sim.separations,
+      setReading({ cores, count: sim.core.drops.length, won: sim.won ? { stars: sim.won.stars, time: sim.won.time } : null,
         held: held ? { hue: dominantHue(held.pigment), purity: purityOf(held.pigment) } : null,
         score: sim.score ? { running: sim.score.running, combo: sim.score.combo(sim.core.time), spits: sim.score.spits, result: sim.score.result,
           note: sim.lastNote && sim.core.time - sim.lastNote.time < 1.1 ? { kind: sim.lastNote.kind, value: sim.lastNote.value } : null } : null });
@@ -115,15 +114,13 @@ export default function StagePlay() {
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
   const choose = (id: number) => { setStage(id); setPaused(false); window.scrollTo(0, 0); };
-  const next = isMichi(def) ? MICHI_STAGES[MICHI_STAGES.indexOf(def) + 1] : LEVELS.find(l => l.id === stage + 1);
-  const discovery = isMichi(def) && def.discovery && !reading.won && reading.separations === 0 && reading.elapsed > def.discovery.after ? def.discovery.text : null;
+  const next = LEVELS.find(l => l.id === stage + 1);
 
   return <div className="droplet-lab purity-scene stage-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
     <ModeNav current={mode === 'score' ? 'score' : 'stages'} onSelect={{ stages: () => setMode('stage'), score: () => { setMode('score'); if (def.sandbox) setStage(1); } }}/>
     <main>
       <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? 'サンド' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
-      <nav className="stage-picker stage-michi" aria-label="道の試作面を選ぶ"><span>道・第3章<small>混ぜて、分ける（試作）</small></span>{MICHI_STAGES.map(l => <button key={l.id} aria-current={l.id === stage ? 'step' : undefined} onClick={() => choose(l.id)}><span>{l.code}</span><small>{'★'.repeat(best[l.id] ?? 0) || l.name}</small></button>)}</nav>
       {def.sandbox && <div className="stage-compare"><div><span>雫の数</span><select value={sandboxCount} onChange={e => setSandboxCount(clampSandboxCount(Number(e.target.value)))}>{Array.from({ length: (SANDBOX_COUNT.max - SANDBOX_COUNT.min) / SANDBOX_COUNT.step + 1 }, (_, i) => SANDBOX_COUNT.min + i * SANDBOX_COUNT.step).map(n => <option key={n} value={n}>{n}</option>)}</select></div></div>}
       {mode === 'score' && !def.sandbox && <p className="stage-best">スコアアタック · この面のベスト {bestScore[stage] ?? '—'}</p>}
       <p className="stage-title"><b>{def.name}</b>{def.hint}</p>
@@ -136,7 +133,6 @@ export default function StagePlay() {
         {reading.score && !reading.score.result && <div className="stage-score" aria-live="off"><b>{reading.score.running}</b>{reading.score.combo > 1 && <span className="is-combo">コンボ ×{reading.score.combo}</span>}{reading.score.note && <span className={reading.score.note.kind === 'spit' ? 'is-spit' : 'is-gain'}>{reading.score.note.kind === 'spit' ? `吐き出し ${reading.score.note.value}` : `+${reading.score.note.value}`}</span>}</div>}
         {reading.score?.result && <div className="stage-result" role="status"><strong>{reading.score.result.total}</strong><small>クリア {reading.score.result.clear} · 純度 {reading.score.result.purity} · 速さ {reading.score.result.speed} · コンボ {reading.score.result.combo} · 吐き出し {reading.score.result.spit}</small></div>}
         {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next && <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button>}</div>}
-        {discovery && <p className="stage-discovery" role="status">{discovery}</p>}
         <div className="dl-stage-bottom"><output aria-live="polite">{reading.held ? `${HUE_NAMES[reading.held.hue]} · 純度 ${Math.floor(reading.held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>{def.sandbox ? 'SANDBOX' : `純度 ${Math.round(def.purity * 100)}% 以上`}</span></div>
       </section>
       {!def.sandbox && <div className="stage-cores">{reading.cores.map(c => <div key={c.hue} data-color={c.hue} className={c.done ? 'is-done' : ''}>
@@ -150,7 +146,7 @@ export default function StagePlay() {
         <p>星: 平均純度99.5%以上で3つ、必要純度+4%以上で2つ。時間制限はありません。</p>
         {mode === 'score' && <p>スコアアタック: クリアの基本点に、純度と速さのボーナス。1.2秒以内に同じ色の融合を続けるとコンボで加点。混ざった融合でコンボは途切れます。吐き出し（2回タップ）は使うたびに減点、取り出す量が多いほど大きく減ります。</p>}
         <div className="stage-compare" role="group" aria-label="比較用の設定">
-          <div><span>雫の大きさ</span>{isMichi(def) && <small>道の試作面は置き方ごと固定</small>}<button aria-pressed={scale === 'large'} onClick={() => setScale('large')}>大きめ</button><button aria-pressed={scale === 'original'} onClick={() => setScale('original')}>元祖の大きさ</button></div>
+          <div><span>雫の大きさ</span><button aria-pressed={scale === 'large'} onClick={() => setScale('large')}>大きめ</button><button aria-pressed={scale === 'original'} onClick={() => setScale('original')}>元祖の大きさ</button></div>
           <div><span>混ぜ方</span><button aria-pressed={mix === 'press'} onClick={() => setMix('press')}>押し込み0.35秒</button><button aria-pressed={mix === 'legacy'} onClick={() => setMix('legacy')}>元祖の判定（難しめ）</button></div>
         </div>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
