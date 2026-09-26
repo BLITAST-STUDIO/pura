@@ -1,8 +1,10 @@
 import { PuraSim, type Drop } from '../../game/sim';
-import { getLevel, LEVELS, SANDBOX, SANDBOX_COUNT, type LevelDef } from '../../game/levels';
+import { LEVELS, SANDBOX, SANDBOX_COUNT, type LevelDef } from '../../game/levels';
 import { emptyPigment, purityOf } from '../../game/palette';
 import { ScoreAttack } from './score';
 import { OpenPlaySimulation } from '../open-play/simulation';
+import { boardDrops } from '../boards';
+import { isMichi, stageLevel } from './michi';
 
 /**
  * M4 test play: the eight legacy stages and the sandbox on the new renderer.
@@ -70,6 +72,8 @@ export class StageSimulation extends OpenPlaySimulation {
   score: ScoreAttack | null = null;
   /** The most recent score change, for a brief on-board note. */
   lastNote: { kind: 'combo' | 'spit'; value: number; time: number } | null = null;
+  /** Separations made on this attempt (the 道 boards offer a hint until the first). */
+  separations = 0;
 
   constructor(setup: StageSetup) {
     super(12);
@@ -81,6 +85,7 @@ export class StageSimulation extends OpenPlaySimulation {
   override grab(id: number) {
     const before = this.splits.length;
     const grabbed = super.grab(id);
+    if (this.splits.length > before) this.separations++;
     if (this.score && this.splits.length > before) {
       const released = this.splits.at(-1)!.children.reduce((n, d) => n + d.mass, 0);
       this.lastNote = { kind: 'spit', value: -this.score.spit(released), time: this.core.time };
@@ -88,19 +93,20 @@ export class StageSimulation extends OpenPlaySimulation {
     return grabbed;
   }
 
-  get def(): LevelDef { return (this.setup && getLevel(this.setup.stage)) || LEVELS[0]; }
+  get def(): LevelDef { return (this.setup && stageLevel(this.setup.stage)) || LEVELS[0]; }
 
   override reset() {
     // The base constructor resets before this class's setup exists.
     if (!this.setup) { super.reset(); return; }
     const def = this.def;
     this.width = STAGE_BOARD.width; this.height = STAGE_BOARD.height;
-    this.won = null;
+    this.won = null; this.separations = 0;
     this.core = new PuraSim();
     this.core.level = def;
     this.core.fusionPolicy = this.setup.mix === 'press' ? 'held-press' : 'legacy';
     this.core.resize(this.width, this.height);
-    this.core.drops = spawnStage(def, this.setup, this.width, this.height, this.core.pad);
+    // Designed boards keep their placement and sizes; the size comparison applies to the legacy spawner.
+    this.core.drops = isMichi(def) ? boardDrops(def.layout) : spawnStage(def, this.setup, this.width, this.height, this.core.pad);
     this.core.quota = { cyan: 0, rose: 0, amber: 0 };
     for (const d of this.core.drops) for (const hue of ['cyan', 'rose', 'amber'] as const) this.core.quota[hue] += d.pigment[hue];
     const totalMass = this.core.drops.reduce((n, d) => n + d.mass, 0);

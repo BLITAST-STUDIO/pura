@@ -4,10 +4,11 @@ import './mode-nav.css';
  * One way between the new modes, shown on every play screen. Play starts at
  * once on each screen (requirement 7.1): this is navigation, never a gate.
  */
-export type ModeId = 'open' | 'stages' | 'score' | 'free' | 'chapters';
+export type ModeId = 'open' | 'stages' | 'hitofude' | 'score' | 'free' | 'chapters';
 export const MODES: { id: ModeId; label: string; href: string }[] = [
   { id: 'open', label: 'はじめる', href: './' },
   { id: 'stages', label: 'ステージ', href: '?play=stages' },
+  { id: 'hitofude', label: 'ひとふで', href: '?play=hitofude' },
   { id: 'score', label: 'スコア', href: '?play=stages&mode=score' },
   { id: 'free', label: '自由', href: '?play=free' },
   { id: 'chapters', label: '三つの道', href: '?play=chapters' },

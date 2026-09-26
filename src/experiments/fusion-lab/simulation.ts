@@ -67,4 +67,6 @@ export class FusionSimulation {
   }
   move(x: number, y: number) { this.core.pointerMove(x, y); }
   release() { this.core.pointerUp(); }
+  /** An interruption (blur, resize, pause) rather than the finger letting go; the same for every mode but the shot mode. */
+  abort() { this.release(); }
 }

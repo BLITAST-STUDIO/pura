@@ -13,6 +13,7 @@ const routes: Record<RouteKey, Route> = {
   "play=classic": async () => (await import("@/components/game-app")).GameApp,
   "play=bench": async () => (await import("./experiments/bench/BenchPlay")).default,
   "play=free": async () => (await import("./experiments/free/FreePlay")).default,
+  "play=hitofude": async () => (await import("./experiments/hitofude/HitofudePlay")).default,
   "play=stages": async () => (await import("./experiments/stages/StagePlay")).default,
   "play=open": async () => (await import("./experiments/open-play/OpenPlay")).default,
   "play=first": async () => (await import("./experiments/purity-scene/PurityScene")).default,
