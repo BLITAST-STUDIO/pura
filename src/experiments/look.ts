@@ -1,18 +1,22 @@
 /**
- * Visual direction proposals (2026-09-26), switchable for side-by-side play:
- * - studio: the current light-grey board (default, unchanged).
+ * Boards (2026-09-26 proposals, the gallery chosen by RYO as the default):
+ * - gallery: a pale, matte exhibition floor with generous margins (default).
+ * - studio: the light-grey board approved up to 2026-09-26.
  * - night: the reference image's world — dark wet stone, jewel drops, the
  *   board dissolving into the dark without a card frame.
- * - gallery: a pale, matte exhibition floor with generous margins.
  * Presentation only; physics, rules and sizes are identical in every look.
  */
 export type Look = 'studio' | 'night' | 'gallery';
-export const LOOKS: Look[] = ['studio', 'night', 'gallery'];
-export const LOOK_LABELS: Record<Look, string> = { studio: 'スタジオ（現在）', night: '夜の水面', gallery: '白い展示室' };
+export const LOOKS: Look[] = ['gallery', 'studio', 'night'];
+export const DEFAULT_LOOK: Look = 'gallery';
+export const LOOK_LABELS: Record<Look, string> = { gallery: '白い展示室', studio: 'スタジオ（従来）', night: '夜の水面' };
 
-/** The page around the board (menus, text), switched independently of the board. */
+/** The page around the board (menus, text), switched independently of the board. Light is the default. */
 export type Ui = 'dark' | 'light';
-export const UI_LABELS: Record<Ui, string> = { dark: '暗い（現在）', light: '明るい' };
+export const DEFAULT_UI: Ui = 'light';
+export const UI_LABELS: Record<Ui, string> = { light: '明るい', dark: '暗い（従来）' };
+/** Browser chrome tint and page colour for each page brightness. */
+export const PAGE_TONE: Record<Ui, string> = { light: '#ecebe6', dark: '#07080c' };
 
 export type LookScene = {
   background: string; floor: string; roughness: number; metalness: number; envIntensity: number; bump: number;
@@ -33,7 +37,8 @@ export function lookScene(look: Look, daylightOption: boolean): LookScene {
     : { background: '#171e24', floor: '#455157', roughness: 0.52, metalness: 0.12, envIntensity: 0.08, bump: 0.004, ambient: 1, light: 1.35, exposure: 1.05, daylight: false, room: 1 };
 }
 
-const KEY = 'pura-flow-look-v1';
+// v2: the defaults changed, so choices made while comparing proposals start fresh.
+const KEY = 'pura-flow-look-v2';
 export function initialLook(search?: string): Look {
   try {
     const q = new URLSearchParams(search ?? location.search).get('look');
@@ -43,18 +48,18 @@ export function initialLook(search?: string): Look {
     const stored = localStorage.getItem(KEY);
     if (stored && (LOOKS as string[]).includes(stored)) return stored as Look;
   } catch { /* storage unavailable */ }
-  return 'studio';
+  return DEFAULT_LOOK;
 }
 export function storeLook(look: Look) {
   try { localStorage.setItem(KEY, look); } catch { /* keeps working without storage */ }
   try {
     const url = new URL(location.href);
-    if (look === 'studio') url.searchParams.delete('look'); else url.searchParams.set('look', look);
+    if (look === DEFAULT_LOOK) url.searchParams.delete('look'); else url.searchParams.set('look', look);
     history.replaceState(history.state, '', url);
   } catch { /* no location */ }
 }
 
-const UI_KEY = 'pura-flow-ui-v1';
+const UI_KEY = 'pura-flow-ui-v2';
 export function initialUi(search?: string): Ui {
   try {
     const q = new URLSearchParams(search ?? location.search).get('ui');
@@ -64,13 +69,21 @@ export function initialUi(search?: string): Ui {
     const stored = localStorage.getItem(UI_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch { /* storage unavailable */ }
-  return 'dark';
+  return DEFAULT_UI;
 }
 export function storeUi(ui: Ui) {
   try { localStorage.setItem(UI_KEY, ui); } catch { /* keeps working without storage */ }
   try {
     const url = new URL(location.href);
-    if (ui === 'dark') url.searchParams.delete('ui'); else url.searchParams.set('ui', ui);
+    if (ui === DEFAULT_UI) url.searchParams.delete('ui'); else url.searchParams.set('ui', ui);
     history.replaceState(history.state, '', url);
   } catch { /* no location */ }
+}
+
+/** Matches the browser bar and the page behind the app to the chosen brightness. */
+export function applyPageTone(ui: Ui) {
+  try {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', PAGE_TONE[ui]);
+    document.documentElement.classList.toggle('boot-dark', ui === 'dark');
+  } catch { /* no document */ }
 }
