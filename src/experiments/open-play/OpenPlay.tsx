@@ -5,6 +5,7 @@ import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { IntroLine } from '../intro-line';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -78,11 +79,12 @@ export default function OpenPlay() {
   const held = reading.held;
 
   return <div className="droplet-lab purity-scene open-play" data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>OPEN PLAY</span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>はじめる</span><span className="dl-edition-rule"/><span>FLOW</span></div></header>
     <ModeNav current="open"/>
     <main>
       <section className="dl-stage purity-stage open-stage" aria-label="水滴で遊ぶ盤面" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="三色の雫をつかんで動かせる盤面" aria-describedby="open-help"/>
+        <IntroLine ready={status === 'ready'}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : 'THREE COLOURS'}</span><span className="dl-stage-index">{reading.count}</span></div>
         <span className="dl-corner dl-corner-bl"/><span className="dl-corner dl-corner-br"/>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}

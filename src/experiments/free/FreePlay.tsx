@@ -80,7 +80,7 @@ export default function FreePlay() {
     <label className="free-slider"><span>{label}</span><small>{left}</small><input type="range" min={0} max={max} step={0.05} value={settings[key]} onChange={e => change({ [key]: Number(e.target.value) })}/><small>{right}</small></label>;
 
   return <div className="droplet-lab purity-scene stage-play free-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>自由</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
     <ModeNav current="free"/>
     <main>
       <p className="stage-title"><b>自由</b>目標も点数もなし。好きな手触りで、好きなだけ。</p>
@@ -110,6 +110,6 @@ export default function FreePlay() {
         <p>雫の数と色を変えると並べ直します。ほかの設定は触ったまま変わります。R：並べ直す · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>自由モード。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">8ステージへ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=open">入口プレイへ<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>数も、色も、手ざわりも、好きなように。</p></div></footer>
   </div></div>;
 }

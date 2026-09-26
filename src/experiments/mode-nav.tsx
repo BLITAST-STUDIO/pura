@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import './mode-nav.css';
 
 /**
@@ -20,6 +21,9 @@ export const MODES: { id: ModeId; label: string; href: string }[] = [
 
 /** `onSelect` lets a screen switch in place (e.g. stage ⇄ score keeps the stage). */
 export function ModeNav({ current, onSelect }: { current: ModeId; onSelect?: Partial<Record<ModeId, () => void>> }) {
+  // The browser tab names the mode (the instant-play entrance is just PURA).
+  const label = MODES.find(m => m.id === current)?.label;
+  useEffect(() => { document.title = current === 'open' || !label ? 'PURA' : `PURA — ${label}`; }, [current, label]);
   return <nav className="mode-nav" aria-label="遊び方を選ぶ">
     {MODES.map(mode => {
       const handler = onSelect?.[mode.id];

@@ -580,8 +580,12 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   window.addEventListener('blur', interrupt); document.addEventListener('visibilitychange', visibility);
   const observer = new ResizeObserver(resize); observer.observe(canvas);
   resize(); sim.reset(); refresh(0); render(); raf = requestAnimationFrame(loop); callbacks.onReady?.();
+  // A new board fades in rather than cutting (skipped when motion is reduced).
+  const calm = () => options.reducedMotion || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function fadeIn(ms: number) { if (!calm()) canvas.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: ms, easing: 'ease-out' }); }
+  fadeIn(450);
   return {
-    restoreState(restore: () => void) { cancel(); restore(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
+    restoreState(restore: () => void) { cancel(); fadeIn(260); restore(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); refresh(0); last = 0; samples = []; adapter.onUpdate?.(); },
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = (next.lighting !== undefined && next.lighting !== options.lighting)

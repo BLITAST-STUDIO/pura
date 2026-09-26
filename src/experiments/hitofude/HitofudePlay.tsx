@@ -8,6 +8,7 @@ import { holeStrokes, relative, Round, scoreName, totals, type Card } from './go
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -146,6 +147,7 @@ export default function HitofudePlay() {
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {holeInOne && !reduced && <div className="hole-in-one" aria-hidden="true"><i/><b>ひとふで</b></div>}
+        <ClearGlow show={!!result?.cleared && !holeInOne}/>
         {result && strokes !== null && <div className="stage-clear" role="status">
           <span className="hole-score">{result.cleared ? scoreName(strokes, board.par) : 'ギブアップ'}</span><small>{relative(strokes - board.par)} · {strokes}打</small>
           {inRound ? (next && !roundDone && <button onClick={() => go(next.id)}>次のホールへ <ArrowUpRight size={13}/></button>)
@@ -178,6 +180,6 @@ export default function HitofudePlay() {
         <p>R：やり直す（練習） · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>ひとふで、9ホールの試作コース。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=stages">ステージ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="./">三色で自由に<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>9ホール。引いて、離して、ひとつに。</p></div></footer>
   </div></div>;
 }

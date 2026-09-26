@@ -6,6 +6,7 @@ import { Planner } from './ai';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -136,6 +137,7 @@ export default function CurlingPlay() {
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {r?.note && r.phase !== 'scored' && r.phase !== 'over' && <p className="stage-discovery curling-note" role="status">{r.note === 'hog' ? 'ホグラインに届かず、外れた' : '場外'}</p>}
         {r?.phase === 'scored' && r.lastEnd && <div className="stage-clear" role="status"><span className="hole-score">{r.lastEnd.team ? `${you(r.lastEnd.team)} ${r.lastEnd.points}点` : 'ブランク（0点）'}</span><small>第{r.end}エンド</small><button onClick={nextEnd}>{r.ends.length >= ENDS && r.totals.cyan !== r.totals.rose ? '結果へ' : '次のエンドへ'}</button></div>}
+        <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
         {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button></div>}
         <div className="dl-stage-bottom"><output aria-live="polite">{turnLine}</output><span>{r && r.phase === 'aim' && r.standing.team ? `いま ${NAMES[r.standing.team]} ${r.standing.points}点` : ''}</span></div>
       </section>
@@ -152,6 +154,6 @@ export default function CurlingPlay() {
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>雫のカーリング、試作。</p></div></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>雫で、カーリング。</p></div></footer>
   </div></div>;
 }

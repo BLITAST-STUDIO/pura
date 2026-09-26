@@ -31,31 +31,30 @@
         height: 100%;
         min-height: 360px;
       }
+      /* The loading moment wears the app's mark: the drop outline and PURA. */
       .boot {
         min-height: 360px;
         height: 100%;
         display: flex;
         flex-direction: column;
+        align-items: center;
         justify-content: center;
+        gap: 22px;
         padding: 48px 24px;
-        font-family: sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
         box-sizing: border-box;
       }
-      .boot h1 {
-        margin: 8px 0 0;
-        font-size: 64px;
-        font-weight: 600;
-        color: #1e2629;
-      }
-      .boot p {
-        margin: 0;
-        color: #6f7a7d;
-        font-size: 13px;
-      }
-      .boot .hint { margin-top: 28px; font-size: 15px; color: #3f8f93; }
-      html.boot-dark .boot h1 { color: #eceef2; }
-      html.boot-dark .boot p { color: #8b90a0; }
-      html.boot-dark .boot .hint { color: #5ee4f2; }
+      .boot-mark { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 30px; font-weight: 300; letter-spacing: .14em; color: #1e2629; }
+      .boot-mark i { display: block; width: 19px; height: 24px; border: 1px solid #6b8f92; border-radius: 60% 40% 55% 45% / 65% 45% 55% 35%; transform: rotate(27deg); }
+      .boot-mark b { font-weight: 300; color: #3f8f93; }
+      .boot-line { width: 120px; height: 1px; background: linear-gradient(90deg, transparent, #6b8f92, transparent); animation: boot-line 1.6s ease-in-out infinite; }
+      .boot-note { margin: 0; font-size: 10px; letter-spacing: .3em; color: #6f7a7d; }
+      @keyframes boot-line { 0%, 100% { opacity: .2; transform: scaleX(.4); } 50% { opacity: 1; transform: scaleX(1); } }
+      @media (prefers-reduced-motion: reduce) { .boot-line { animation: none; } }
+      html.boot-dark .boot-mark { color: #eceef2; }
+      html.boot-dark .boot-mark i { border-color: #90b4b9; }
+      html.boot-dark .boot-mark b { color: #5ee4f2; }
+      html.boot-dark .boot-note { color: #8b90a0; }
       #pura-err {
         display: none;
         position: fixed;
@@ -73,9 +72,9 @@
   <body>
     <div id="root">
       <div class="boot">
-        <p>LIQUID CORE</p>
-        <h1>PURA</h1>
-        <p class="hint">読み込み中…</p>
+        <p class="boot-mark"><i></i><span>PURA<b>.</b></span></p>
+        <span class="boot-line" aria-hidden="true"></span>
+        <p class="boot-note">読み込み中</p>
       </div>
     </div>
     <pre id="pura-err"></pre>

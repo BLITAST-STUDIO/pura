@@ -8,6 +8,7 @@ import { clampSandboxCount, StageSimulation, stageDropHeight, STAGE_IDS, type Mi
 import type { ScoreBreakdown } from './score';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -63,7 +64,8 @@ export default function StagePlay() {
     let alive = true;
     setStatus('loading'); setError('');
     setQuery({ play: 'stages', stage: String(stage), scale, mix, mode, ...(def.sandbox ? { count: String(sandboxCount) } : {}) });
-    const sim = new StageSimulation({ stage, scale, mix, sandboxCount, mode }); simulation.current = sim;
+    // Score attack always plays the decided defaults (large drops, 0.35 s press); the comparison is for test play.
+    const sim = new StageSimulation({ stage, scale: mode === 'score' ? 'large' : scale, mix: mode === 'score' ? 'press' : mix, sandboxCount, mode }); simulation.current = sim;
     let done: boolean[] = [];
     let celebrated = false;
     const update = () => {
@@ -119,10 +121,10 @@ export default function StagePlay() {
   const next = LEVELS.find(l => l.id === stage + 1);
 
   return <div className="droplet-lab purity-scene stage-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
-    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>FLOW</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
+    <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>{mode === 'score' ? 'スコア' : '元祖8ステージ'}</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
     <ModeNav current={mode === 'score' ? 'score' : 'stages'} onSelect={{ stages: () => setMode('stage'), score: () => { setMode('score'); if (def.sandbox) setStage(1); } }}/>
     <main>
-      <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? 'サンド' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
+      <nav className="stage-picker" aria-label="ステージを選ぶ">{STAGE_IDS.filter(id => mode !== 'score' || !getLevel(id)!.sandbox).map(id => { const l = getLevel(id)!; return <button key={id} aria-current={id === stage ? 'step' : undefined} onClick={() => choose(id)}><span>{l.code}</span><small>{l.sandbox ? 'サンド' : '★'.repeat(best[id] ?? 0) || l.name}</small></button>; })}</nav>
       {def.sandbox && <div className="stage-compare"><div><span>雫の数</span><select value={sandboxCount} onChange={e => setSandboxCount(clampSandboxCount(Number(e.target.value)))}>{Array.from({ length: (SANDBOX_COUNT.max - SANDBOX_COUNT.min) / SANDBOX_COUNT.step + 1 }, (_, i) => SANDBOX_COUNT.min + i * SANDBOX_COUNT.step).map(n => <option key={n} value={n}>{n}</option>)}</select></div></div>}
       {mode === 'score' && !def.sandbox && <p className="stage-best">スコアアタック · この面のベスト {bestScore[stage] ?? '—'}</p>}
       <p className="stage-title"><b>{def.name}</b>{def.hint}</p>
@@ -134,6 +136,7 @@ export default function StagePlay() {
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {reading.score && !reading.score.result && <div className="stage-score" aria-live="off"><b>{reading.score.running}</b>{reading.score.combo > 1 && <span className="is-combo">コンボ ×{reading.score.combo}</span>}{reading.score.note && <span className={reading.score.note.kind === 'spit' ? 'is-spit' : 'is-gain'}>{reading.score.note.kind === 'spit' ? `吐き出し ${reading.score.note.value}` : `+${reading.score.note.value}`}</span>}</div>}
         {reading.score?.result && <div className="stage-result" role="status"><strong>{reading.score.result.total}</strong><small>クリア {reading.score.result.clear} · 純度 {reading.score.result.purity} · 速さ {reading.score.result.speed} · コンボ {reading.score.result.combo} · 吐き出し {reading.score.result.spit}</small></div>}
+        <ClearGlow show={!!reading.won}/>
         {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next && <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button>}</div>}
         <div className="dl-stage-bottom"><output aria-live="polite">{reading.held ? `${HUE_NAMES[reading.held.hue]} · 純度 ${Math.floor(reading.held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>{def.sandbox ? 'SANDBOX' : `純度 ${Math.round(def.purity * 100)}% 以上`}</span></div>
       </section>
@@ -147,10 +150,10 @@ export default function StagePlay() {
         <p>違う色はぶつかると跳ね返ります。つかんで押し込むと混ざり、純度が下がります。混ざった雫は素早く2回タップすると、入った色を取り出せます。</p>
         <p>星: 平均純度99.5%以上で3つ、必要純度+4%以上で2つ。時間制限はありません。</p>
         {mode === 'score' && <p>スコアアタック: クリアの基本点に、純度と速さのボーナス。1.2秒以内に同じ色の融合を続けるとコンボで加点。混ざった融合でコンボは途切れます。吐き出し（2回タップ）は使うたびに減点、取り出す量が多いほど大きく減ります。</p>}
-        <div className="stage-compare" role="group" aria-label="比較用の設定">
+        {mode !== 'score' && <div className="stage-compare" role="group" aria-label="比較用の設定">
           <div><span>雫の大きさ</span><button aria-pressed={scale === 'large'} onClick={() => setScale('large')}>大きめ</button><button aria-pressed={scale === 'original'} onClick={() => setScale('original')}>元祖の大きさ</button></div>
           <div><span>混ぜ方</span><button aria-pressed={mix === 'press'} onClick={() => setMix('press')}>押し込み0.35秒</button><button aria-pressed={mix === 'legacy'} onClick={() => setMix('legacy')}>元祖の判定（難しめ）</button></div>
-        </div>
+        </div>}
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
@@ -158,6 +161,6 @@ export default function StagePlay() {
         <p>R：やり直す · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>元祖の8ステージ、テストプレイ。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=free">自由モード<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=open">三色で自由に<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>{mode === 'score' ? '元祖の8ステージで、点を競う。' : '元祖PURAの8ステージ。道の中でも遊べます。'}</p></div><span className="open-links"><a className="purity-lab-link" href="?play=michi">道へ<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }
