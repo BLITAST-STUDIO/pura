@@ -75,6 +75,8 @@ const AIM_DOTS = 16;
 type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
   /** Shot modes: a dotted line on the floor shows where and how hard a drop will go. */
   aim?: () => SceneAim | null;
+  /** Curling: dragging on the floor (not on a drop) sweeps the sheet at that board point. */
+  sweep?: (x: number, y: number) => void;
   /** Fixed floor lines (curling's house rings and hog line), in board units. */
   markings?: { rings: { x: number; y: number; r: number; fill?: boolean }[]; lines: { x0: number; y0: number; x1: number; y1: number }[] };
   /** Drop height in world units for a board radius; defaults to the approved fixed height. */
@@ -192,6 +194,17 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       for (let i = 0; i < 3; i++) layer(band(x0, y0, x1, y1, r, -(i + 1) * 5 * W, -i * 5 * W - .8 * W), [.05, .03, .015][i], -.0094);
     }
     wallGroup = group; scene.add(group);
+  }
+  // Brush marks where the sheet is swept: short strokes that shrink away.
+  const SWEEP_MARKS = 28, SWEEP_LIFE = .45;
+  const sweepMarks = adapter.sweep ? new THREE.InstancedMesh(new THREE.CircleGeometry(1, 16), new THREE.MeshBasicMaterial({ color: '#2f3d41', transparent: true, opacity: .22, depthWrite: false }), SWEEP_MARKS) : null;
+  const sweepLog: { x: number; y: number; angle: number; t: number }[] = [];
+  let sweepClock = 0, sweeping = false, lastSweep: { x: number; y: number } | null = null;
+  if (sweepMarks) { sweepMarks.count = 0; sweepMarks.position.z = -.0085; sweepMarks.frustumCulled = false; scene.add(sweepMarks); }
+  function markSweep(x: number, y: number) {
+    const angle = lastSweep ? Math.atan2(-(y - lastSweep.y), x - lastSweep.x) : 0;
+    lastSweep = { x, y };
+    sweepLog.push({ x, y, angle, t: sweepClock }); if (sweepLog.length > SWEEP_MARKS) sweepLog.shift();
   }
   const bodies = new Map<number, Body>();
   const shapes = new ShapePool();
@@ -438,6 +451,17 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       aimDots.count = n; aimDots.instanceMatrix.needsUpdate = true;
       canvas.dataset.aim = aim && aim.power > 0 ? JSON.stringify({ dx: aim.dx, dy: aim.dy, power: aim.power }) : '';
     }
+    if (sweepMarks) {
+      sweepClock += dt;
+      let n = 0;
+      for (const m of sweepLog) {
+        const life = 1 - (sweepClock - m.t) / SWEEP_LIFE;
+        if (life <= 0) continue;
+        aimMatrix.makeRotationZ(m.angle).scale(new THREE.Vector3(9 * W * life, 2.4 * W * life, 1)).setPosition((m.x - sim.width / 2) * W, (sim.height / 2 - m.y) * W, 0);
+        sweepMarks.setMatrixAt(n++, aimMatrix);
+      }
+      sweepMarks.count = n; sweepMarks.instanceMatrix.needsUpdate = true;
+    }
     const rect = canvas.getBoundingClientRect();
     const projectedGoals = (adapter.goals?.() ?? []).map((goal, i) => {
       const { ring, fill, label } = goalViews[i];
@@ -464,6 +488,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   }
   /** `letGo` is the finger lifting; everything else interrupts a hold. */
   function cancel(letGo = false) {
+    if (sweeping) {
+      sweeping = false; const id = active; active = null;
+      if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+      return;
+    }
     const id = active; active = null;
     if (letGo) sim.release(); else sim.abort();
     canvas.style.cursor = 'grab';
@@ -491,6 +520,16 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     ndc.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
   }
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  function floorPoint(e: PointerEvent) {
+    ray(e);
+    if (!raycaster.ray.intersectPlane(floorPlane, point)) return null;
+    return { x: point.x / W + sim.width / 2, y: sim.height / 2 - point.y / W };
+  }
+  function sweepAt(e: PointerEvent) {
+    const f = floorPoint(e); if (!f) return;
+    adapter.sweep!(f.x, f.y); markSweep(f.x, f.y);
+  }
   function down(e: PointerEvent) {
     if (active !== null || options.paused || lost || (e.pointerType === 'mouse' && e.button !== 0)) return;
     ray(e);
@@ -507,7 +546,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         .find(d => Math.hypot(x - d.x, y - d.y) < d.r + 14);
       hitPoint = point.clone();
     }
-    if (!chosen || !hitPoint || !sim.grab(chosen.id)) return;
+    if (!chosen || !hitPoint || !sim.grab(chosen.id)) {
+      // Not a drop to hold: on a curling sheet, the finger sweeps instead.
+      if (adapter.sweep) { sweeping = true; lastSweep = null; active = e.pointerId; canvas.setPointerCapture(e.pointerId); sweepAt(e); e.preventDefault(); }
+      return;
+    }
     feedback?.grab(chosen.r, chosen.x, sim.width);
     bodies.get(chosen.id)!.grabPoint.set((hitPoint.x / W + sim.width / 2 - chosen.x) / chosen.r,
       (hitPoint.y / W - sim.height / 2 + chosen.y) / chosen.r).clampLength(0, 1);
@@ -517,6 +560,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   }
   function move(e: PointerEvent) {
     if (active !== e.pointerId || options.paused) return;
+    if (sweeping) { sweepAt(e); e.preventDefault(); return; }
     ray(e); if (!raycaster.ray.intersectPlane(pointerPlane, point)) return;
     sim.move(point.x / W + sim.width / 2 - offset.x, sim.height / 2 - point.y / W - offset.y); e.preventDefault();
   }
@@ -606,6 +650,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         renderer.toneMappingExposure = look.exposure;
         aimDots?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
         markingMaterial?.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
+        sweepMarks?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
       }
       floorMaterial.map = textures[options.inspection ? 1 : 0]; floorMaterial.bumpMap = options.inspection ? null : textures[0]; floorMaterial.needsUpdate = true;
       for (const b of bodies.values()) {
@@ -627,6 +672,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       for (const g of goalViews) { for (const mesh of [g.ring, g.fill, g.label]) { mesh.geometry.dispose(); mesh.material.dispose(); } g.texture.dispose(); }
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
       if (aimDots) { aimDots.geometry.dispose(); aimDots.material.dispose(); aimDots.dispose(); }
+      if (sweepMarks) { sweepMarks.geometry.dispose(); sweepMarks.material.dispose(); sweepMarks.dispose(); }
       for (const mesh of markingMeshes) mesh.geometry.dispose();
       disposeWalls();
       markingMaterial?.dispose();

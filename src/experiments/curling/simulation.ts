@@ -19,7 +19,10 @@ import { launch, MAX_PULL, MIN_PULL } from '../hitofude/simulation';
  * PURA's twist: drops of one colour that touch fuse, so two stones become one
  * larger stone — it reaches the button more easily and is harder to move,
  * but it counts once. Other colours bounce, which is what takes a drop out.
- * Drops do not curl (no spin).
+ * Curl and sweeping, as in curling (added 2026-09-27): a delivery can be
+ * given a turn; the drop drifts sideways, more as it slows. Rubbing the
+ * sheet just ahead of one's own sliding drop lowers its friction and
+ * straightens it.
  */
 export const SHEET = { width: 420, height: 560 };
 export const HOUSE = { x: 210, y: 150, r: 110, rings: [110, 72, 36, 12] };
@@ -33,6 +36,20 @@ export const CURLING_SPEED = 560;
 /** Sliding friction makes a drop glide, then stop within about three seconds. */
 export const CURLING_TUNING = { ...LEGACY_TUNING, grabK: 0, grabDamp: 0, attraction: 0, friction: 60 };
 const REST_SPEED = 2;
+/** Sideways acceleration from a turn at the slowest (board units/s²); a draw to the button drifts about 40. */
+export const CURL = 40;
+/** Sweeping: friction while swept, and how much of the curl remains. */
+export const SWEPT_FRICTION = 42;
+const SWEPT_CURL = 0.5;
+/** A sweep counts when made this close ahead of the drop, this recently. */
+const SWEEP_REACH = 90, SWEEP_SECONDS = 0.15;
+/** Clockwise curls right (+1), counter-clockwise left (−1). */
+export type Spin = -1 | 0 | 1;
+
+/** The sideways pull of a turn at a speed: gentle while fast, strongest near the stop. */
+export function curlAt(speed: number) {
+  return CURL * Math.min(1, Math.max(0.15, 1 - speed / 600));
+}
 
 export type Team = 'cyan' | 'rose';
 export const other = (team: Team): Team => team === 'cyan' ? 'rose' : 'cyan';
@@ -74,6 +91,14 @@ export class CurlingSimulation extends FusionSimulation {
   control: Team[] = ['cyan', 'rose'];
   /** A shot shown on the floor before the computer delivers it. */
   preview: { angle: number; power: number } | null = null;
+  /** The turn the next delivery gets. */
+  spin: Spin = 0;
+  /** Turns of drops still sliding, by id. */
+  private spins = new Map<number, Spin>();
+  private sweptAt: { x: number; y: number; t: number } | null = null;
+  private clock = 0;
+  /** Seconds the current delivery has been swept (for the screen). */
+  swept = 0;
   private out = new Set<number>();
   private nextId = 5000;
   /** A search copy resolves one delivery and stops (no turn change, no scoring). */
@@ -154,8 +179,9 @@ export class CurlingSimulation extends FusionSimulation {
   override abort() { this.aiming = false; this.core.pointerUp(); }
 
   /** Deliver at an angle (radians, board axes) and power 0..1 — the computer's and the tests' hand. */
-  shoot(angle: number, power: number) {
+  shoot(angle: number, power: number, spin: Spin = this.spin) {
     if (this.phase !== 'aim') return false;
+    this.spin = spin;
     const speed = CURLING_SPEED * Math.min(1, Math.max(0, power));
     if (speed < CURLING_SPEED * MIN_PULL / MAX_PULL) return false;
     this.deliver(Math.cos(angle) * speed, Math.sin(angle) * speed);
@@ -167,12 +193,45 @@ export class CurlingSimulation extends FusionSimulation {
     const d = this.core.drops.find(d => d.id === this.delivery);
     if (!d) return;
     d.vx = vx; d.vy = vy;
+    if (this.spin) this.spins.set(d.id, this.spin);
+    this.swept = 0;
     this.thrown[this.turn]++;
     this.phase = 'moving'; this.note = null;
   }
 
+  /** Rubbing the sheet at a board point (only one's own sliding delivery responds). */
+  sweep(x: number, y: number) { this.sweptAt = { x, y, t: this.clock }; }
+
+  /** Whether the delivery is being swept now: a recent rub just ahead of it. */
+  private sweeping(d: Drop) {
+    const s = this.sweptAt;
+    if (!s || this.clock - s.t > SWEEP_SECONDS || !this.control.includes(this.turn)) return false;
+    const speed = Math.hypot(d.vx, d.vy);
+    if (speed < REST_SPEED) return false;
+    const ahead = ((s.x - d.x) * d.vx + (s.y - d.y) * d.vy) / speed;
+    return ahead > -d.r * 0.5 && Math.hypot(s.x - d.x, s.y - d.y) < SWEEP_REACH + d.r;
+  }
+
   override tick(dt: number) {
+    this.clock += dt;
     super.tick(dt);
+    if (this.phase === 'moving' && dt > 0) for (const d of this.core.drops) {
+      const speed = Math.hypot(d.vx, d.vy);
+      if (speed < REST_SPEED) continue;
+      const swept = d.id === this.delivery && this.sweeping(d);
+      if (swept) {
+        // Sweeping gives back part of the friction the step just took.
+        const back = Math.min(speed, (CURLING_TUNING.friction - SWEPT_FRICTION) * dt);
+        d.vx += d.vx / speed * back; d.vy += d.vy / speed * back;
+        this.swept += dt;
+      }
+      const spin = this.spins.get(d.id);
+      if (spin) {
+        // Sideways, to the right of travel for a clockwise turn.
+        const a = curlAt(speed) * spin * (swept ? SWEPT_CURL : 1) * dt, vx = d.vx, vy = d.vy;
+        d.vx += -vy / speed * a; d.vy += vx / speed * a;
+      }
+    }
     if (this.aiming) { const d = this.core.drops.find(d => d.id === this.delivery); if (d) { d.x = HACK.x; d.y = HACK.y; d.vx = 0; d.vy = 0; } }
     if (this.out.size) {
       if (this.delivery !== null && this.out.has(this.delivery)) this.note = 'out';
@@ -184,6 +243,7 @@ export class CurlingSimulation extends FusionSimulation {
     const delivered = this.core.drops.find(d => d.id === this.delivery);
     if (delivered && delivered.y > HOG_Y) { this.core.drops = this.core.drops.filter(d => d !== delivered); this.note = 'hog'; }
     for (const d of this.core.drops) { d.vx = 0; d.vy = 0; }
+    this.spins.clear(); this.sweptAt = null;
     if (this.searching) { this.phase = 'scored'; return; }
     if (this.thrown.cyan + this.thrown.rose >= STONES_PER_END * 2) {
       this.lastEnd = endScore(this.core.drops);
@@ -219,7 +279,7 @@ export class CurlingSimulation extends FusionSimulation {
     copy.turn = this.turn; copy.hammer = this.hammer; copy.end = this.end;
     copy.thrown = { ...this.thrown };
     copy.core.drops = this.core.drops.map(d => ({ ...d, pigment: { ...d.pigment } }));
-    copy.delivery = this.delivery; copy.phase = 'aim';
+    copy.delivery = this.delivery; copy.phase = 'aim'; copy.spin = this.spin;
     return copy;
   }
 

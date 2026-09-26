@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { CurlingSimulation, endScore, ENDS, HOUSE, STONE_R, STONES_PER_END, type Team } from '../src/experiments/curling/simulation';
-import { Planner, positionValue } from '../src/experiments/curling/ai';
+import { CurlingSimulation, curlAt, endScore, ENDS, HOUSE, STONE_R, STONES_PER_END, type Team } from '../src/experiments/curling/simulation';
+import { candidates, Planner, positionValue, STRENGTHS } from '../src/experiments/curling/ai';
 import { emptyPigment } from '../src/game/palette';
 import type { Drop } from '../src/game/sim';
 
@@ -102,4 +102,45 @@ test('the computer finds a shot that scores on an empty sheet and answers a ston
   const against = new Planner(sim, random); while (!against.step(100));
   const after = sim.lookahead(); after.shoot(against.best!.angle, against.best!.power); after.settle();
   assert.ok(positionValue(after.core.drops, 'rose') > positionValue(sim.core.drops, 'rose'));
+});
+
+test('a turn curls: clockwise to the right, counter-clockwise to the left, most near the stop', () => {
+  const rest = (spin: -1 | 0 | 1) => { const sim = new CurlingSimulation(); sim.shoot(UP, 0.6, spin); sim.settle(); return sim.core.drops.find(d => d.pigment.cyan > 0)!; };
+  const [left, straight, right] = [rest(-1), rest(0), rest(1)];
+  assert.ok(Math.abs(straight.x - HOUSE.x) < 1);
+  assert.ok(right.x - HOUSE.x > 30 && HOUSE.x - left.x > 30, `curls about 40 (${left.x.toFixed(0)}, ${right.x.toFixed(0)})`);
+  assert.ok(Math.abs((right.x - HOUSE.x) - (HOUSE.x - left.x)) < 1, 'the same both ways');
+  assert.ok(curlAt(40) > curlAt(400), 'a slow drop curls more');
+});
+
+function slide(sim: CurlingSimulation, sweepAhead: number | null) {
+  for (let t = 0; t < 12 && sim.phase === 'moving'; t += 1 / 60) {
+    const d = sim.core.drops.find(q => q.id === sim.delivery);
+    if (sweepAhead !== null && d) { const s = Math.hypot(d.vx, d.vy) || 1; sim.sweep(d.x + d.vx / s * sweepAhead, d.y + d.vy / s * sweepAhead); }
+    sim.tick(1 / 60);
+  }
+  return sim.core.drops.find(d => d.pigment.cyan > 0 || d.pigment.rose > 0)!;
+}
+
+test('sweeping just ahead carries a drop farther and straighter; behind it, or for the computer, it does nothing', () => {
+  const plain = slide((() => { const s = new CurlingSimulation(); s.shoot(UP, 0.55, 1); return s; })(), null);
+  const swept = slide((() => { const s = new CurlingSimulation(); s.shoot(UP, 0.55, 1); return s; })(), 40);
+  const behind = slide((() => { const s = new CurlingSimulation(); s.shoot(UP, 0.55, 1); return s; })(), -60);
+  assert.ok(plain.y - swept.y > 30, `farther (${plain.y.toFixed(0)} → ${swept.y.toFixed(0)})`);
+  assert.ok(Math.abs(swept.x - HOUSE.x) < Math.abs(plain.x - HOUSE.x), 'straighter');
+  assert.ok(Math.abs(behind.y - plain.y) < 1e-6, 'sweeping behind does nothing');
+  const cpu = new CurlingSimulation(); cpu.control = ['cyan'];
+  cpu.shoot(UP, 0.55); cpu.settle(); // cyan's delivery; now rose (the computer) throws
+  cpu.shoot(UP, 0.4, 0);
+  const cpuPlain = new CurlingSimulation(); cpuPlain.control = ['cyan']; cpuPlain.shoot(UP, 0.55); cpuPlain.settle(); cpuPlain.shoot(UP, 0.4, 0);
+  assert.equal(slide(cpu, 40).y, slide(cpuPlain, null).y, 'the computer’s drop is not swept by the person');
+});
+
+test('strengths: the gentler computer strays more, uses no turns or takeouts, and picks among its better ideas', () => {
+  const sim = new CurlingSimulation();
+  sim.core.drops.push(at('rose', HOUSE.x, HOUSE.y));
+  assert.ok(candidates(sim, 'easy').every(s => s.spin === 0));
+  assert.equal(candidates(sim, 'hard').length, candidates(sim, 'easy').length * 3 + 3, 'three turns, plus the takeouts');
+  assert.ok(STRENGTHS.easy.angle > STRENGTHS.normal.angle && STRENGTHS.normal.angle > STRENGTHS.hard.angle);
+  assert.equal(sim.lookahead().spin, sim.spin);
 });
