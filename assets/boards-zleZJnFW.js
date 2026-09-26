@@ -1,1 +1,0 @@
-import{p as e}from"./rotate-ccw-DY9dqRKY.js";function t(t,n=1e3){return t.map((t,r)=>{var i;let a=t.r*t.r,o=e(),s=1;for(let[e,n]of Object.entries((i=t.mix)==null?{}:i))o[e]+=a*n,s-=n;return o[t.hue]+=a*Math.max(0,s),{id:n+r,x:t.x,y:t.y,vx:0,vy:0,r:t.r,renderR:t.r,mass:a,pigment:o,freshness:0}})}export{t};
