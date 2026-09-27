@@ -22,3 +22,10 @@ test('the bare URL opens instant play; the original PURA stays at ?play=classic'
   assert.equal(routeKey('?play=unknown', false), 'play=open');
   assert.equal(routeKey('?play=welcome'), 'play=welcome', 'the welcome can be replayed');
 });
+
+test('the mode gallery offers the same six ways to play as the mode bar, each to a route', async () => {
+  const { GALLERY } = await import('../src/experiments/mode-gallery-data');
+  const { MODES } = await import('../src/experiments/mode-nav-data');
+  assert.deepEqual(GALLERY.map(m => m.id), MODES.map(m => m.id));
+  for (const m of GALLERY) assert.notEqual(routeKey(new URL(m.href, 'https://x.test/pura/').search, false), 'play=welcome', `${m.name} opens its mode, not the welcome`);
+});

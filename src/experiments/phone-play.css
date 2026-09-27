@@ -32,3 +32,15 @@
 
 .droplet-lab[data-look="gallery"] .phone-bar button, .droplet-lab[data-look="gallery"] .phone-menu-close, .droplet-lab[data-look="gallery"] .phone-chip { background: rgba(246, 245, 241, .78); color: #1e2629; box-shadow: 0 2px 10px rgba(30, 40, 44, .12); }
 .droplet-lab[data-ui="light"] .phone-menu-close { background: #1e2629; color: #f2f1ec; }
+
+/* The menu opens on the six ways to play; the page's own logo and mode bar would repeat them. */
+.droplet-lab.is-phone.menu-open .dl-header, .droplet-lab.is-phone.menu-open .mode-nav { display: none; }
+.phone-menu-top { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 4px auto 6px; max-width: 420px; }
+.phone-menu-brand { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 22px; font-weight: 300; letter-spacing: .12em; }
+.phone-menu-here { align-self: stretch; display: flex; align-items: center; gap: 10px; margin: 14px 0 0; font-size: 10px; letter-spacing: .2em; color: #6f7a7d; }
+.phone-menu-here::before, .phone-menu-here::after { content: ''; flex: 1; height: 1px; background: rgba(30, 40, 44, .12); }
+.droplet-lab[data-ui="dark"] .phone-menu-here { color: #8fa7ab; }
+.droplet-lab[data-ui="dark"] .phone-menu-here::before, .droplet-lab[data-ui="dark"] .phone-menu-here::after { background: rgba(160, 200, 205, .16); }
+
+.phone-menu-brand .dl-brand-symbol { margin-right: 4px; }
+.phone-menu-brand .dl-brand-period { margin-left: -.1em; }

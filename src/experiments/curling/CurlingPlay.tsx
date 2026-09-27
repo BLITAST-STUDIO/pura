@@ -146,7 +146,7 @@ export default function CurlingPlay() {
     : '';
   const movingLine = r?.phase === 'moving' && r.sweeping ? '滑っている先の床をこすると、スイープ' : '';
 
-  return <div className={'droplet-lab purity-scene stage-play curling-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play curling-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'curling'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>カーリング</span><span className="dl-edition-rule"/><span>END <b>{r ? Math.min(r.end, columns) : 1}</b></span></div></header>
     <ModeNav current="curling"/>
     <main>

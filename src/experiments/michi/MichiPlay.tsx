@@ -118,7 +118,7 @@ export default function MichiPlay() {
   const stars = (id: number) => records.best[id] ?? 0;
   const discovery = board.discovery && !reading.won && reading.separations === 0 && reading.elapsed > board.discovery.after ? board.discovery.text : null;
 
-  return <div className={'droplet-lab purity-scene stage-play michi-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play michi-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'michi'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>道</span><span className="dl-edition-rule"/><span><b>{board.code}</b></span></div></header>
     <ModeNav current="michi"/>
     <main>
