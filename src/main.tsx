@@ -39,6 +39,16 @@ async function boot() {
   }
 }
 
+// The trial channel (/next/, built with VITE_CHANNEL=next) says so in a corner,
+// so nobody mistakes it for the version shared with family and friends.
+if (import.meta.env.VITE_CHANNEL === "next") {
+  const tag = document.createElement("div");
+  tag.textContent = "試作版";
+  tag.setAttribute("aria-hidden", "true");
+  tag.style.cssText = "position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:9999;padding:3px 8px;border-radius:999px;background:rgba(30,40,44,.55);color:#f2f1ec;font:10px/1.4 -apple-system,sans-serif;letter-spacing:.1em;pointer-events:none";
+  document.body.appendChild(tag);
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
 } else {

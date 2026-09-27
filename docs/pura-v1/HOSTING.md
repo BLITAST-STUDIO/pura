@@ -195,3 +195,11 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 ## スマホのメニューの入口（2026-09-27）
 
 - ソース `6b9db2fe0f1dfe6297bd2f46f52b72e9b8047d61`（ブランチ `feat/menu-gallery`）、配信 `ca03f30`。全41ファイルSHA-256一致。公開版でメニュー先頭のモード画面、今のモードで盤面へ、他のモードへの移動を確認、警告エラー0。
+
+## 身内版と試作版（2026-09-27〜）
+
+ユーザーの「身内に公開」に合わせ、`gh-pages` のルートを**身内版（安定）**、`next/` を**試作版**に分けた。
+
+- 身内版: `main` から `npm run build` → `scripts/publish-pages.sh stable <gh-pagesのclone>`（`next/` はそのまま残る）→ commit・通常push。ユーザーの了承（`main` への統合）のあとだけ。
+- 試作版: 作業ブランチで `VITE_CHANNEL=next npm run build` → `scripts/publish-pages.sh next <clone>`（`next/` だけ入れ替え、名前を「PURA 試作」に、左下に「試作版」）→ commit・push。
+- どちらも配信後に全ファイルのSHA-256を公開版と照合する（従来どおり）。`build-info.json` に channel と sourceCommit。
