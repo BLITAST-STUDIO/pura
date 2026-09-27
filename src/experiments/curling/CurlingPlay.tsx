@@ -8,6 +8,7 @@ import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
+import { FirstPull } from '../first-pull';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -171,6 +172,8 @@ export default function CurlingPlay() {
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {r?.note && r.phase !== 'scored' && r.phase !== 'over' && <p className="stage-discovery curling-note" role="status">{r.note === 'hog' ? 'ホグラインに届かず、外れた' : '場外'}</p>}
         {r?.phase === 'scored' && r.lastEnd && <div className="stage-clear" role="status"><span className="hole-score">{r.lastEnd.team ? `${you(r.lastEnd.team)} ${r.lastEnd.points}点` : 'ブランク（0点）'}</span><small>第{r.end}エンド</small><button onClick={nextEnd}>{r.ends.length >= ENDS && r.totals.cyan !== r.totals.rose ? '結果へ' : '次のエンドへ'}</button></div>}
+        <FirstPull mode="curling" canvas={canvas} straight shot={!!r && (r.end > 1 || r.left.cyan < STONES_PER_END)} active={status === 'ready' && !paused && !play.menu}
+          aimed={() => { const sim = simulation.current; return sim && sim.atRest && sim.core.grabbedId === null ? sim.selected() : null; }}/>
         <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
         {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button></div>}
         {play.phone && r?.phase === 'aim' && (players === 'two' || r.turn === 'cyan') && <button className="phone-chip" onClick={() => setSpin(s => (s === 1 ? -1 : s + 1) as Spin)}>{SPIN_LABELS[spin]}</button>}

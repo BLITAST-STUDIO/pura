@@ -13,6 +13,7 @@ import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
+import { FirstPull } from '../first-pull';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
 import { initialLook, initialUi, type Look, type Ui } from '../look';
@@ -187,6 +188,8 @@ export default function HitofudePlay() {
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {holeInOne && !reduced && <div className="hole-in-one" aria-hidden="true"><i/><b>ひとふで</b></div>}
+        <FirstPull mode="hitofude" canvas={canvas} shot={reading.shots > 0} active={status === 'ready' && !paused && !play.menu}
+          aimed={() => { const sim = simulation.current; return sim && !sim.result && sim.atRest && sim.core.grabbedId === null ? sim.selected() : null; }}/>
         <ClearGlow show={!!result?.cleared && !holeInOne}/>
         {result && strokes !== null && <div className="stage-clear" role="status">
           <span className="hole-score">{result.cleared ? scoreName(strokes, board.par) : 'ギブアップ'}</span><small>{relative(strokes - board.par)} · {strokes}打{challenge !== null && result.cleared ? ` · ${challengeOutcome(strokes, challenge)}` : ''}</small>
