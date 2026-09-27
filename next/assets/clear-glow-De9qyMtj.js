@@ -1,1 +1,0 @@
-import{t as e}from"./index-XA_mW9xV.js";var t=e();function n({show:e}){return e?(0,t.jsxs)(`div`,{className:`clear-glow`,"aria-hidden":`true`,children:[(0,t.jsx)(`i`,{}),(0,t.jsx)(`i`,{})]}):null}export{n as t};
