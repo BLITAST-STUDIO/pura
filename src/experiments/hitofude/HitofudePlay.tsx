@@ -5,7 +5,7 @@ import { dominantHue } from '../../game/palette';
 import { HitofudeSimulation, shotLimit, type ShotResult } from './simulation';
 import { SHOT_BOARDS } from './boards';
 import { DAILY_HOLES, todaysHole } from './daily-holes';
-import { holeStrokes, relative, Round, ROUND_LABELS, roundHoles, scoreName, totals, type Card, type RoundKind } from './golf';
+import { holeStrokes, relative, Round, ROUND_LABELS, roundHoles, roundsAfterHole16Par, scoreName, totals, type Card, type RoundKind } from './golf';
 import { challengeFrom, challengeOutcome, challengeText, challengeUrl } from './share';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
@@ -37,12 +37,16 @@ type Reading = { shots: number; left: number; remaining: number; result: ShotRes
 function readRecords(): Records {
   try {
     const d = JSON.parse(localStorage.getItem(RECORD_KEY) ?? 'null');
-    if (d?.v === 2) return { best: d.best ?? {}, round: d.round ?? null, rounds: d.rounds ?? (d.round !== null && d.round !== undefined ? { out: d.round } : {}) };
+    if (d?.v === 2 || d?.v === 3) {
+      const rounds = d.rounds ?? (d.round !== null && d.round !== undefined ? { out: d.round } : {});
+      // v2 was kept while hole 16 was par 3.
+      return { best: d.best ?? {}, round: d.round ?? null, rounds: d.v === 2 ? roundsAfterHole16Par(rounds) : rounds };
+    }
   } catch { /* no records yet */ }
   return { best: {}, round: null, rounds: {} };
 }
 function writeRecords(records: Records) {
-  try { localStorage.setItem(RECORD_KEY, JSON.stringify({ v: 2, ...records })); } catch { /* play continues without records */ }
+  try { localStorage.setItem(RECORD_KEY, JSON.stringify({ v: 3, ...records })); } catch { /* play continues without records */ }
 }
 
 export default function HitofudePlay() {

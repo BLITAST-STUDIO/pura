@@ -42,6 +42,16 @@ export class Round {
 
 /** As in golf: the front nine (OUT), the back nine (IN), or all eighteen. */
 export type RoundKind = 'out' | 'in' | 'full';
+
+/**
+ * Hole 16's par went from 3 to 4 (2026-09-27). A best IN or 18-hole round
+ * kept against the old par is one stroke better against the new one.
+ */
+export function roundsAfterHole16Par(rounds: Partial<Record<RoundKind, number>>): Partial<Record<RoundKind, number>> {
+  const out = { ...rounds };
+  for (const kind of ['in', 'full'] as const) { const v = out[kind]; if (typeof v === 'number') out[kind] = v - 1; }
+  return out;
+}
 export const ROUND_LABELS: Record<RoundKind, string> = { out: '前半9', in: '後半9', full: '18ホール' };
 export function roundHoles<T>(kind: RoundKind, holes: readonly T[]): T[] {
   return kind === 'out' ? holes.slice(0, 9) : kind === 'in' ? holes.slice(9, 18) : holes.slice(0, 18);

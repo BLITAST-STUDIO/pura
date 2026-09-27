@@ -185,7 +185,10 @@ export const SHOT_BOARDS: ShotBoard[] = [
   },
   {
     // A row of stones; one drop passes a gap, two fused do not.
-    id: 16, code: '16', name: '石のむこう', hint: '一粒ずつなら、通れる。', par: 3, min: 2,
+    // Par 4 since 2026-09-27 (RYO found par 3 very hard): four straight shots through
+    // the gaps make par; 3 needs a bank combination about 2° wide (narrower than
+    // hole 9's 4°, which set the min+2 rule), 2 is a wall-bank trick shot.
+    id: 16, code: '16', name: '石のむこう', hint: '一粒ずつなら、通れる。', par: 4, min: 2,
     stones: [{ x: 100, y: 280, r: 30 }, { x: 210, y: 280, r: 30 }, { x: 320, y: 280, r: 30 }],
     drops: [
       { x: 120, y: 440, r: 18, hue: 'cyan' },
