@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AIMABLE_SPEED, HitofudeSimulation, launch, MAX_PULL, MIN_PULL, SHOT_SPEED, shotLimit, type ShotBoard } from '../src/experiments/hitofude/simulation';
-import { holeStrokes, relative, Round, scoreName, totals } from '../src/experiments/hitofude/golf';
+import { holeStrokes, relative, Round, roundsAfterHole16Par, scoreName, totals } from '../src/experiments/hitofude/golf';
 import { SHOT_BOARDS } from '../src/experiments/hitofude/boards';
 import { playShot, replay, type Shot } from '../scripts/hitofude-solve';
 
@@ -43,7 +43,7 @@ test('every hole can be finished in its recorded minimum, and par is above it', 
   }
   assert.equal(SHOT_BOARDS.length, 18, 'an eighteen-hole course');
   assert.equal(SHOT_BOARDS.slice(0, 9).reduce((n, b) => n + b.par, 0), 23, 'OUT par');
-  assert.equal(SHOT_BOARDS.slice(9).reduce((n, b) => n + b.par, 0), 23, 'IN par');
+  assert.equal(SHOT_BOARDS.slice(9).reduce((n, b) => n + b.par, 0), 24, 'IN par (hole 16 par 4 since 2026-09-27)');
 });
 
 test('hole 7 in order makes par: amber first, then cyan gently, then rose', () => {
@@ -154,4 +154,29 @@ test('pull from anywhere in curling: the waiting drop, on a person’s turn only
   sim.settle();
   assert.equal(sim.turn, 'rose');
   assert.equal(sim.selected(), null, 'the computer’s turn');
+});
+
+test('hole 16 makes par with four straight shots through the gaps; three needs the bank combination', () => {
+  const board = SHOT_BOARDS.find(b => b.id === 16)!;
+  assert.equal(board.par, 4);
+  const toward = (from: [number, number], to: [number, number]) => Math.atan2(to[1] - from[1], to[0] - from[0]);
+  // 1 the top cyan down the right gap, 2 the bottom rose up the same gap, 3 and 4 along the rows.
+  const par = replay(board, [
+    { id: 1002, angle: toward([240, 130], [300, 470]), power: 0.7 },
+    { id: 1003, angle: toward([210, 400], [340, 120]), power: 0.7 },
+  ]);
+  const big = (hue: 'cyan' | 'rose') => par.core.drops.filter(d => d.pigment[hue] > 0).sort((a, b) => b.r - a.r)[0];
+  const smallRose = par.core.drops.find(d => d.pigment.rose > 0 && d !== big('rose'))!;
+  playShot(par, { id: smallRose.id, angle: toward([smallRose.x, smallRose.y], [big('rose').x, big('rose').y]), power: 0.7 });
+  const smallCyan = par.core.drops.find(d => d.pigment.cyan > 0 && d !== big('cyan'))!;
+  playShot(par, { id: smallCyan.id, angle: toward([smallCyan.x, smallCyan.y], [big('cyan').x, big('cyan').y]), power: 0.7 });
+  assert.deepEqual(par.result, { cleared: true, shots: 4 });
+  // Birdie: after the first shot, the bottom-left cyan drives the rose off the right wall and runs on into the cyan.
+  const birdie = replay(board, [{ id: 1002, angle: toward([240, 130], [300, 470]), power: 0.7 }, { id: 1000, angle: rad(338), power: 0.8 }]);
+  assert.equal(birdie.remaining, 1, 'two joined in one shot');
+});
+
+test('best IN and 18-hole rounds kept under the old par are one better against the new', () => {
+  assert.deepEqual(roundsAfterHole16Par({ out: 2, in: 1, full: 3 }), { out: 2, in: 0, full: 2 });
+  assert.deepEqual(roundsAfterHole16Par({}), {});
 });
