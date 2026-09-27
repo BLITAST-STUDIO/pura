@@ -9,6 +9,7 @@ import type { ScoreBreakdown } from './score';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
+import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -133,6 +134,7 @@ export default function StagePlay() {
       <section className="dl-stage purity-stage stage-board" aria-label={`ステージ ${def.code} ${def.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={def.hint}/>
         <PhoneBar play={play} onRetry={again}/>
+        <SoundNudge feedback={feedback} sound={sensory.sound}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : reading.won ? 'CLEAR' : `STAGE ${def.code}`}</span><span className="dl-stage-index">{reading.count}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}

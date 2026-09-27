@@ -6,6 +6,7 @@ import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
+import { SoundNudge } from '../sensory/sound-nudge';
 import { IntroLine } from '../intro-line';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -87,6 +88,7 @@ export default function OpenPlay() {
       <section className="dl-stage purity-stage open-stage" aria-label="水滴で遊ぶ盤面" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="三色の雫をつかんで動かせる盤面" aria-describedby="open-help"/>
         <PhoneBar play={play} onRetry={again}/>
+        <SoundNudge feedback={feedback} sound={sensory.sound}/>
         <IntroLine ready={status === 'ready'}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : 'THREE COLOURS'}</span><span className="dl-stage-index">{reading.count}</span></div>
         <span className="dl-corner dl-corner-bl"/><span className="dl-corner dl-corner-br"/>

@@ -63,7 +63,6 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
   let noiseBuffer: AudioBuffer | null = null;
   let enabled = true;
   let disposed = false;
-  let primed = false;
 
   function ensure(): BaseAudioContext | null {
     if (disposed) return null;
@@ -199,15 +198,15 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
       // iOS reports 'interrupted' after calls, Siri or other audio; resume that too.
       if (realtime.state !== 'running' && realtime.state !== 'closed') {
         void realtime.resume().catch(() => undefined);
-      }
-      if (!primed && bus) {
-        // Older iOS only enables output after a sound starts inside the gesture.
-        primed = true;
-        const silent = realtime.createBufferSource();
-        silent.buffer = realtime.createBuffer(1, 1, realtime.sampleRate);
-        silent.connect(realtime.destination);
-        silent.start(0);
-        silent.onended = () => silent.disconnect();
+        // Older iOS only enables output after a sound starts inside a real
+        // gesture; a drag is not one, so keep priming until it runs.
+        if (bus) {
+          const silent = realtime.createBufferSource();
+          silent.buffer = realtime.createBuffer(1, 1, realtime.sampleRate);
+          silent.connect(realtime.destination);
+          silent.start(0);
+          silent.onended = () => silent.disconnect();
+        }
       }
     },
     setEnabled(next) {
