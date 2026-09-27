@@ -20,3 +20,8 @@
 - PC（900×820）のはじめる・道・ひとふで、スマホ幅で `?layout=page` の道は公開版と画素差0。
 - 画像 `artifacts/phone/portrait.png`（道・メニュー・ひとふで・カーリング）、`artifacts/phone/landscape.png`。
 - 実機（iPhone・Android）での指の操作感は未確認。
+
+## 実機（2026-09-27）
+
+ユーザーがiPhoneでスマホ表示のまま遊び、音の始まりの問題（別記 SENSORY_FEEDBACK.md）を指摘・確認。スマホ表示そのものへの修正依頼はなし。保存点 `phone-play-20260927`、PR #10 で `main` に統合。
+
