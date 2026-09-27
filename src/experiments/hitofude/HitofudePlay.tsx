@@ -163,7 +163,7 @@ export default function HitofudePlay() {
   const holeInOne = !!result?.cleared && result.shots === 1;
   const best = (k: RoundKind) => records.rounds?.[k];
 
-  return <div className={'droplet-lab purity-scene stage-play hitofude-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play hitofude-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'hitofude'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>ひとふで</span><span className="dl-edition-rule"/><span>{daily ? 'TODAY' : <>HOLE <b>{board.code}</b></>}</span></div></header>
     <ModeNav current="hitofude"/>
     <main>

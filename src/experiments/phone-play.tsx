@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Menu, RotateCcw, X } from 'lucide-react';
 import { PHONE_QUERY, phoneLayout } from './phone-layout';
+import { ModeGallery } from './mode-gallery';
+import type { ModeId } from './mode-nav';
 import './phone-play.css';
 
 /**
@@ -41,8 +43,18 @@ export function PhoneBar({ play, onRetry }: { play: PhonePlay; onRetry?: () => v
   </div>;
 }
 
-/** The way back from the menu to the board. */
-export function PhoneMenuClose({ play }: { play: PhonePlay }) {
+/**
+ * The top of the menu: the way back to the board, then the six ways to play
+ * (the same picture as the welcome's end), then this screen's own settings.
+ */
+export function PhoneMenuClose({ play, current }: { play: PhonePlay; current: ModeId }) {
   if (!play.phone || !play.menu) return null;
-  return <button className="phone-menu-close" onClick={play.close}><X size={16}/><span>盤面に戻る</span></button>;
+  return <>
+    <button className="phone-menu-close" onClick={play.close}><X size={16}/><span>盤面に戻る</span></button>
+    <section className="phone-menu-top" aria-label="メニュー">
+      <p className="phone-menu-brand"><span className="dl-brand-symbol"/>PURA<span className="dl-brand-period">.</span></p>
+      <ModeGallery current={current} onCurrent={play.close}/>
+      <p className="phone-menu-here">この遊び</p>
+    </section>
+  </>;
 }

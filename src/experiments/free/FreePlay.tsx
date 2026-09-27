@@ -82,7 +82,7 @@ export default function FreePlay() {
   const slider = (label: string, left: string, right: string, key: 'viscosity' | 'inertia' | 'friction' | 'attraction', max = 1) =>
     <label className="free-slider"><span>{label}</span><small>{left}</small><input type="range" min={0} max={max} step={0.05} value={settings[key]} onChange={e => change({ [key]: Number(e.target.value) })}/><small>{right}</small></label>;
 
-  return <div className={'droplet-lab purity-scene stage-play free-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play free-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'free'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>自由</span><span className="dl-edition-rule"/><span>FREE</span></div></header>
     <ModeNav current="free"/>
     <main>

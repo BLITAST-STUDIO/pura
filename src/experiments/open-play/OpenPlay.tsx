@@ -81,7 +81,7 @@ export default function OpenPlay() {
   }, []);
   const held = reading.held;
 
-  return <div className={'droplet-lab purity-scene open-play' + play.className} data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene open-play' + play.className} data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><PhoneMenuClose play={play} current={'open'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>はじめる</span><span className="dl-edition-rule"/><span>FLOW</span></div></header>
     <ModeNav current="open"/>
     <main>

@@ -123,7 +123,7 @@ export default function StagePlay() {
   const choose = (id: number) => { setStage(id); setPaused(false); window.scrollTo(0, 0); play.played(); };
   const next = LEVELS.find(l => l.id === stage + 1);
 
-  return <div className={'droplet-lab purity-scene stage-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={mode === 'score' ? 'score' : 'stages'}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>{mode === 'score' ? 'スコア' : '元祖8ステージ'}</span><span className="dl-edition-rule"/><span>STAGE <b>{def.code}</b></span></div></header>
     <ModeNav current={mode === 'score' ? 'score' : 'stages'} onSelect={{ stages: () => setMode('stage'), score: () => { setMode('score'); if (def.sandbox) setStage(1); } }}/>
     <main>

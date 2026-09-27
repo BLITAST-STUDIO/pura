@@ -28,15 +28,8 @@
 .welcome-end { position: absolute; z-index: 5; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 20px; background: rgba(236, 235, 230, .88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: welcome-in 1s ease both; }
 .welcome-line { margin: 0; font-size: clamp(18px, 5.4vw, 24px); font-weight: 300; letter-spacing: .3em; text-indent: .3em; color: #1e2629; }
 .welcome-sub { margin: 0 0 12px; font-size: 12px; letter-spacing: .12em; color: #5c686b; }
-.welcome-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: min(100%, 420px); }
-.welcome-modes a { display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 12px 12px; border-radius: 14px; background: #f6f5f1; border: 1px solid rgba(30, 40, 44, .1); color: #1e2629; text-decoration: none; animation: welcome-in .6s ease both; }
-.welcome-modes a:nth-child(2) { animation-delay: .08s; } .welcome-modes a:nth-child(3) { animation-delay: .16s; } .welcome-modes a:nth-child(4) { animation-delay: .24s; } .welcome-modes a:nth-child(5) { animation-delay: .32s; } .welcome-modes a:nth-child(6) { animation-delay: .4s; }
-.welcome-modes svg { grid-row: span 2; color: #56666a; }
-.welcome-modes b { font-size: 14px; font-weight: 500; }
-.welcome-modes small { font-size: 10px; color: #6f7a7d; }
 @keyframes welcome-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .droplet-lab[data-ui="dark"] .welcome-end { background: rgba(10, 16, 18, .86); }
 .droplet-lab[data-ui="dark"] .welcome-line { color: #eef6f5; }
-.droplet-lab[data-ui="dark"] .welcome-modes a { background: #142327; border-color: #30494d; color: #e3f2f0; }
-@media (prefers-reduced-motion: reduce) { .welcome-ghost i, .welcome-breathe { animation-duration: 4s; } .welcome-end, .welcome-modes a, .welcome-picture { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .welcome-ghost i, .welcome-breathe { animation-duration: 4s; } .welcome-end, .welcome-picture { animation: none; } }

@@ -9,6 +9,7 @@ import { useWalls } from '../walls';
 import { applyPageTone, initialLook, initialUi } from '../look';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import { INTRO_TEXT } from '../intro-line';
+import { ModeGallery } from '../mode-gallery';
 import { WELCOME_STEPS, WELCOMED_KEY, type WelcomeStep } from './steps';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
@@ -19,14 +20,6 @@ import './welcome.css';
 type Spot = { id: number; x: number; y: number; r: number };
 const HUE: Record<string, string> = { cyan: '#5fbfcb', rose: '#d77f9f', amber: '#dcae5b' };
 
-const MODES = [
-  { href: './?play=open', name: 'はじめる', line: '三色で、自由に', icon: 'dots' },
-  { href: './?play=michi', name: '道', line: '面を、ひとつずつ', icon: 'path' },
-  { href: './?play=hitofude', name: 'ひとふで', line: '一打で、まとめる', icon: 'shot' },
-  { href: './?play=curling', name: 'カーリング', line: '中心を、ねらう', icon: 'house' },
-  { href: './?play=stages&mode=score', name: 'スコア', line: '速さと、ていねいさ', icon: 'score' },
-  { href: './?play=free', name: '自由', line: '数も、手ざわりも', icon: 'free' },
-] as const;
 
 function markWelcomed() {
   try { localStorage.setItem(WELCOMED_KEY, '1'); localStorage.setItem('pura-flow-intro-v1', '1'); } catch { /* shown again next time */ }
@@ -39,18 +32,6 @@ function Picture({ step }: { step: WelcomeStep }) {
     {Array.from({ length: g.from }, (_, i) => <i key={i} style={{ background: HUE[g.hue] }}/>)}
     <em>→</em><b style={{ background: HUE[g.hue] }}/>
   </span>)}</div>;
-}
-
-function ModeIcon({ kind }: { kind: string }) {
-  const c = 'currentColor';
-  return <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">{
-    kind === 'dots' ? <><circle cx="12" cy="24" r="5" fill={HUE.cyan}/><circle cx="22" cy="14" r="5" fill={HUE.rose}/><circle cx="29" cy="26" r="5" fill={HUE.amber}/></>
-    : kind === 'path' ? <><circle cx="9" cy="30" r="3" fill={c}/><circle cx="18" cy="22" r="3" fill={c}/><circle cx="26" cy="16" r="3" fill={c}/><circle cx="32" cy="9" r="4" fill={HUE.cyan}/></>
-    : kind === 'shot' ? <><circle cx="10" cy="30" r="5" fill={HUE.cyan}/><path d="M15 25 L31 9" stroke={c} strokeWidth="2" strokeDasharray="2 3"/></>
-    : kind === 'house' ? <><circle cx="20" cy="20" r="14" fill="none" stroke={c} strokeWidth="1.5"/><circle cx="20" cy="20" r="8" fill="none" stroke={c} strokeWidth="1.5"/><circle cx="20" cy="20" r="3" fill={HUE.rose}/></>
-    : kind === 'score' ? <><path d="M8 30 L16 18 L23 24 L32 10" fill="none" stroke={c} strokeWidth="2"/><circle cx="32" cy="10" r="3" fill={HUE.amber}/></>
-    : <><path d="M8 13 H32 M8 27 H32" stroke={c} strokeWidth="1.5"/><circle cx="15" cy="13" r="3.5" fill={HUE.cyan}/><circle cx="26" cy="27" r="3.5" fill={HUE.rose}/></>
-  }</svg>;
 }
 
 export default function WelcomePlay() {
@@ -139,7 +120,7 @@ export default function WelcomePlay() {
       {finished && <div className="welcome-end" role="dialog" aria-label="遊び方を選ぶ">
         <p className="welcome-line">{INTRO_TEXT}</p>
         <p className="welcome-sub">ここから、好きな遊び方で。</p>
-        <nav className="welcome-modes">{MODES.map(m => <a key={m.name} href={m.href}><ModeIcon kind={m.icon}/><b>{m.name}</b><small>{m.line}</small></a>)}</nav>
+        <ModeGallery/>
       </div>}
     </section>
   </main></div></div>;
