@@ -53,6 +53,13 @@ export class HitofudeSimulation extends FusionSimulation {
   shots = 0;
   result: ShotResult | null = null;
   private aiming: { id: number; x: number; y: number } | null = null;
+  /**
+   * The drop a touch on empty floor aims, so a drop by the screen's edge can
+   * be pulled from anywhere (RYO, 2026-09-27: power ran short at the edges).
+   * The hole's first drop to begin with; then whichever drop was touched.
+   */
+  private selectedId: number | null = null;
+  private selectedHue: HueId | null = null;
 
   constructor(board: ShotBoard) {
     super();
@@ -64,7 +71,7 @@ export class HitofudeSimulation extends FusionSimulation {
     // The base constructor resets before this class's board exists.
     if (!this.board) { super.reset(); return; }
     this.width = SHOT_BOARD.width; this.height = SHOT_BOARD.height;
-    this.shots = 0; this.result = null; this.aiming = null;
+    this.shots = 0; this.result = null; this.aiming = null; this.selectedId = null; this.selectedHue = null;
     this.core = new PuraSim();
     // The sandbox level keeps the legacy core-and-quota win check out of the way.
     this.core.level = SANDBOX;
@@ -73,6 +80,8 @@ export class HitofudeSimulation extends FusionSimulation {
     this.core.resize(this.width, this.height);
     this.core.drops = boardDrops(this.board.drops);
     this.core.obstacles = this.board.stones ?? [];
+    const first = this.core.drops[0];
+    if (first) { this.selectedId = first.id; this.selectedHue = dominantHue(first.pigment); }
     this.core.quota = { cyan: 0, rose: 0, amber: 0 };
     for (const d of this.core.drops) for (const hue of ['cyan', 'rose', 'amber'] as const) this.core.quota[hue] += d.pigment[hue];
     this.observe();
@@ -102,8 +111,17 @@ export class HitofudeSimulation extends FusionSimulation {
     if (!d || Math.hypot(d.vx, d.vy) > AIMABLE_SPEED) return false;
     d.vx = 0; d.vy = 0;
     this.aiming = { id, x: d.x, y: d.y };
+    this.selectedId = id; this.selectedHue = dominantHue(d.pigment);
     this.core.grabbedId = id; this.core.pointer = { x: d.x, y: d.y };
     return true;
+  }
+
+  /** The selected drop; after a fusion, the largest drop of its colour carries the selection on. */
+  override selected(): number | null {
+    if (this.selectedId !== null && this.core.drops.some(d => d.id === this.selectedId)) return this.selectedId;
+    const heir = this.core.drops.filter(d => dominantHue(d.pigment) === this.selectedHue).sort((a, b) => b.mass - a.mass)[0];
+    this.selectedId = heir?.id ?? null;
+    return this.selectedId;
   }
 
   get aim(): Aim | null {

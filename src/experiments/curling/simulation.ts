@@ -159,6 +159,11 @@ export class CurlingSimulation extends FusionSimulation {
     return true;
   }
 
+  /** The drop waiting at the hack is the one a touch anywhere aims, on a person's turn. */
+  override selected(): number | null {
+    return this.phase === 'aim' && this.control.includes(this.turn) ? this.delivery : null;
+  }
+
   get aim() {
     if (this.preview && this.phase === 'aim') return { x: HACK.x, y: HACK.y, r: STONE_R, dx: Math.cos(this.preview.angle), dy: Math.sin(this.preview.angle), power: this.preview.power };
     const p = this.core.pointer;
