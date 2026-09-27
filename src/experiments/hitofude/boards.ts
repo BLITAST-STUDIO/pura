@@ -65,10 +65,13 @@ export const SHOT_BOARDS: ShotBoard[] = [
   },
   {
     // The gate lets a small drop through, not a merged one.
-    id: 6, code: '06', name: 'せまいみち', hint: '大きくなると、通れない。', par: 3, min: 2,
+    // 2026-09-27 (RYO's find): the bottom drop sits 12 left of the gate's centre, so the
+    // wall-bank sweep from the top drop can just reach it — a one-shot window of 5° at
+    // full power, about hole 9's 4°, so par stays 3 (min+2); two shots remain the way.
+    id: 6, code: '06', name: 'せまいみち', hint: '大きくなると、通れない。', par: 3, min: 1,
     stones: [{ x: 150, y: 320, r: 34 }, { x: 270, y: 320, r: 34 }],
     drops: [
-      { x: 210, y: 480, r: 20, hue: 'cyan' },
+      { x: 198, y: 480, r: 20, hue: 'cyan' },
       { x: 95, y: 430, r: 22, hue: 'cyan' },
       { x: 210, y: 200, r: 20, hue: 'cyan' },
       { x: 310, y: 120, r: 18, hue: 'cyan' },

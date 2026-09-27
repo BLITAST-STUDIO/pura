@@ -14,7 +14,8 @@ const MIN_SOLUTIONS: Record<number, Shot[]> = {
   3: [{ id: 1004, angle: rad(238), power: 0.8 }, { id: 1000, angle: rad(300), power: 0.8 }],
   4: [{ id: 1000, angle: rad(223), power: 0.95 }],
   5: [{ id: 1000, angle: rad(269), power: 0.8 }],
-  6: [{ id: 1003, angle: rad(147), power: 0.8 }, { id: 2, angle: rad(358), power: 1 }],
+  // The top drop sweeps the other two off the left wall and reaches the bottom one (RYO's find; window 146–150° at full power).
+  6: [{ id: 1003, angle: rad(148), power: 1 }],
   // A combination shot found by the search (drop 2 is the gathered amber).
   7: [{ id: 1004, angle: rad(31), power: 1 }, { id: 2, angle: rad(192), power: 1 }],
   8: [{ id: 1000, angle: rad(214), power: 0.8 }, { id: 4, angle: rad(332), power: 1 }],
@@ -179,4 +180,13 @@ test('hole 16 makes par with four straight shots through the gaps; three needs t
 test('best IN and 18-hole rounds kept under the old par are one better against the new', () => {
   assert.deepEqual(roundsAfterHole16Par({ out: 2, in: 1, full: 3 }), { out: 2, in: 0, full: 2 });
   assert.deepEqual(roundsAfterHole16Par({}), {});
+});
+
+test('hole 6: the one-shot sweep needs full power in a narrow window; softer, it is the usual two', () => {
+  const board = SHOT_BOARDS.find(b => b.id === 6)!;
+  for (const a of [146, 148, 150]) assert.deepEqual(replay(board, [{ id: 1003, angle: rad(a), power: 1 }]).result, { cleared: true, shots: 1 }, `${a}°`);
+  for (const a of [140, 156]) assert.equal(replay(board, [{ id: 1003, angle: rad(a), power: 1 }]).result, null, `${a}° misses`);
+  const soft = replay(board, [{ id: 1003, angle: rad(148), power: 0.8 }]);
+  assert.equal(soft.result, null);
+  assert.equal(soft.remaining, 1, 'one left for the second shot');
 });
