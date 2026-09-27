@@ -148,7 +148,7 @@ export default function PurityScene() {
             const next = e.target.checked ? 'shape' : 'artistic';
             setCaustic(next);
             writeLookQuery('caustic', causticQuery(e.target.checked));
-          }}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
+          }}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label><label><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
         </aside>
       </div>
     </main>

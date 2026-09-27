@@ -1,27 +1,31 @@
 import { createDropletAudio, type DropletAudio } from './audio';
 import { fusionCue, impactCue, ImpactGate, panFor, sizeFactor, type ContactSurface } from './cues';
 import { createHaptics, type HapticMode, type Haptics } from './haptics';
+import { createMusic, type Music, type MusicState } from './music';
 
 export const SENSORY_KEY = 'pura-flow-sensory-v1';
-export type SensoryPreferences = { sound: boolean; haptics: boolean };
+/** `music` is the BGM (added 2026-09-27); it plays only while `sound` is on too. */
+export type SensoryPreferences = { sound: boolean; haptics: boolean; music: boolean };
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
 export type CueName = 'grab' | 'impact' | 'fusion' | 'ready' | 'delivered' | 'rewind' | 'split';
 
-/** Stored per browser. `?sound=off` / `?haptics=off` override for one visit only. */
+/** Stored per browser. `?sound=off` / `?haptics=off` / `?music=off` override for one visit only. */
 export function readSensoryPreferences(storage?: StorageLike, search?: string): SensoryPreferences {
-  const preferences: SensoryPreferences = { sound: true, haptics: true };
+  const preferences: SensoryPreferences = { sound: true, haptics: true, music: true };
   try {
     const raw = (storage ?? window.localStorage).getItem(SENSORY_KEY);
     const data = raw ? JSON.parse(raw) : null;
     if (data?.v === 1) {
       if (typeof data.sound === 'boolean') preferences.sound = data.sound;
       if (typeof data.haptics === 'boolean') preferences.haptics = data.haptics;
+      if (typeof data.music === 'boolean') preferences.music = data.music;
     }
   } catch { /* unavailable or malformed storage keeps the defaults */ }
   try {
     const query = new URLSearchParams(search ?? window.location.search);
     if (query.get('sound') === 'off') preferences.sound = false;
     if (query.get('haptics') === 'off') preferences.haptics = false;
+    if (query.get('music') === 'off') preferences.music = false;
   } catch { /* no location outside the browser */ }
   return preferences;
 }
@@ -49,12 +53,13 @@ export type SensoryFeedback = {
   rewind(): void;
   split(radius: number, x: number, width: number): void;
   /** Audio state and issued cue counts, for verification and the stats readout. */
-  status(): { audio: string; haptics: HapticMode; counts: Record<CueName, number> };
+  status(): { audio: string; haptics: HapticMode; counts: Record<CueName, number>; music: { state: MusicState; position: number | null } };
   dispose(): void;
 };
 
-export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?: Haptics } = {}): SensoryFeedback {
+export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?: Haptics; music?: Music } = {}): SensoryFeedback {
   const audio = options.audio ?? createDropletAudio();
+  const music = options.music ?? createMusic(() => audio.context);
   const haptics = options.haptics ?? createHaptics();
   const gate = new ImpactGate();
   const counts: Record<CueName, number> = { grab: 0, impact: 0, fusion: 0, ready: 0, delivered: 0, rewind: 0, split: 0 };
@@ -65,7 +70,7 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
   // Safari counts a tap as a gesture but not a drag (RYO, 2026-09-27: sound
   // sometimes began only at a double-tap separation), so every kind of touch is
   // tried, and SoundNudge offers a tap when none of them took.
-  const unlock = () => { if (sound) audio.unlock(); };
+  const unlock = () => { if (sound) { audio.unlock(); music.update(); } };
   const gestures = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'] as const;
   if (typeof window !== 'undefined') for (const type of gestures) window.addEventListener(type, unlock, { capture: true, passive: true });
 
@@ -75,6 +80,7 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
     setPreferences(preferences) {
       sound = preferences.sound;
       audio.setEnabled(preferences.sound);
+      music.setEnabled(preferences.sound && preferences.music);
       haptics.setEnabled(preferences.haptics);
     },
     grab(radius, x, width) {
@@ -120,10 +126,11 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
     },
     status() {
       const context = audio.context as AudioContext | null;
-      return { audio: context?.state ?? 'idle', haptics: haptics.mode, counts: { ...counts } };
+      return { audio: context?.state ?? 'idle', haptics: haptics.mode, counts: { ...counts }, music: music.status() };
     },
     dispose() {
       if (typeof window !== 'undefined') for (const type of gestures) window.removeEventListener(type, unlock, { capture: true });
+      music.dispose();
       audio.dispose();
       haptics.dispose();
     },

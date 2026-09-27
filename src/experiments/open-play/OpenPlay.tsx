@@ -112,6 +112,7 @@ export default function OpenPlay() {
         <label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => { setRipple(e.target.checked); writeLookQuery('ripple', rippleQuery(e.target.checked)); }}/></label>
         <label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => { setCaustic(e.target.checked ? 'shape' : 'artistic'); writeLookQuery('caustic', causticQuery(e.target.checked)); }}/></label>
         <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
+        <label><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/></label>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
         <p>R：もう一度 · Esc：一時停止</p>
       </details>

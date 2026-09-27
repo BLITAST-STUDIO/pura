@@ -4,6 +4,9 @@ import { fusionCue, impactCue, ImpactGate, IMPACT_THRESHOLD, panFor, sizeFactor 
 import { createSensoryFeedback, readSensoryPreferences, SENSORY_KEY, writeSensoryPreferences } from '../src/experiments/sensory/feedback';
 import { detectHapticMode, type Haptics } from '../src/experiments/sensory/haptics';
 import type { DropletAudio } from '../src/experiments/sensory/audio';
+import type { Music } from '../src/experiments/sensory/music';
+import { MUSIC_LOOP, musicPosition } from '../src/experiments/sensory/music-loop';
+import { existsSync, statSync } from 'node:fs';
 
 function memoryStorage(initial: Record<string, string> = {}) {
   const data = new Map(Object.entries(initial));
@@ -74,15 +77,15 @@ test('holding a drop against a wall is one impact, a later separate hit is anoth
 
 test('preferences default on, persist, ignore malformed data, and URL can mute one visit', () => {
   const store = memoryStorage();
-  assert.deepEqual(readSensoryPreferences(store, ''), { sound: true, haptics: true });
-  assert.equal(writeSensoryPreferences({ sound: false, haptics: true }, store), true);
-  assert.deepEqual(readSensoryPreferences(store, ''), { sound: false, haptics: true });
-  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{bad' }), ''), { sound: true, haptics: true });
-  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{"v":2,"sound":false}' }), ''), { sound: true, haptics: true });
-  assert.deepEqual(readSensoryPreferences(store, '?haptics=off'), { sound: false, haptics: false });
+  assert.deepEqual(readSensoryPreferences(store, ''), { sound: true, haptics: true, music: true });
+  assert.equal(writeSensoryPreferences({ sound: false, haptics: true, music: true }, store), true);
+  assert.deepEqual(readSensoryPreferences(store, ''), { sound: false, haptics: true, music: true });
+  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{bad' }), ''), { sound: true, haptics: true, music: true });
+  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{"v":2,"sound":false}' }), ''), { sound: true, haptics: true, music: true });
+  assert.deepEqual(readSensoryPreferences(store, '?haptics=off'), { sound: false, haptics: false, music: true });
   const broken = { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); } };
-  assert.deepEqual(readSensoryPreferences(broken, ''), { sound: true, haptics: true });
-  assert.equal(writeSensoryPreferences({ sound: true, haptics: true }, broken), false);
+  assert.deepEqual(readSensoryPreferences(broken, ''), { sound: true, haptics: true, music: true });
+  assert.equal(writeSensoryPreferences({ sound: true, haptics: true, music: true }, broken), false);
 });
 
 test('haptic mode: vibration where available, the iOS switch tick on iPhone, otherwise none', () => {
@@ -121,7 +124,7 @@ test('muting sound and haptics reaches both outputs', () => {
   let hapticsEnabled = true;
   haptics.setEnabled = enabled => { hapticsEnabled = enabled; };
   const feedback = createSensoryFeedback({ audio, haptics });
-  feedback.setPreferences({ sound: false, haptics: false });
+  feedback.setPreferences({ sound: false, haptics: false, music: true });
   assert.deepEqual(played.at(-1), { name: 'enabled', args: [false] });
   assert.equal(hapticsEnabled, false);
   feedback.unlock();
@@ -137,4 +140,47 @@ test('the sound nudge appears only when sound is on, the board was touched, and 
   assert.equal(soundNudgeNeeded('suspended', false, true), false, 'not before the first touch');
   assert.equal(soundNudgeNeeded('suspended', true, false), false, 'not when sound is off');
   assert.equal(soundNudgeNeeded('idle', true, true), false);
+});
+
+function fakeMusic() {
+  const calls: string[] = [];
+  const music: Music = {
+    setEnabled: on => { calls.push(`enabled:${on}`); },
+    update: () => { calls.push('update'); },
+    status: () => ({ state: 'off', position: null }),
+    dispose: () => { calls.push('dispose'); },
+  };
+  return { music, calls };
+}
+
+test('the BGM follows its own switch and the sound switch, starts with a touch, and is remembered', () => {
+  const store = memoryStorage();
+  assert.equal(readSensoryPreferences(store, '').music, true, 'on by default');
+  writeSensoryPreferences({ sound: true, haptics: true, music: false }, store);
+  assert.equal(readSensoryPreferences(store, '').music, false);
+  assert.equal(readSensoryPreferences(memoryStorage(), '?music=off').music, false, 'off for one visit');
+  const { audio, haptics } = fakes();
+  const { music, calls } = fakeMusic();
+  const feedback = createSensoryFeedback({ audio, haptics, music });
+  feedback.setPreferences({ sound: true, haptics: true, music: true });
+  feedback.setPreferences({ sound: false, haptics: true, music: true });
+  feedback.setPreferences({ sound: true, haptics: true, music: false });
+  assert.deepEqual(calls, ['enabled:true', 'enabled:false', 'enabled:false'], 'music plays only while sound is on too');
+  feedback.setPreferences({ sound: true, haptics: true, music: true });
+  feedback.unlock();
+  assert.equal(calls.at(-1), 'update', 'a touch that starts audio also starts the music');
+  feedback.dispose();
+  assert.equal(calls.at(-1), 'dispose');
+});
+
+test('the BGM loop: the intro plays once, then the loop repeats', () => {
+  const { loopStart, loopEnd, crossfade } = MUSIC_LOOP;
+  assert.ok(loopStart > crossfade && loopEnd - loopStart > 60, 'a long loop, with room before it for the blended seam');
+  assert.equal(musicPosition(10), 10);
+  assert.equal(musicPosition(loopEnd - 1), loopEnd - 1);
+  assert.ok(Math.abs(musicPosition(loopEnd + 5) - (loopStart + 5)) < 1e-9, 'past the end, back to the loop start, not the intro');
+  assert.ok(Math.abs(musicPosition(loopEnd + 3 * (loopEnd - loopStart) + 2) - (loopStart + 2)) < 1e-9);
+  assert.equal(musicPosition(-1), 0);
+  const file = `public/${MUSIC_LOOP.file}`;
+  assert.ok(existsSync(file) && statSync(file).size > 1_000_000, 'the baked file ships with the site');
 });
