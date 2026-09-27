@@ -43,3 +43,12 @@ test('the first-visit line shows once, and again only on request', async () => {
   assert.equal(shouldShowIntro(seen, '?intro=1'), true);
   assert.equal(shouldShowIntro({ getItem: () => { throw Error('blocked'); } }, ''), false, 'no storage: stay quiet rather than repeat');
 });
+
+test('phone play follows the screen size, and ?layout= forces either for checking', async () => {
+  const { phoneLayout, PHONE_QUERY } = await import('../src/experiments/phone-layout');
+  assert.equal(phoneLayout('', true), true);
+  assert.equal(phoneLayout('', false), false);
+  assert.equal(phoneLayout('?layout=phone', false), true);
+  assert.equal(phoneLayout('?layout=page', true), false);
+  assert.match(PHONE_QUERY, /max-width: 540px/);
+});

@@ -62,8 +62,11 @@ export function createSensoryFeedback(options: { audio?: DropletAudio; haptics?:
 
   // iOS resumes audio only inside a gesture, and may suspend it again after an
   // interruption. Every gesture re-checks; resuming a running context is a no-op.
+  // Safari counts a tap as a gesture but not a drag (RYO, 2026-09-27: sound
+  // sometimes began only at a double-tap separation), so every kind of touch is
+  // tried, and SoundNudge offers a tap when none of them took.
   const unlock = () => { if (sound) audio.unlock(); };
-  const gestures = ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const;
+  const gestures = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'] as const;
   if (typeof window !== 'undefined') for (const type of gestures) window.addEventListener(type, unlock, { capture: true, passive: true });
 
   return {

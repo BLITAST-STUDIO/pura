@@ -10,6 +10,8 @@ import { challengeFrom, challengeOutcome, challengeText, challengeUrl } from './
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
+import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -53,6 +55,7 @@ export default function HitofudePlay() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
+  const play = usePhonePlay(paused, setPaused);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
   const [reading, setReading] = useState<Reading>({ shots: 0, left: 0, remaining: 0, result: null });
@@ -119,9 +122,9 @@ export default function HitofudePlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [boardId, retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, ripple: initialRipple(), caustic: initialCaustic() });
-  }, [paused, reduced, quality, boardId, retry, look, walls]);
-  const again = () => { if (round.current) return; experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); };
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple: initialRipple(), caustic: initialCaustic() });
+  }, [paused, reduced, quality, boardId, retry, look, walls, play.phone]);
+  const again = () => { if (round.current) return; experience.current?.restoreState(() => simulation.current?.reset()); setPaused(false); play.played(); };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.repeat || e.altKey || e.metaKey || e.ctrlKey) return;
@@ -132,7 +135,7 @@ export default function HitofudePlay() {
     };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
-  const go = (id: number) => { setBoardId(id); setRetry(v => v + 1); setPaused(false); window.scrollTo(0, 0); };
+  const go = (id: number) => { setBoardId(id); setRetry(v => v + 1); setPaused(false); window.scrollTo(0, 0); play.played(); };
   const startRound = (kind: RoundKind) => {
     const holes = roundHoles(kind, SHOT_BOARDS);
     round.current = { kind, ids: holes.map(b => b.id), play: new Round(holes.map(b => b.par)) };
@@ -160,7 +163,7 @@ export default function HitofudePlay() {
   const holeInOne = !!result?.cleared && result.shots === 1;
   const best = (k: RoundKind) => records.rounds?.[k];
 
-  return <div className="droplet-lab purity-scene stage-play hitofude-play" data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play hitofude-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>ひとふで</span><span className="dl-edition-rule"/><span>{daily ? 'TODAY' : <>HOLE <b>{board.code}</b></>}</span></div></header>
     <ModeNav current="hitofude"/>
     <main>
@@ -177,6 +180,8 @@ export default function HitofudePlay() {
       <p className="stage-title"><b>{board.name}</b>{board.hint}<span className="hole-par">{daily ? `${today.getMonth() + 1}月${today.getDate()}日 · ` : ''}パー{board.par}</span></p>
       <section className="dl-stage purity-stage stage-board" aria-label={`ひとふで ホール${board.code} ${board.name}`} aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={board.hint}/>
+        <PhoneBar play={play} onRetry={inRound ? undefined : again}/>
+        <SoundNudge feedback={feedback} sound={sensory.sound}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : `${daily ? 'TODAY' : `HOLE ${board.code}`} · PAR ${board.par}`}</span><span className="dl-stage-index">{reading.remaining}</span></div>
         {status === 'loading' && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}

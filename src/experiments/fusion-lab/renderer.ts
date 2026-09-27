@@ -23,7 +23,9 @@ export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boole
   /** Visual direction proposal; 'studio' is the approved look. */
   look?: Look;
   /** How the physics walls are shown: a low rim, a fine inlaid line, or not at all (the default here). */
-  walls?: 'rim' | 'line' | 'none' };
+  walls?: 'rim' | 'line' | 'none';
+  /** 'screen': the board is the whole phone screen, so the camera comes in until its corners nearly touch the edges. */
+  fit?: 'card' | 'screen' };
 export type FusionStats = { count: number; cyan: number; rose: number; merged: boolean; fps: number; p95: number };
 type Callbacks = { onReady?: () => void; onError?: (error: string) => void; onStats?: (stats: FusionStats) => void; onInteraction?: () => void };
 type Body = { mesh: THREE.Mesh; group: THREE.Group; pullGroup: THREE.Group; material: ReturnType<typeof createFusionMaterial>; shadow: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; caustic: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>; projected: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>; shape: FusionShape | null; shapeReady: boolean; shapeLobes: Lobe[]; shapeBlend: number; source: Lobe[]; lobes: Lobe[]; age: number; correction: number; motion: DropletMotion; pull: DropletPull; radius: number; surface: DropletSurface; grabPoint: THREE.Vector2; rim: DropletRim; appear: number };
@@ -508,8 +510,18 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     sim.resize(width, Math.max(420, width / aspect));
     camera.aspect = aspect;
     const tilt = .47, tangent = Math.tan(34 * Math.PI / 360);
-    const distance = Math.max(sim.width * W / (2 * tangent * aspect), sim.height * W / (2 * tangent)) * 1.13 + 1.25;
-    camera.position.set(0, -Math.sin(tilt) * distance, Math.cos(tilt) * distance); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+    let distance = Math.max(sim.width * W / (2 * tangent * aspect), sim.height * W / (2 * tangent)) * 1.13 + 1.25;
+    const place = () => { camera.position.set(0, -Math.sin(tilt) * distance, Math.cos(tilt) * distance); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); };
+    place();
+    if (options.fit === 'screen') {
+      // Bring the board's corners to the sides (a little room above and below for the buttons and readouts).
+      const corners = [[0, 0], [sim.width, 0], [0, sim.height], [sim.width, sim.height]].map(([x, y]) => new THREE.Vector3((x - sim.width / 2) * W, (sim.height / 2 - y) * W, 0));
+      for (let i = 0; i < 6; i++) {
+        let mx = 0, my = 0;
+        for (const c of corners) { const p = c.clone().project(camera); mx = Math.max(mx, Math.abs(p.x)); my = Math.max(my, Math.abs(p.y)); }
+        distance *= Math.max(mx / .98, my / .8); place();
+      }
+    }
     buildWalls();
     // A bead of about 0.065 world units (6.5 board units) at its drawn distance.
     (spray.points.material as THREE.ShaderMaterial).uniforms.uPixels.value = 0.065 * canvas.height / (2 * tangent);
@@ -636,6 +648,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         || (next.look !== undefined && next.look !== options.look);
       const qualityChanged = (next.quality !== undefined && next.quality !== options.quality)
         || (next.adaptive !== undefined && next.adaptive !== options.adaptive);
+      const fitChanged = next.fit !== undefined && next.fit !== options.fit;
       Object.assign(options, next);
       if (qualityChanged) { adaptive.reset(); adaptWindow = []; adaptWork = []; adaptWindowMs = 0; adaptWarmup = 3; }
       projectionGeometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
@@ -659,7 +672,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         b.caustic.visible = !options.clay && !b.projected.visible;
       }
       buildWalls();
-      if (qualityChanged) resize(); refresh(0); last = 0;
+      if (qualityChanged || fitChanged) resize(); refresh(0); last = 0;
     },
     dispose() {
       if (disposed) return; cancel(); disposed = true; cancelAnimationFrame(raf); observer.disconnect();

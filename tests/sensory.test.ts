@@ -128,3 +128,13 @@ test('muting sound and haptics reaches both outputs', () => {
   assert.ok(!played.some(p => p.name === 'unlock'), 'a muted page does not start audio');
   feedback.dispose();
 });
+
+test('the sound nudge appears only when sound is on, the board was touched, and audio is still blocked', async () => {
+  const { soundNudgeNeeded } = await import('../src/experiments/sensory/sound-nudge-logic');
+  assert.equal(soundNudgeNeeded('suspended', true, true), true);
+  assert.equal(soundNudgeNeeded('interrupted', true, true), true, 'after a call or another app');
+  assert.equal(soundNudgeNeeded('running', true, true), false);
+  assert.equal(soundNudgeNeeded('suspended', false, true), false, 'not before the first touch');
+  assert.equal(soundNudgeNeeded('suspended', true, false), false, 'not when sound is off');
+  assert.equal(soundNudgeNeeded('idle', true, true), false);
+});

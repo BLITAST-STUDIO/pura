@@ -5,6 +5,8 @@ import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { ModeNav } from '../mode-nav';
+import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
+import { SoundNudge } from '../sensory/sound-nudge';
 import { IntroLine } from '../intro-line';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -26,6 +28,7 @@ export default function OpenPlay() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
+  const play = usePhonePlay(paused, setPaused);
   const [touched, setTouched] = useState(false);
   const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [quality, setQuality] = useState<FusionOptions['quality']>('high');
@@ -59,12 +62,12 @@ export default function OpenPlay() {
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
   }, [retry]);
   useEffect(() => {
-    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', look, walls, ripple,
+    experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting, dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple,
       caustic });
-  }, [paused, reduced, quality, lighting, ripple, caustic, retry, look, walls]);
+  }, [paused, reduced, quality, lighting, ripple, caustic, retry, look, walls, play.phone]);
   const again = () => {
     experience.current?.restoreState(() => simulation.current?.reset());
-    setPaused(false); setTouched(false);
+    setPaused(false); setTouched(false); play.played();
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -78,12 +81,14 @@ export default function OpenPlay() {
   }, []);
   const held = reading.held;
 
-  return <div className="droplet-lab purity-scene open-play" data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene open-play' + play.className} data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><PhoneMenuClose play={play}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>はじめる</span><span className="dl-edition-rule"/><span>FLOW</span></div></header>
     <ModeNav current="open"/>
     <main>
       <section className="dl-stage purity-stage open-stage" aria-label="水滴で遊ぶ盤面" aria-busy={status === 'loading'}>
         <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label="三色の雫をつかんで動かせる盤面" aria-describedby="open-help"/>
+        <PhoneBar play={play} onRetry={again}/>
+        <SoundNudge feedback={feedback} sound={sensory.sound}/>
         <IntroLine ready={status === 'ready'}/>
         <div className="dl-stage-top" aria-hidden="true"><span className="dl-stage-label"><span className={status === 'ready' && !paused ? 'is-live' : ''}/>{paused ? 'PAUSED' : 'THREE COLOURS'}</span><span className="dl-stage-index">{reading.count}</span></div>
         <span className="dl-corner dl-corner-bl"/><span className="dl-corner dl-corner-br"/>
