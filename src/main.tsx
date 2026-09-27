@@ -14,6 +14,7 @@ const routes: Record<RouteKey, Route> = {
   "play=classic": async () => (await import("@/components/game-app")).GameApp,
   "play=bench": async () => (await import("./experiments/bench/BenchPlay")).default,
   "play=free": async () => (await import("./experiments/free/FreePlay")).default,
+  "play=endless": async () => (await import("./experiments/endless/EndlessPlay")).default,
   "play=hitofude": async () => (await import("./experiments/hitofude/HitofudePlay")).default,
   "play=michi": async () => (await import("./experiments/michi/MichiPlay")).default,
   "play=curling": async () => (await import("./experiments/curling/CurlingPlay")).default,

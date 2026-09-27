@@ -45,7 +45,7 @@ export function PhoneBar({ play, onRetry }: { play: PhonePlay; onRetry?: () => v
 }
 
 /**
- * The top of the menu: the way back to the board, then the six ways to play
+ * The top of the menu: the way back to the board, then the ways to play
  * (the same picture as the welcome's end), the sound and its volumes, then
  * this screen's own settings.
  */
