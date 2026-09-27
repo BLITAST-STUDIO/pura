@@ -10,3 +10,6 @@
 .droplet-lab[data-ui="dark"] .mode-gallery a[aria-current="page"] { border-color: #9fd6d2; box-shadow: inset 0 0 0 1px #9fd6d2; }
 .droplet-lab[data-ui="dark"] .mode-gallery small { color: #8fa7ab; }
 @media (prefers-reduced-motion: reduce) { .mode-gallery a { animation: none; } }
+.mode-gallery a:nth-child(7) { animation-delay: .36s; }
+/* An odd one out takes the whole last row. */
+.mode-gallery a:last-child:nth-child(odd) { grid-column: 1 / -1; }

@@ -1,4 +1,5 @@
 import type { MichiBoard } from '../michi/boards';
+import type { ShotBoard } from '../hitofude/simulation';
 
 /**
  * はじめて: the first visit's few boards (2026-09-27, RYO: someone handed the
@@ -11,16 +12,21 @@ import type { MichiBoard } from '../michi/boards';
  * 2 あつめる: five drops; the ghost only returns if nothing happens for a while.
  * 3 色ごとに: two colours mixed on the board; other colours bounce.
  * 4 なげる: a line of drops across the top; the ghost flicks.
+ * 5 ひいて、はなす: the shot modes' move (ひとふで, カーリング). The drop sits by
+ *   the left edge and the ghost pulls from open floor on the right, linked to
+ *   the drop by a dashed line: a pull can start anywhere (added 2026-09-27).
  */
 export type WelcomeStep = {
   id: number;
   /** The goal as a picture: which colours gather, and from how many. */
   picture: { hue: 'cyan' | 'rose' | 'amber'; from: number }[];
-  /** How the ghost touch moves: drag one drop onto another, or flick one toward the others. */
-  ghost: 'drag' | 'flick' | null;
+  /** How the ghost touch moves: drag one drop onto another, flick one toward the others, or pull from open floor. */
+  ghost: 'drag' | 'flick' | 'pull' | null;
   /** Seconds of stillness before the ghost appears (0: at once). */
   ghostAfter: number;
   board: MichiBoard;
+  /** A shot step plays by the ひとふで rules on this board instead. */
+  shot?: ShotBoard;
 };
 
 const designed = { perColor: 0, rMin: 0, rMax: 0 } as const;
@@ -47,6 +53,13 @@ export const WELCOME_STEPS: WelcomeStep[] = [
       { x: 210, y: 480, r: 30, hue: 'amber' },
       { x: 90, y: 120, r: 17, hue: 'amber' }, { x: 170, y: 120, r: 17, hue: 'amber' }, { x: 250, y: 120, r: 17, hue: 'amber' }, { x: 330, y: 120, r: 17, hue: 'amber' },
     ]) },
+  { id: 5, picture: [{ hue: 'cyan', from: 5 }], ghost: 'pull', ghostAfter: 1,
+    // ひとふで's first hole moved to the left edge; the same shot (up and to the right) clears it.
+    board: board(5, ['cyan'], []),
+    shot: { id: 905, code: 'W5', name: '', hint: '', par: 5, min: 1, drops: [
+      { x: 70, y: 470, r: 26, hue: 'cyan' }, { x: 113, y: 385, r: 20, hue: 'cyan' }, { x: 149, y: 314, r: 20, hue: 'cyan' },
+      { x: 185, y: 242, r: 20, hue: 'cyan' }, { x: 221, y: 171, r: 20, hue: 'cyan' },
+    ] } },
 ];
 
 export const WELCOMED_KEY = 'pura-flow-welcome-v1';

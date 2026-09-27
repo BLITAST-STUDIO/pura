@@ -44,3 +44,9 @@
 
 .phone-menu-brand .dl-brand-symbol { margin-right: 4px; }
 .phone-menu-brand .dl-brand-period { margin-left: -.1em; }
+
+/* Sound and its volumes, right under the ways to play (the settings' copy is hidden on phones). */
+.phone-menu-sound { align-self: stretch; margin-top: 6px; font-size: 11px; color: #94aeb1; }
+.phone-menu-sound label { display: flex; justify-content: space-between; align-items: center; min-height: 40px; gap: 16px; }
+.droplet-lab[data-ui="light"] .phone-menu-sound { color: #5c686b; }
+.droplet-lab.is-phone .purity-details .sound-settings { display: none; }

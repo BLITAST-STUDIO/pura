@@ -4,6 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { SoundSettings } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -81,7 +82,7 @@ export default function OpenPlay() {
   }, []);
   const held = reading.held;
 
-  return <div className={'droplet-lab purity-scene open-play' + play.className} data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><PhoneMenuClose play={play} current={'open'}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene open-play' + play.className} data-look={look} data-ui={ui} data-lighting={lighting} data-hue="cyan"><PhoneMenuClose play={play} current={'open'} sound={{ sensory, change: changeSensory, feedback }}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>はじめる</span><span className="dl-edition-rule"/><span>FLOW</span></div></header>
     <ModeNav current="open"/>
     <main>
@@ -111,7 +112,7 @@ export default function OpenPlay() {
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
         <label><span>縁が波打つ</span><input type="checkbox" checked={ripple} onChange={e => { setRipple(e.target.checked); writeLookQuery('ripple', rippleQuery(e.target.checked)); }}/></label>
         <label><span>形から床の光を描く</span><input type="checkbox" checked={caustic === 'shape'} onChange={e => { setCaustic(e.target.checked ? 'shape' : 'artistic'); writeLookQuery('caustic', causticQuery(e.target.checked)); }}/></label>
-        <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
+        <SoundSettings sensory={sensory} change={changeSensory} feedback={feedback}/>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
         <p>R：もう一度 · Esc：一時停止</p>
       </details>

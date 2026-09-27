@@ -5,9 +5,11 @@ import { CurlingSimulation, ENDS, HACK, HOG_Y, HOUSE, SHEET, STONES_PER_END, typ
 import { Planner, STRENGTH_LABELS, type Strength } from './ai';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { SoundSettings } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
+import { FirstPull } from '../first-pull';
 import { ClearGlow } from '../clear-glow';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -146,7 +148,7 @@ export default function CurlingPlay() {
     : '';
   const movingLine = r?.phase === 'moving' && r.sweeping ? '滑っている先の床をこすると、スイープ' : '';
 
-  return <div className={'droplet-lab purity-scene stage-play curling-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'curling'}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play curling-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'curling'} sound={{ sensory, change: changeSensory, feedback }}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>カーリング</span><span className="dl-edition-rule"/><span>END <b>{r ? Math.min(r.end, columns) : 1}</b></span></div></header>
     <ModeNav current="curling"/>
     <main>
@@ -171,6 +173,8 @@ export default function CurlingPlay() {
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         {r?.note && r.phase !== 'scored' && r.phase !== 'over' && <p className="stage-discovery curling-note" role="status">{r.note === 'hog' ? 'ホグラインに届かず、外れた' : '場外'}</p>}
         {r?.phase === 'scored' && r.lastEnd && <div className="stage-clear" role="status"><span className="hole-score">{r.lastEnd.team ? `${you(r.lastEnd.team)} ${r.lastEnd.points}点` : 'ブランク（0点）'}</span><small>第{r.end}エンド</small><button onClick={nextEnd}>{r.ends.length >= ENDS && r.totals.cyan !== r.totals.rose ? '結果へ' : '次のエンドへ'}</button></div>}
+        <FirstPull mode="curling" canvas={canvas} straight shot={!!r && (r.end > 1 || r.left.cyan < STONES_PER_END)} active={status === 'ready' && !paused && !play.menu}
+          aimed={() => { const sim = simulation.current; return sim && sim.atRest && sim.core.grabbedId === null ? sim.selected() : null; }}/>
         <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
         {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button></div>}
         {play.phone && r?.phase === 'aim' && (players === 'two' || r.turn === 'cyan') && <button className="phone-chip" onClick={() => setSpin(s => (s === 1 ? -1 : s + 1) as Spin)}>{SPIN_LABELS[spin]}</button>}
@@ -188,7 +192,7 @@ export default function CurlingPlay() {
         <p>ハンマー（●、最後の一投）は、点を取られた側に移ります。PURAならではの決まり: 同じ色どうしは触れるとひとつになり、大きく重くなるぶん中心に届きやすく動かしにくい一方、1つとしか数えません。違う色ははじき合い、当てて外に出せます。</p>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
-        <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
+        <SoundSettings sensory={sensory} change={changeSensory} feedback={feedback}/>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
       </details>
     </main>

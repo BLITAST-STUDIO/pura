@@ -7,6 +7,7 @@ import { MichiSimulation, type RingState } from './simulation';
 import { chapterOf, MICHI, MICHI_BOARDS, michiBoard, nextBoard } from './boards';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { SoundSettings } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -118,7 +119,7 @@ export default function MichiPlay() {
   const stars = (id: number) => records.best[id] ?? 0;
   const discovery = board.discovery && !reading.won && reading.separations === 0 && reading.elapsed > board.discovery.after ? board.discovery.text : null;
 
-  return <div className={'droplet-lab purity-scene stage-play michi-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'michi'}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play michi-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'michi'} sound={{ sensory, change: changeSensory, feedback }}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>道</span><span className="dl-edition-rule"/><span><b>{board.code}</b></span></div></header>
     <ModeNav current="michi"/>
     <main>
@@ -164,7 +165,7 @@ export default function MichiPlay() {
         <p>星: 純度99.5%以上で3つ、必要な純度+4%以上で2つ。時間制限はありません。</p>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
-        <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
+        <SoundSettings sensory={sensory} change={changeSensory} feedback={feedback}/>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
         <p>R：やり直す · Esc：一時停止</p>
       </details>

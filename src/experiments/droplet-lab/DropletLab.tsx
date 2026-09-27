@@ -4,6 +4,7 @@ import type { HueId } from "../../game/palette";
 import { createDropletExperience } from "./renderer";
 import "./droplet-lab.css";
 import { useSensoryFeedback } from "../sensory/useSensoryFeedback";
+import { VolumeSliders } from "../sound-settings";
 import { causticQuery, initialCaustic, initialRipple, rippleQuery } from "../look-defaults";
 
 type Experience = ReturnType<typeof createDropletExperience>;
@@ -239,6 +240,7 @@ export function DropletLab() {
                     <label className="dl-setting-row"><span>揺れを控えめに</span><input type="checkbox" checked={reducedMotion} onChange={(event) => setReducedMotion(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
                     <label className="dl-setting-row dl-select-setting"><span>画質</span><select value={quality} onChange={(event) => setQuality(event.target.value as "high" | "balanced")}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
                     <label className="dl-setting-row"><span>音</span><input type="checkbox" checked={sensory.sound} onChange={(event) => changeSensory({ sound: event.target.checked })} /><span className="dl-switch" aria-hidden="true" /></label>
+                    <label className="dl-setting-row"><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={(event) => changeSensory({ music: event.target.checked })} /><span className="dl-switch" aria-hidden="true" /></label><VolumeSliders sensory={sensory} change={changeSensory} feedback={feedback} className="dl-setting-row"/>
                     {feedback.hapticMode !== "none" && <label className="dl-setting-row"><span>{feedback.hapticMode === "ios-switch" ? "振動（iPhoneは試験的）" : "振動"}</span><input type="checkbox" checked={sensory.haptics} onChange={(event) => changeSensory({ haptics: event.target.checked })} /><span className="dl-switch" aria-hidden="true" /></label>}
                     <label className="dl-setting-row"><span>動作情報を表示</span><input type="checkbox" checked={showStats} onChange={(event) => setShowStats(event.target.checked)} /><span className="dl-switch" aria-hidden="true" /></label>
                     <button className="dl-pause-setting" disabled={status !== "ready"} onClick={() => { setPaused((value) => !value); setSettingsOpen(false); settingsButtonRef.current?.focus(); }}>{paused ? <Play size={14} /> : <Pause size={14} />}<span>{paused ? "再開する" : "一時停止"}</span><kbd>Esc</kbd></button>
