@@ -21,11 +21,15 @@ export class MichiSimulation extends OpenPlaySimulation {
   separations = 0;
   private settling: Partial<Record<Ring['hue'], number>> = {};
 
-  constructor(id: number) {
+  /** A 道 board by id, or any board given whole (the welcome steps). */
+  constructor(id: number | MichiBoard, private readonly policy: 'held-press' | 'legacy' = 'held-press') {
     super(12);
-    this.board = michiBoard(id);
+    this.board = typeof id === 'number' ? michiBoard(id) : id;
     this.reset();
   }
+
+  /** Touches so far (the welcome's first step waits for one). */
+  touches = 0;
 
   override reset() {
     // The base constructor resets before this class's board exists.
@@ -36,7 +40,7 @@ export class MichiSimulation extends OpenPlaySimulation {
     this.core = new PuraSim();
     // Ring boards finish by delivery, so the core-and-quota check stays out of the way.
     this.core.level = def.rings ? { ...def, sandbox: true } : def;
-    this.core.fusionPolicy = 'held-press';
+    this.core.fusionPolicy = this.policy ?? 'held-press';
     this.core.resize(this.width, this.height);
     this.core.obstacles = def.stones ?? [];
     const origin = def.origin ?? def.id;
@@ -49,6 +53,7 @@ export class MichiSimulation extends OpenPlaySimulation {
   }
 
   override grab(id: number) {
+    this.touches++;
     const before = this.splits.length;
     const grabbed = super.grab(id);
     if (this.splits.length > before) this.separations++;

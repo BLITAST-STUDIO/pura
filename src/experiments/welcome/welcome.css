@@ -1,0 +1,42 @@
+/* はじめて (WelcomePlay): the board on the whole screen, a goal picture, and a ghost touch. */
+.welcome-play .dl-stage-top, .welcome-play .dl-stage-bottom { display: none; }
+.welcome-top { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top, 0px) + 22px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; pointer-events: none; }
+.welcome-dots { display: flex; gap: 8px; }
+.welcome-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(30, 40, 44, .16); transition: background .4s, transform .4s; }
+.welcome-dots i.is-now { background: rgba(30, 40, 44, .45); transform: scale(1.25); }
+.welcome-dots i.is-done { background: #3f8f93; }
+.welcome-picture { display: flex; gap: 22px; padding: 9px 16px; border-radius: 999px; background: rgba(246, 245, 241, .72); box-shadow: 0 2px 12px rgba(30, 40, 44, .08); animation: welcome-in .8s ease both; }
+.welcome-picture span { display: flex; align-items: center; gap: 4px; }
+.welcome-picture i { width: 8px; height: 8px; border-radius: 50%; }
+.welcome-picture em { margin: 0 4px; font-style: normal; font-size: 12px; color: #6f7a7d; }
+.welcome-picture b { width: 16px; height: 16px; border-radius: 50%; }
+.welcome-skip { position: absolute; z-index: 4; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; padding: 8px 12px; border-radius: 999px; background: transparent; color: rgba(30, 40, 44, .45); font-size: 11px; letter-spacing: .1em; }
+
+/* Step 0: the one drop breathes, inviting a touch. */
+.welcome-breathe { position: absolute; z-index: 2; transform: translate(-50%, -50%); border-radius: 50%; border: 1.5px solid rgba(63, 143, 147, .55); pointer-events: none; animation: welcome-breathe 2.2s ease-in-out infinite; }
+@keyframes welcome-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(.92); opacity: .25; } 50% { transform: translate(-50%, -50%) scale(1.12); opacity: .9; } }
+
+/* The ghost touch: a fingertip that presses, carries (or flicks), lifts, and waits. */
+.welcome-ghost { position: absolute; z-index: 3; width: 0; height: 0; pointer-events: none; }
+.welcome-ghost i { position: absolute; left: -17px; top: -17px; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .75), rgba(255, 255, 255, .25) 60%, transparent 72%); box-shadow: 0 0 0 1.5px rgba(30, 40, 44, .2); }
+.welcome-ghost.is-drag i { animation: welcome-drag 2.6s cubic-bezier(.45, 0, .3, 1) infinite; }
+.welcome-ghost.is-flick i { animation: welcome-flick 1.8s cubic-bezier(.3, 0, .2, 1) infinite; }
+@keyframes welcome-drag { 0% { transform: translate(0, 0) scale(1.3); opacity: 0; } 12% { transform: translate(0, 0) scale(1); opacity: 1; } 65% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 1; } 78% { transform: translate(var(--dx), var(--dy)) scale(1.3); opacity: 0; } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+@keyframes welcome-flick { 0% { transform: translate(0, 0) scale(1.3); opacity: 0; } 18% { transform: translate(0, 0) scale(1); opacity: 1; } 34% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 1; } 46% { transform: translate(var(--dx), var(--dy)) scale(1.4); opacity: 0; } 100% { opacity: 0; } }
+
+/* The end: the line, then the ways to play. */
+.welcome-end { position: absolute; z-index: 5; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 20px; background: rgba(236, 235, 230, .88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: welcome-in 1s ease both; }
+.welcome-line { margin: 0; font-size: clamp(18px, 5.4vw, 24px); font-weight: 300; letter-spacing: .3em; text-indent: .3em; color: #1e2629; }
+.welcome-sub { margin: 0 0 12px; font-size: 12px; letter-spacing: .12em; color: #5c686b; }
+.welcome-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: min(100%, 420px); }
+.welcome-modes a { display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 12px 12px; border-radius: 14px; background: #f6f5f1; border: 1px solid rgba(30, 40, 44, .1); color: #1e2629; text-decoration: none; animation: welcome-in .6s ease both; }
+.welcome-modes a:nth-child(2) { animation-delay: .08s; } .welcome-modes a:nth-child(3) { animation-delay: .16s; } .welcome-modes a:nth-child(4) { animation-delay: .24s; } .welcome-modes a:nth-child(5) { animation-delay: .32s; } .welcome-modes a:nth-child(6) { animation-delay: .4s; }
+.welcome-modes svg { grid-row: span 2; color: #56666a; }
+.welcome-modes b { font-size: 14px; font-weight: 500; }
+.welcome-modes small { font-size: 10px; color: #6f7a7d; }
+@keyframes welcome-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.droplet-lab[data-ui="dark"] .welcome-end { background: rgba(10, 16, 18, .86); }
+.droplet-lab[data-ui="dark"] .welcome-line { color: #eef6f5; }
+.droplet-lab[data-ui="dark"] .welcome-modes a { background: #142327; border-color: #30494d; color: #e3f2f0; }
+@media (prefers-reduced-motion: reduce) { .welcome-ghost i, .welcome-breathe { animation-duration: 4s; } .welcome-end, .welcome-modes a, .welcome-picture { animation: none; } }

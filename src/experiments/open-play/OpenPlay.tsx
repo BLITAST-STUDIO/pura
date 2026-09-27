@@ -116,6 +116,6 @@ export default function OpenPlay() {
         <p>R：もう一度 · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><span className="open-links"><a className="purity-lab-link" href="?lab=droplets">実験室<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=classic">元祖PURA<ArrowUpRight size={14}/></a></span></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>三色の雫で、自由に。</p></div><span className="open-links"><a className="purity-lab-link" href="?play=welcome">はじめての方へ<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?lab=droplets">実験室<ArrowUpRight size={14}/></a> <a className="purity-lab-link" href="?play=classic">元祖PURA<ArrowUpRight size={14}/></a></span></footer>
   </div></div>;
 }

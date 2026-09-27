@@ -16,4 +16,9 @@ test('the bare URL opens instant play; the original PURA stays at ?play=classic'
   assert.equal(routeKey('?lab=fusion&mixing=bloom'), 'lab=fusion');
   assert.equal(routeKey('?play=unknown'), 'play=open', 'unknown values fall back to instant play');
   assert.equal(routeKey('?sound=off'), 'play=open');
+  assert.equal(routeKey('', false), 'play=welcome', 'a first visit gets the welcome');
+  assert.equal(routeKey('?sound=off', false), 'play=welcome');
+  assert.equal(routeKey('?play=michi', false), 'play=michi', 'a shared link goes where it points');
+  assert.equal(routeKey('?play=unknown', false), 'play=open');
+  assert.equal(routeKey('?play=welcome'), 'play=welcome', 'the welcome can be replayed');
 });

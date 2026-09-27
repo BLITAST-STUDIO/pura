@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import type { ComponentType } from "react";
 import "@/styles.css";
 import { routeKey, type RouteKey } from "./route-key";
+import { welcomed } from "./experiments/welcome/steps";
 
 /**
  * Entry routing. Since 2026-09-26 the bare URL opens the new instant play
@@ -16,6 +17,7 @@ const routes: Record<RouteKey, Route> = {
   "play=hitofude": async () => (await import("./experiments/hitofude/HitofudePlay")).default,
   "play=michi": async () => (await import("./experiments/michi/MichiPlay")).default,
   "play=curling": async () => (await import("./experiments/curling/CurlingPlay")).default,
+  "play=welcome": async () => (await import("./experiments/welcome/WelcomePlay")).default,
   "play=stages": async () => (await import("./experiments/stages/StagePlay")).default,
   "play=open": async () => (await import("./experiments/open-play/OpenPlay")).default,
   "play=first": async () => (await import("./experiments/purity-scene/PurityScene")).default,
@@ -28,7 +30,9 @@ async function boot() {
   const el = document.getElementById("root");
   if (!el) return;
   try {
-    const Screen = await routes[routeKey(window.location.search)]();
+    let storage: Storage | null = null;
+    try { storage = window.localStorage; } catch { /* private mode */ }
+    const Screen = await routes[routeKey(window.location.search, welcomed(storage))]();
     createRoot(el).render(<Screen />);
   } catch {
     el.textContent = "水滴の準備ができませんでした。ページを再読み込みしてください。";
