@@ -5,6 +5,7 @@ import { PuritySimulation, type SceneState } from './simulation';
 import { CHAPTERS, getChapter, HUE_NAMES } from './chapters';
 import { readProgress, writeProgress, type Progress } from './progress';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { SoundSettings } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -148,7 +149,7 @@ export default function PurityScene() {
             const next = e.target.checked ? 'shape' : 'artistic';
             setCaustic(next);
             writeLookQuery('caustic', causticQuery(e.target.checked));
-          }}/></label><label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label><label><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/></label>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
+          }}/></label><SoundSettings sensory={sensory} change={changeSensory} feedback={feedback}/>{feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}<p>U：一手戻す · R：最初から · Esc：一時停止</p></details>
         </aside>
       </div>
     </main>

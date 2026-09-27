@@ -5,7 +5,7 @@ import { createSensoryFeedback, readSensoryPreferences, SENSORY_KEY, writeSensor
 import { detectHapticMode, type Haptics } from '../src/experiments/sensory/haptics';
 import type { DropletAudio } from '../src/experiments/sensory/audio';
 import type { Music } from '../src/experiments/sensory/music';
-import { MUSIC_LOOP, musicPosition } from '../src/experiments/sensory/music-loop';
+import { MUSIC_LOOP, MUSIC_VOLUME_DEFAULT, musicGain, musicPosition, volumeCurve } from '../src/experiments/sensory/music-loop';
 import { existsSync, statSync } from 'node:fs';
 
 function memoryStorage(initial: Record<string, string> = {}) {
@@ -20,6 +20,7 @@ function fakes() {
     context: null,
     unlock() { played.push({ name: 'unlock', args: [] }); },
     setEnabled(enabled) { played.push({ name: 'enabled', args: [enabled] }); },
+    setVolume(volume) { played.push({ name: 'volume', args: [volume] }); },
     touch: (...args) => { played.push({ name: 'touch', args }); },
     impact: (...args) => { played.push({ name: 'impact', args }); },
     fusion: (...args) => { played.push({ name: 'fusion', args }); },
@@ -77,15 +78,15 @@ test('holding a drop against a wall is one impact, a later separate hit is anoth
 
 test('preferences default on, persist, ignore malformed data, and URL can mute one visit', () => {
   const store = memoryStorage();
-  assert.deepEqual(readSensoryPreferences(store, ''), { sound: true, haptics: true, music: true });
-  assert.equal(writeSensoryPreferences({ sound: false, haptics: true, music: true }, store), true);
-  assert.deepEqual(readSensoryPreferences(store, ''), { sound: false, haptics: true, music: true });
-  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{bad' }), ''), { sound: true, haptics: true, music: true });
-  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{"v":2,"sound":false}' }), ''), { sound: true, haptics: true, music: true });
-  assert.deepEqual(readSensoryPreferences(store, '?haptics=off'), { sound: false, haptics: false, music: true });
+  assert.deepEqual(readSensoryPreferences(store, ''), { sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  assert.equal(writeSensoryPreferences({ sound: false, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 }, store), true);
+  assert.deepEqual(readSensoryPreferences(store, ''), { sound: false, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{bad' }), ''), { sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  assert.deepEqual(readSensoryPreferences(memoryStorage({ [SENSORY_KEY]: '{"v":2,"sound":false}' }), ''), { sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  assert.deepEqual(readSensoryPreferences(store, '?haptics=off'), { sound: false, haptics: false, music: true, soundVolume: 1, musicVolume: 0.6 });
   const broken = { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); } };
-  assert.deepEqual(readSensoryPreferences(broken, ''), { sound: true, haptics: true, music: true });
-  assert.equal(writeSensoryPreferences({ sound: true, haptics: true, music: true }, broken), false);
+  assert.deepEqual(readSensoryPreferences(broken, ''), { sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  assert.equal(writeSensoryPreferences({ sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 }, broken), false);
 });
 
 test('haptic mode: vibration where available, the iOS switch tick on iPhone, otherwise none', () => {
@@ -124,7 +125,7 @@ test('muting sound and haptics reaches both outputs', () => {
   let hapticsEnabled = true;
   haptics.setEnabled = enabled => { hapticsEnabled = enabled; };
   const feedback = createSensoryFeedback({ audio, haptics });
-  feedback.setPreferences({ sound: false, haptics: false, music: true });
+  feedback.setPreferences({ sound: false, haptics: false, music: true, soundVolume: 1, musicVolume: 0.6 });
   assert.deepEqual(played.at(-1), { name: 'enabled', args: [false] });
   assert.equal(hapticsEnabled, false);
   feedback.unlock();
@@ -146,8 +147,9 @@ function fakeMusic() {
   const calls: string[] = [];
   const music: Music = {
     setEnabled: on => { calls.push(`enabled:${on}`); },
+    setVolume: volume => { calls.push(`volume:${volume}`); },
     update: () => { calls.push('update'); },
-    status: () => ({ state: 'off', position: null }),
+    status: () => ({ state: 'off', position: null, gain: 0 }),
     dispose: () => { calls.push('dispose'); },
   };
   return { music, calls };
@@ -156,17 +158,17 @@ function fakeMusic() {
 test('the BGM follows its own switch and the sound switch, starts with a touch, and is remembered', () => {
   const store = memoryStorage();
   assert.equal(readSensoryPreferences(store, '').music, true, 'on by default');
-  writeSensoryPreferences({ sound: true, haptics: true, music: false }, store);
+  writeSensoryPreferences({ sound: true, haptics: true, music: false, soundVolume: 1, musicVolume: 0.6 }, store);
   assert.equal(readSensoryPreferences(store, '').music, false);
   assert.equal(readSensoryPreferences(memoryStorage(), '?music=off').music, false, 'off for one visit');
   const { audio, haptics } = fakes();
   const { music, calls } = fakeMusic();
   const feedback = createSensoryFeedback({ audio, haptics, music });
-  feedback.setPreferences({ sound: true, haptics: true, music: true });
-  feedback.setPreferences({ sound: false, haptics: true, music: true });
-  feedback.setPreferences({ sound: true, haptics: true, music: false });
-  assert.deepEqual(calls, ['enabled:true', 'enabled:false', 'enabled:false'], 'music plays only while sound is on too');
-  feedback.setPreferences({ sound: true, haptics: true, music: true });
+  feedback.setPreferences({ sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  feedback.setPreferences({ sound: false, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
+  feedback.setPreferences({ sound: true, haptics: true, music: false, soundVolume: 1, musicVolume: 0.6 });
+  assert.deepEqual(calls.filter(c => c.startsWith('enabled')), ['enabled:true', 'enabled:false', 'enabled:false'], 'music plays only while sound is on too');
+  feedback.setPreferences({ sound: true, haptics: true, music: true, soundVolume: 1, musicVolume: 0.6 });
   feedback.unlock();
   assert.equal(calls.at(-1), 'update', 'a touch that starts audio also starts the music');
   feedback.dispose();
@@ -183,4 +185,29 @@ test('the BGM loop: the intro plays once, then the loop repeats', () => {
   assert.equal(musicPosition(-1), 0);
   const file = `public/${MUSIC_LOOP.file}`;
   assert.ok(existsSync(file) && statSync(file).size > 1_000_000, 'the baked file ships with the site');
+});
+
+test('volume sliders: stored and bounded, the default music level unchanged, zero music is off', () => {
+  const store = memoryStorage();
+  const defaults = readSensoryPreferences(store, '');
+  assert.equal(defaults.soundVolume, 1, 'effects start at the approved level');
+  assert.equal(defaults.musicVolume, MUSIC_VOLUME_DEFAULT);
+  assert.ok(Math.abs(musicGain(MUSIC_VOLUME_DEFAULT) - MUSIC_LOOP.level) < 1e-12, 'the default slider keeps the tuned music level');
+  assert.ok(musicGain(1) > MUSIC_LOOP.level * 2.5 && musicGain(1) < MUSIC_LOOP.level * 3, 'room to turn the music up (about +9 dB)');
+  assert.equal(musicGain(0), 0);
+  assert.ok(Math.abs(volumeCurve(0.5) - 0.25) < 1e-12, 'half the slider is about -12 dB');
+  assert.equal(volumeCurve(Number.NaN), 0);
+  writeSensoryPreferences({ ...defaults, soundVolume: 0.4, musicVolume: 0.9 }, store);
+  assert.deepEqual([readSensoryPreferences(store, '').soundVolume, readSensoryPreferences(store, '').musicVolume], [0.4, 0.9]);
+  const odd = memoryStorage({ [SENSORY_KEY]: '{"v":1,"soundVolume":7,"musicVolume":"loud"}' });
+  assert.deepEqual([readSensoryPreferences(odd, '').soundVolume, readSensoryPreferences(odd, '').musicVolume], [1, MUSIC_VOLUME_DEFAULT], 'out of range or malformed values are bounded or ignored');
+  const { audio, haptics, played } = fakes();
+  const { music, calls } = fakeMusic();
+  const feedback = createSensoryFeedback({ audio, haptics, music });
+  feedback.setPreferences({ ...defaults, soundVolume: 0.3, musicVolume: 0 });
+  assert.ok(played.some(p => p.name === 'volume' && p.args[0] === 0.3), 'the effects slider reaches the sound');
+  assert.deepEqual(calls.slice(-2), ['volume:0', 'enabled:false'], 'music at zero does not load or play');
+  feedback.previewSound(); feedback.previewSound();
+  assert.equal(played.filter(p => p.name === 'touch').length, 1, 'the slider preview is throttled');
+  feedback.dispose();
 });

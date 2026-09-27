@@ -5,6 +5,7 @@ import type { FusionPreset } from './simulation';
 import '../droplet-lab/droplet-lab.css';
 import './fusion-lab.css';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { VolumeSliders } from '../sound-settings';
 import { causticQuery, initialCaustic, initialRipple, rippleQuery, writeLookQuery } from '../look-defaults';
 
 function initialDyeFlow(): FusionOptions['dyeFlow'] {
@@ -90,7 +91,7 @@ export default function FusionLab() {
           <label className="dl-setting-row dl-select-setting"><span>色のなじみ方</span><select value={options.dyeFlow} onChange={e => change({ dyeFlow: e.target.value as FusionOptions['dyeFlow'] })}><option value="bloom">ふわっと広がる（試作）</option><option value="swirl">ゆるやかな渦（試作）</option><option value="classic">これまでの混ざり方</option></select></label>
           <label className="dl-setting-row dl-select-setting"><span>画質</span><select value={options.quality} onChange={e => change({ quality: e.target.value as FusionOptions['quality'] })}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
           <label className="dl-setting-row"><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/><span className="dl-switch"/></label>
-          <label className="dl-setting-row"><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/><span className="dl-switch"/></label>
+          <label className="dl-setting-row"><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/><span className="dl-switch"/></label><VolumeSliders sensory={sensory} change={changeSensory} feedback={feedback} className="dl-setting-row"/>
           {feedback.hapticMode !== 'none' && <label className="dl-setting-row"><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/><span className="dl-switch"/></label>}
           <label className="dl-setting-row"><span>動作情報を表示</span><input type="checkbox" checked={showStats} onChange={e => setShowStats(e.target.checked)}/><span className="dl-switch"/></label>
           <button className="dl-pause-setting" onClick={() => { change({ paused: !options.paused }); setSettings(false); }}>{options.paused ? '再開する' : '一時停止'}</button>

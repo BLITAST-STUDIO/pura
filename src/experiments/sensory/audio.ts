@@ -1,4 +1,5 @@
 import type { ContactSurface } from './cues';
+import { volumeCurve } from './music-loop';
 
 /**
  * Synthesised droplet sounds. No sample files: every voice is a few short
@@ -9,6 +10,8 @@ export type DropletAudio = {
   readonly context: BaseAudioContext | null;
   unlock(): void;
   setEnabled(enabled: boolean): void;
+  /** The sound-effects slider (0..1); 1 is the approved level. */
+  setVolume(volume: number): void;
   touch(size: number, pan: number): void;
   impact(gain: number, size: number, surface: ContactSurface, pan: number): void;
   fusion(gain: number, size: number, clarity: number, pan: number): void;
@@ -62,7 +65,9 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
   let master: GainNode | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let enabled = true;
+  let volume = 1;
   let disposed = false;
+  const level = () => (enabled ? MASTER_LEVEL * volumeCurve(volume) : 0);
 
   function ensure(): BaseAudioContext | null {
     if (disposed) return null;
@@ -70,7 +75,7 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
     try { ctx = factory(); } catch { ctx = null; }
     if (!ctx) return null;
     master = ctx.createGain();
-    master.gain.value = enabled ? MASTER_LEVEL : 0;
+    master.gain.value = level();
     const compressor = ctx.createDynamicsCompressor();
     // Single cues peak below the knee; only piled-up bursts are held down.
     compressor.threshold.value = -11;
@@ -211,7 +216,11 @@ export function createDropletAudio(factory: ContextFactory = defaultContext): Dr
     },
     setEnabled(next) {
       enabled = next;
-      if (master && ctx) master.gain.setTargetAtTime(next ? MASTER_LEVEL : 0, ctx.currentTime, 0.03);
+      if (master && ctx) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.03);
+    },
+    setVolume(next) {
+      volume = next;
+      if (master && ctx) master.gain.setTargetAtTime(level(), ctx.currentTime, 0.03);
     },
     touch(size, pan) {
       const c = live(); if (!c) return;

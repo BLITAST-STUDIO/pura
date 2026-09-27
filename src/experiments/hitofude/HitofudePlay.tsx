@@ -9,6 +9,7 @@ import { holeStrokes, relative, Round, ROUND_LABELS, roundHoles, scoreName, tota
 import { challengeFrom, challengeOutcome, challengeText, challengeUrl } from './share';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
+import { SoundSettings } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -164,7 +165,7 @@ export default function HitofudePlay() {
   const holeInOne = !!result?.cleared && result.shots === 1;
   const best = (k: RoundKind) => records.rounds?.[k];
 
-  return <div className={'droplet-lab purity-scene stage-play hitofude-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'hitofude'}/><div className="dl-shell">
+  return <div className={'droplet-lab purity-scene stage-play hitofude-play' + play.className} data-look={look} data-ui={ui} data-lighting="studio" data-hue="cyan"><PhoneMenuClose play={play} current={'hitofude'} sound={{ sensory, change: changeSensory, feedback }}/><div className="dl-shell">
     <header className="dl-header"><a className="dl-brand" href="./" aria-label="PURA はじめる"><span className="dl-brand-symbol"/><span>PURA<span className="dl-brand-period">.</span></span></a><div className="dl-edition"><span>ひとふで</span><span className="dl-edition-rule"/><span>{daily ? 'TODAY' : <>HOLE <b>{board.code}</b></>}</span></div></header>
     <ModeNav current="hitofude"/>
     <main>
@@ -223,8 +224,7 @@ export default function HitofudePlay() {
         <p>パーより少ない打数ほど良いスコア。1打で決めると「ひとふで」。パー+3打で決まらなければギブアップ（パー+4として数えます）。練習は何度でもやり直せます。ラウンドは前半9（1〜9番）・後半9（10〜18番）・18ホールから選び、一度ずつ回ります。「今日」は日替わりのホール（毎日ひとつ、一打で決められる面）。決めたホールは、送るボタンから「この盤面、◯打で決めた」と友だちに送れます。</p>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>
         <label><span>揺れを控えめに</span><input type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)}/></label>
-        <label><span>音</span><input type="checkbox" checked={sensory.sound} onChange={e => changeSensory({ sound: e.target.checked })}/></label>
-        <label><span>音楽</span><input type="checkbox" checked={sensory.music} disabled={!sensory.sound} onChange={e => changeSensory({ music: e.target.checked })}/></label>
+        <SoundSettings sensory={sensory} change={changeSensory} feedback={feedback}/>
         {feedback.hapticMode !== 'none' && <label><span>{feedback.hapticMode === 'ios-switch' ? '振動（iPhoneは試験的）' : '振動'}</span><input type="checkbox" checked={sensory.haptics} onChange={e => changeSensory({ haptics: e.target.checked })}/></label>}
         <p>R：やり直す（練習） · Esc：一時停止</p>
       </details>

@@ -1,0 +1,9 @@
+/* Volume sliders (sound-settings.tsx), in the settings rows. */
+.volume-row { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.volume-row span { flex: none; min-width: 84px; }
+.volume-row input[type="range"] { flex: 1; min-width: 0; height: 28px; margin: 0; accent-color: #8cc2bd; }
+.volume-row output { flex: none; width: 26px; text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; opacity: .8; }
+.volume-row:has(input:disabled) { opacity: .4; }
+.droplet-lab[data-ui="light"] .volume-row input[type="range"] { accent-color: #3f8f93; }
+/* In the labs' settings panel, whose switch rows hide their checkbox. */
+.dl-setting-row.volume-row input[type="range"] { position: static; width: auto; height: 28px; opacity: 1; }

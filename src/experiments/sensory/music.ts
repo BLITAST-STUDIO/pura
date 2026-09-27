@@ -1,4 +1,4 @@
-import { MUSIC_LOOP, musicPosition, type MusicLoop } from './music-loop';
+import { MUSIC_LOOP, MUSIC_VOLUME_DEFAULT, musicGain, musicPosition, type MusicLoop } from './music-loop';
 
 /**
  * The BGM player (MUSIC.md). It rides the droplet sounds' AudioContext, so it
@@ -12,9 +12,11 @@ export type MusicState = 'off' | 'waiting' | 'loading' | 'playing' | 'failed';
 export type Music = {
   /** Sound and music both on. It plays once the context runs and the file is ready. */
   setEnabled(on: boolean): void;
+  /** The music slider (0..1), applied smoothly while playing. */
+  setVolume(volume: number): void;
   /** Re-check after a touch may have started the context. */
   update(): void;
-  status(): { state: MusicState; position: number | null };
+  status(): { state: MusicState; position: number | null; gain: number };
   dispose(): void;
 };
 
@@ -36,7 +38,9 @@ export function createMusic(getContext: () => BaseAudioContext | null, loop: Mus
   let enabled = false, visible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
   let disposed = false, loading = false, failed = false;
   let buffer: AudioBuffer | null = null;
-  let source: AudioBufferSourceNode | null = null, gain: GainNode | null = null;
+  // source → gain (the fade envelope, 0..1) → volumeNode (the slider) → speakers
+  let source: AudioBufferSourceNode | null = null, gain: GainNode | null = null, volumeNode: GainNode | null = null;
+  let volume = MUSIC_VOLUME_DEFAULT;
   let startedAt = 0, startOffset = 0, saver = 0;
   let watched: BaseAudioContext | null = null;
 
@@ -63,15 +67,17 @@ export function createMusic(getContext: () => BaseAudioContext | null, loop: Mus
     const t = c.currentTime;
     gain = c.createGain();
     // An even fade in loudness: exponential from -60 dB.
-    gain.gain.setValueAtTime(loop.level * 0.001, t);
-    gain.gain.exponentialRampToValueAtTime(loop.level, t + (offset > 0 ? FADE_RESUME : FADE_IN));
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.exponentialRampToValueAtTime(1, t + (offset > 0 ? FADE_RESUME : FADE_IN));
+    if (!volumeNode) { volumeNode = c.createGain(); volumeNode.connect(c.destination); }
+    volumeNode.gain.value = musicGain(volume, loop.level);
     source = c.createBufferSource();
     source.buffer = buffer;
     source.loop = true;
     source.loopStart = loop.loopStart;
     source.loopEnd = loop.loopEnd;
     source.connect(gain);
-    gain.connect(c.destination);
+    gain.connect(volumeNode);
     source.start(t, offset);
     startedAt = t; startOffset = offset;
     saver = window.setInterval(save, 2000);
@@ -107,11 +113,16 @@ export function createMusic(getContext: () => BaseAudioContext | null, loop: Mus
 
   return {
     setEnabled(on) { enabled = on; update(); },
+    setVolume(next) {
+      volume = next;
+      const c = getContext();
+      if (volumeNode && c) volumeNode.gain.setTargetAtTime(musicGain(volume, loop.level), c.currentTime, 0.05);
+    },
     update,
     status() {
       const c = getContext();
       const state: MusicState = failed ? 'failed' : !enabled ? 'off' : source ? 'playing' : loading ? 'loading' : 'waiting';
-      return { state, position: c && source ? place(c) : null };
+      return { state, position: c && source ? place(c) : null, gain: musicGain(volume, loop.level) };
     },
     dispose() {
       const c = getContext();
