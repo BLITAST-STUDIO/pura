@@ -1,1 +1,0 @@
-import{t as e}from"./index-LLB_r91v.js";var t=e();function n({show:e}){return e?(0,t.jsxs)(`div`,{className:`clear-glow`,"aria-hidden":`true`,children:[(0,t.jsx)(`i`,{}),(0,t.jsx)(`i`,{})]}):null}export{n as t};
