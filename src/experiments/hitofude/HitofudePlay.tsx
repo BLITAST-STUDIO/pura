@@ -116,7 +116,7 @@ export default function HitofudePlay() {
       experience.current = createFusionExperience(canvas.current!, {
         onReady: () => { if (alive) setStatus('ready'); },
         onError: e => { if (alive) { setError(e); setStatus('error'); } },
-      }, { simulation: sim, onUpdate: update, feedback, height: stageDropHeight, aim: () => sim.aim, obstacles: board.stones });
+      }, { simulation: sim, onUpdate: update, feedback, height: stageDropHeight, aim: () => sim.aim, obstacles: board.stones, aimAnywhere: true, showSelected: true });
       update();
     } catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simulation.current = null; };
@@ -215,7 +215,7 @@ export default function HitofudePlay() {
         <button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
-        <p>雫に触れて、引いて、離す。雫は反対の向きへ滑り出します。遠くまで引くほど強く、床の点線が向きと強さの目安です。短く引いただけなら、打数に数えません。</p>
+        <p>雫に触れて、引いて、離す。雫は反対の向きへ滑り出します。一度触った雫には薄い輪が付き、そのあとは盤面の空いているところから引いても、その雫を狙えます（画面の端の雫も思い切り引けます）。遠くまで引くほど強く、床の点線が向きと強さの目安です。短く引いただけなら、打数に数えません。</p>
         <p>同じ色は触れるとひとつに、違う色ははじき合います（当てて押し出すこともできます）。石は動きません。色ごとにひとつにまとめたらホールアウト。</p>
         <p>パーより少ない打数ほど良いスコア。1打で決めると「ひとふで」。パー+3打で決まらなければギブアップ（パー+4として数えます）。練習は何度でもやり直せます。ラウンドは前半9（1〜9番）・後半9（10〜18番）・18ホールから選び、一度ずつ回ります。「今日」は日替わりのホール（毎日ひとつ、一打で決められる面）。決めたホールは、送るボタンから「この盤面、◯打で決めた」と友だちに送れます。</p>
         <LookPicker look={look} onChange={setLook} ui={ui} onUi={setUi}/><label><span>画質</span><select value={quality} onChange={e => setQuality(e.target.value as FusionOptions['quality'])}><option value="high">美しさを優先</option><option value="balanced">軽さを優先</option></select></label>

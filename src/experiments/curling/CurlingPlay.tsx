@@ -126,7 +126,7 @@ export default function CurlingPlay() {
       experience.current = createFusionExperience(canvas.current!, {
         onReady: () => { if (alive) setStatus('ready'); },
         onError: e => { if (alive) { setError(e); setStatus('error'); } },
-      }, { simulation: sim, onUpdate: update, feedback, height: stageDropHeight, aim: () => sim.aim, markings: MARKINGS, sweep: (x, y) => sim.sweep(x, y) });
+      }, { simulation: sim, onUpdate: update, feedback, height: stageDropHeight, aim: () => sim.aim, markings: MARKINGS, sweep: (x, y) => sim.sweep(x, y), aimAnywhere: true });
       update();
     } catch (e) { setStatus('error'); setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; cancelAnimationFrame(frame); clearTimeout(timer); experience.current?.dispose(); experience.current = null; simulation.current = null; };
@@ -182,7 +182,7 @@ export default function CurlingPlay() {
       <div className="purity-actions"><button onClick={newGame} disabled={status !== 'ready'}><RotateCcw size={15}/><span>最初から</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
-        <p>下の丸から、雫を引いて離して滑らせます。強さの目安は、点線の長さ。ホグライン（横の線）を越えずに止まった雫と、壁に触れた雫は外れます。</p>
+        <p>下の丸から、雫を引いて離して滑らせます。盤面のどこからでも引けます。強さの目安は、点線の長さ。ホグライン（横の線）を越えずに止まった雫と、壁に触れた雫は外れます。</p>
         <p>1エンドに{STONES_PER_END}つずつ交互に投げ、全部止まったら数えます。ハウス（円）に触れている雫のうち、中心にいちばん近い色が、相手のいちばん近い雫より内側にある数だけ得点。{ENDS}エンドの合計で勝負（同点なら延長1エンド）。</p>
         <p>回転: 投げる前に選ぶと、右回転は右へ、左回転は左へ曲がります。遅くなるほど大きく曲がるので、手前の雫の裏へ回り込めます。スイープ: 自分の雫が滑っている間、その先の床を指でこすると、摩擦が減って少し遠く・まっすぐに進みます。</p>
         <p>ハンマー（●、最後の一投）は、点を取られた側に移ります。PURAならではの決まり: 同じ色どうしは触れるとひとつになり、大きく重くなるぶん中心に届きやすく動かしにくい一方、1つとしか数えません。違う色ははじき合い、当てて外に出せます。</p>

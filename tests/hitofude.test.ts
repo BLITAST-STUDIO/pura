@@ -132,3 +132,26 @@ test('playing the same shots again gives the same board (no randomness in play)'
   playShot(b, { id: 1004, angle: rad(210), power: 0.6 });
   assert.deepEqual(a.core.drops.map(d => [d.x, d.y, d.mass]), b.core.drops.map(d => [d.x, d.y, d.mass]));
 });
+
+test('pull from anywhere: the first drop starts selected, a touch moves the selection, a fusion hands it on', () => {
+  const sim = new HitofudeSimulation(SHOT_BOARDS[0]);
+  assert.equal(sim.selected(), 1000, 'the hole’s first drop');
+  sim.grab(1003); sim.abort();
+  assert.equal(sim.selected(), 1003, 'the drop last touched');
+  // Shoot 1000 up its line: 1003 is swallowed on the way, and the fused drop carries the selection.
+  sim.grab(1000); sim.release();
+  playShot(sim, { id: 1000, angle: rad(300), power: 0.8 });
+  const left = sim.core.drops.filter(d => d.pigment.cyan > 0);
+  assert.equal(sim.selected(), [...left].sort((a, b) => b.mass - a.mass)[0].id);
+});
+
+test('pull from anywhere in curling: the waiting drop, on a person’s turn only', async () => {
+  const { CurlingSimulation } = await import('../src/experiments/curling/simulation');
+  const sim = new CurlingSimulation(); sim.control = ['cyan'];
+  assert.equal(sim.selected(), sim.delivery);
+  sim.shoot(-Math.PI / 2, 0.55);
+  assert.equal(sim.selected(), null, 'nothing to aim while it slides (the floor sweeps)');
+  sim.settle();
+  assert.equal(sim.turn, 'rose');
+  assert.equal(sim.selected(), null, 'the computer’s turn');
+});

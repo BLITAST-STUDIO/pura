@@ -69,4 +69,6 @@ export class FusionSimulation {
   release() { this.core.pointerUp(); }
   /** An interruption (blur, resize, pause) rather than the finger letting go; the same for every mode but the shot mode. */
   abort() { this.release(); }
+  /** Shot modes: the drop a touch on empty floor aims (pull from anywhere); none elsewhere. */
+  selected(): number | null { return null; }
 }

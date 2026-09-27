@@ -79,6 +79,13 @@ type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; 
   aim?: () => SceneAim | null;
   /** Curling: dragging on the floor (not on a drop) sweeps the sheet at that board point. */
   sweep?: (x: number, y: number) => void;
+  /**
+   * Shot modes: a touch on empty floor aims the simulation's selected drop,
+   * the pull measured from where the finger landed, so a drop by the edge
+   * can still be pulled hard. `showSelected` rings the selected drop.
+   */
+  aimAnywhere?: boolean;
+  showSelected?: boolean;
   /** Fixed floor lines (curling's house rings and hog line), in board units. */
   markings?: { rings: { x: number; y: number; r: number; fill?: boolean }[]; lines: { x0: number; y0: number; x1: number; y1: number }[] };
   /** Drop height in world units for a board radius; defaults to the approved fixed height. */
@@ -208,6 +215,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     lastSweep = { x, y };
     sweepLog.push({ x, y, angle, t: sweepClock }); if (sweepLog.length > SWEEP_MARKS) sweepLog.shift();
   }
+  const selectRing = adapter.showSelected ? new THREE.Mesh(new THREE.RingGeometry(.93, 1, 72), new THREE.MeshBasicMaterial({ color: '#2f3d41', transparent: true, opacity: .4, depthWrite: false })) : null;
+  if (selectRing) { selectRing.position.z = -.008; selectRing.visible = false; scene.add(selectRing); }
   const bodies = new Map<number, Body>();
   const shapes = new ShapePool();
   let shapeBudget = SHAPE_UPDATES_PER_FRAME;
@@ -453,6 +462,11 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       aimDots.count = n; aimDots.instanceMatrix.needsUpdate = true;
       canvas.dataset.aim = aim && aim.power > 0 ? JSON.stringify({ dx: aim.dx, dy: aim.dy, power: aim.power }) : '';
     }
+    if (selectRing) {
+      const id = sim.selected(), d = id === null ? undefined : sim.core.drops.find(q => q.id === id);
+      selectRing.visible = !!d && sim.core.grabbedId === null && Math.hypot(d.vx, d.vy) < 30;
+      if (d) { selectRing.position.x = (d.x - sim.width / 2) * W; selectRing.position.y = (sim.height / 2 - d.y) * W; selectRing.scale.setScalar((d.r + 9) * W); }
+    }
     if (sweepMarks) {
       sweepClock += dt;
       let n = 0;
@@ -559,9 +573,16 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       hitPoint = point.clone();
     }
     if (!chosen || !hitPoint || !sim.grab(chosen.id)) {
-      // Not a drop to hold: on a curling sheet, the finger sweeps instead.
-      if (adapter.sweep) { sweeping = true; lastSweep = null; active = e.pointerId; canvas.setPointerCapture(e.pointerId); sweepAt(e); e.preventDefault(); }
-      return;
+      // Not a drop to hold: a shot mode aims its selected drop from here instead,
+      const id = adapter.aimAnywhere ? sim.selected() : null;
+      const target = id === null ? undefined : sim.core.drops.find(d => d.id === id);
+      if (target && raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), -.42), point) && sim.grab(target.id)) {
+        chosen = target; hitPoint = point.clone();
+      } else {
+        // and on a curling sheet with nothing to aim, the finger sweeps.
+        if (adapter.sweep) { sweeping = true; lastSweep = null; active = e.pointerId; canvas.setPointerCapture(e.pointerId); sweepAt(e); e.preventDefault(); }
+        return;
+      }
     }
     feedback?.grab(chosen.r, chosen.x, sim.width);
     bodies.get(chosen.id)!.grabPoint.set((hitPoint.x / W + sim.width / 2 - chosen.x) / chosen.r,
@@ -664,6 +685,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
         aimDots?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
         markingMaterial?.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
         sweepMarks?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
+        selectRing?.material.color.set(look.daylight ? '#2f3d41' : '#d7e9e7');
       }
       floorMaterial.map = textures[options.inspection ? 1 : 0]; floorMaterial.bumpMap = options.inspection ? null : textures[0]; floorMaterial.needsUpdate = true;
       for (const b of bodies.values()) {
@@ -686,6 +708,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       for (const mesh of islands) { mesh.geometry.dispose(); mesh.material.dispose(); }
       if (aimDots) { aimDots.geometry.dispose(); aimDots.material.dispose(); aimDots.dispose(); }
       if (sweepMarks) { sweepMarks.geometry.dispose(); sweepMarks.material.dispose(); sweepMarks.dispose(); }
+      if (selectRing) { selectRing.geometry.dispose(); selectRing.material.dispose(); }
       for (const mesh of markingMeshes) mesh.geometry.dispose();
       disposeWalls();
       markingMaterial?.dispose();
