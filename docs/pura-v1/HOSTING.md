@@ -203,3 +203,7 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - 身内版: `main` から `npm run build` → `scripts/publish-pages.sh stable <gh-pagesのclone>`（`next/` はそのまま残る）→ commit・通常push。ユーザーの了承（`main` への統合）のあとだけ。
 - 試作版: 作業ブランチで `VITE_CHANNEL=next npm run build` → `scripts/publish-pages.sh next <clone>`（`next/` だけ入れ替え、名前を「PURA 試作」に、左下に「試作版」）→ commit・push。
 - どちらも配信後に全ファイルのSHA-256を公開版と照合する（従来どおり）。`build-info.json` に channel と sourceCommit。
+
+## 身内版と試作版の初回配信（2026-09-27）
+
+- ソース `b5a12fb`（ブランチ `feat/share-ready`、PR #13 で `main` へ）、配信 `fa39135`。ルート（身内版）と `next/`（試作版）の全92ファイルSHA-256一致。manifest（試作版は「PURA 試作」）、アイコン、og.jpg、noindex を公開版で確認。スマホ幅で身内版に「試作版」表示なし、試作版に表示あり、警告エラー0。
