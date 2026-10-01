@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import type { ComponentType } from "react";
 import "@/styles.css";
-import { routeKey, type RouteKey } from "./route-key";
+import { releasedRoute, routeKey, type RouteKey } from "./route-key";
 import { welcomed } from "./experiments/welcome/steps";
 
 /**
@@ -34,7 +34,7 @@ async function boot() {
   try {
     let storage: Storage | null = null;
     try { storage = window.localStorage; } catch { /* private mode */ }
-    const Screen = await routes[routeKey(window.location.search, welcomed(storage))]();
+    const Screen = await routes[releasedRoute(routeKey(window.location.search, welcomed(storage)), import.meta.env.VITE_CHANNEL)]();
     createRoot(el).render(<Screen />);
   } catch {
     el.textContent = "水滴の準備ができませんでした。ページを再読み込みしてください。";
