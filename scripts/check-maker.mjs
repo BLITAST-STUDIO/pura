@@ -10,6 +10,8 @@ const out = process.argv[3] ?? 'artifacts/maker';
 mkdirSync(out, { recursive: true });
 const b = await launch({ width: 390, height: 844, mobile: true });
 const checks = [];
+// Capture after the existing board-entry fade, so evidence shows the settled view.
+const screenshot = async path => { await b.sleep(500); await b.screenshot(path); };
 const state = () => b.eval(`({drops:JSON.parse(document.querySelector('canvas').dataset.drops),rect:document.querySelector('canvas').getBoundingClientRect().toJSON(),draft:JSON.parse(localStorage.getItem('${DRAFT_KEY}')),mode:document.querySelector('.maker-play').dataset.mode})`);
 async function click(label, tag = 'button') {
   const point = await b.eval(`(()=>{const e=[...document.querySelectorAll(${JSON.stringify(tag)})].find(e=>e.getAttribute('aria-label')===${JSON.stringify(label)}||e.textContent.trim()===${JSON.stringify(label)});if(!e)throw Error('missing '+${JSON.stringify(label)});e.scrollIntoView({block:'nearest'});const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()`);
@@ -65,7 +67,7 @@ try {
   await b.goto(base + '?play=maker&sound=off');
   await b.waitFor(`document.querySelector('canvas')?.dataset.drops`);
   assert.ok(await b.eval(`document.querySelector('.maker-actions button:last-child').disabled`));
-  await b.screenshot(out + '/editor-phone.png');
+  await screenshot(out + '/editor-phone.png');
   let s = await state(), d = s.drops[0];
   await touchDrag([s.rect.x + d.screenX, s.rect.y + d.screenY], [s.rect.x + d.screenX + 12, s.rect.y + d.screenY]);
   assert.notEqual((await state()).draft.drops[0].x, 130);
@@ -76,7 +78,7 @@ try {
   await b.mouse('mousePressed', ...stonePoint); await b.mouse('mouseReleased', ...stonePoint); await b.sleep(120);
   assert.equal((await state()).draft.stones.length, 1);
   await click('石を小に'); assert.equal((await state()).draft.stones[0].r, 24);
-  await b.screenshot(out + '/stone-phone.png');
+  await screenshot(out + '/stone-phone.png');
   await click('選んだものを消す'); assert.equal((await state()).draft.stones.length, 0);
   await click('雫'); s = await state(); const dropPoint = project(s.rect, 100, 180);
   await b.mouse('mousePressed', ...dropPoint); await b.mouse('mouseReleased', ...dropPoint); await b.sleep(120);
@@ -91,10 +93,10 @@ try {
   await click('位置を数値で指定', 'summary'); await fill('Xの位置', '282'); await click('位置を数値で指定', 'summary');
   assert.equal((await state()).draft.drops[4].x, 282);
   await click('遊んで確かめる'); await b.sleep(500); await aimAndClear();
-  await b.screenshot(out + '/cleared-phone.png');
+  await screenshot(out + '/cleared-phone.png');
   await click('共有リンク'); const url = await b.eval(`document.querySelector('textarea[aria-label="共有リンク"]').value`);
   const shared = decodeStage(sharedToken(new URL(url).hash)); assert.ok(shared); assert.equal(shared.proof.length, 1); assert.equal(shared.layout.drops[4].x, 282);
-  await b.screenshot(out + '/share-phone.png'); await click('閉じる'); await click('編集に戻る');
+  await screenshot(out + '/share-phone.png'); await click('閉じる'); await click('編集に戻る');
   await b.waitFor(`JSON.parse(document.querySelector('canvas').dataset.drops).length===5`);
   assert.equal((await state()).drops[4].x, 282, 'testing never overwrites the layout');
   await click('雫を大に'); assert.ok(await b.eval(`document.querySelector('.maker-actions button:last-child').disabled`));
@@ -102,13 +104,13 @@ try {
   const savedDraft = (await state()).draft;
   await b.goto(url); await b.waitFor(`document.querySelector('canvas')?.dataset.drops`);
   assert.equal((await state()).mode, 'challenge'); assert.deepEqual((await state()).draft, savedDraft);
-  await aimAndClear(); await b.screenshot(out + '/friend-phone.png');
+  await aimAndClear(); await screenshot(out + '/friend-phone.png');
   checks.push('friend opens the exact layout, clears it and does not overwrite a draft');
   await b.goto(base + '?play=maker#stage=broken'); await b.waitFor(`!!document.querySelector('.maker-invalid')`);
   await click('自分の台をつくる'); await b.waitFor(`document.querySelector('canvas')?.dataset.drops`);
   checks.push('invalid links show a recovery screen');
   await b.send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 850, deviceScaleFactor: 1, mobile: false }); await b.sleep(600);
-  await b.screenshot(out + '/editor-desktop.png');
+  await screenshot(out + '/editor-desktop.png');
   assert.ok(await b.eval(`document.querySelector('.maker-play').scrollWidth <= innerWidth`));
   await b.goto(base + '?play=hitofude&board=1&sound=off'); await b.waitFor(`document.querySelector('canvas')?.dataset.drops`);
   assert.equal((await b.eval(`JSON.parse(document.querySelector('canvas').dataset.drops)`)).length, 5);

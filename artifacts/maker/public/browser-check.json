@@ -1,0 +1,13 @@
+{
+  "base": "https://blitast-studio.github.io/pura/next/",
+  "checks": [
+    "touch drag, no scroll, undo restores the original",
+    "add drops/stones, resize/delete, draft and Unicode name survive reload",
+    "clear custom layout by real pointer, verified share, edit invalidates its certificate",
+    "friend opens the exact layout, clears it and does not overwrite a draft",
+    "invalid links show a recovery screen",
+    "desktop layout and original course render"
+  ],
+  "warningsAndErrors": [],
+  "limits": "Chrome GPU with touch emulation and mouse; physical phones and social-app link handling not tested"
+}
