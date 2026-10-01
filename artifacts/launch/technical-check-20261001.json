@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-01",
+  "sourceBase": "d99c271",
+  "checks": {
+    "typecheck": { "command": "npm run typecheck", "exitCode": 0 },
+    "tests": { "command": "npm test", "exitCode": 0, "passed": 179, "failed": 0, "skipped": 0 },
+    "build": { "command": "npm run build", "exitCode": 0, "warning": "Existing chunks larger than 500 kB after minification" },
+    "publicBuildInfo": {
+      "url": "https://blitast-studio.github.io/pura/build-info.json",
+      "channel": "stable",
+      "sourceCommit": "22e76d500f7875a138d5d24dc81f9a1532888020"
+    }
+  },
+  "limits": [
+    "No new browser interaction or physical-device performance tests in this planning pass",
+    "Only build-info was fetched; not a repeat of full deployed-file hash verification",
+    "Pricing, paid access, purchase recovery, and launch date are not decided or implemented",
+    "Game code and public preview were not changed"
+  ]
+}

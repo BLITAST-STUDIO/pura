@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { routeKey } from '../src/route-key';
+import { releasedRoute, routeKey, TRIAL_ONLY } from '../src/route-key';
 
 test('the bare URL opens instant play; the original PURA stays at ?play=classic', () => {
   assert.equal(routeKey(''), 'play=open');
@@ -29,4 +29,12 @@ test('the mode gallery offers the same ways to play as the mode bar, each to a r
   const { MODES } = await import('../src/experiments/mode-nav-data');
   assert.deepEqual(GALLERY.map(m => m.id), MODES.map(m => m.id));
   for (const m of GALLERY) assert.notEqual(routeKey(new URL(m.href, 'https://x.test/pura/').search, false), 'play=welcome', `${m.name} opens its mode, not the welcome`);
+});
+
+test('screens on trial open only on the trial channel; the shared version falls back to the default', () => {
+  assert.deepEqual([...TRIAL_ONLY], ['play=maker']);
+  assert.equal(releasedRoute('play=maker', 'next'), 'play=maker');
+  assert.equal(releasedRoute('play=maker', undefined), 'play=open', 'the family version');
+  assert.equal(releasedRoute('play=maker', ''), 'play=open');
+  for (const key of ['play=hitofude', 'play=endless', 'play=welcome', 'play=classic'] as const) assert.equal(releasedRoute(key, undefined), key, `${key} is unaffected`);
 });

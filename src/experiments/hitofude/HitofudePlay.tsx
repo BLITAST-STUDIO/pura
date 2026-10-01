@@ -233,6 +233,6 @@ export default function HitofudePlay() {
         <p>R：やり直す（練習） · Esc：一時停止</p>
       </details>
     </main>
-    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>18ホール。引いて、離して、ひとつに。</p></div></footer>
+    <footer className="dl-footer"><div><span className="dl-footer-title">A LITTLE MOMENT OF FLOW.</span><p>18ホール。引いて、離して、ひとつに。</p>{import.meta.env.VITE_CHANNEL === 'next' && <a href="?play=maker">自分の台をつくる（試作）</a>}</div></footer>
   </div></div>;
 }
