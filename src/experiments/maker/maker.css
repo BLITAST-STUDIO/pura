@@ -75,3 +75,10 @@
   .maker-workspace { padding: 12px 0; gap: 16px; grid-template-columns: minmax(0, 1fr) 300px; }
   .maker-panel { gap: 5px; }
 }
+
+/* Board colours: round swatches. */
+.maker-tones { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; min-height: 44px; font-size: 11px; }
+.maker-tones > div { display: flex; gap: 8px; }
+.maker-tone { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1.5px solid rgba(30, 40, 44, .16); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55); }
+.maker-tone[aria-pressed="true"] { border-color: #244f4c; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .8), 0 0 0 2px rgba(36, 79, 76, .35); }
+.maker-play[data-ui="dark"] .maker-tone { border-color: rgba(230, 240, 240, .3); }

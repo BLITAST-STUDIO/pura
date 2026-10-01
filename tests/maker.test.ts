@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STARTER, cloneLayout, geometryKey, movePiece, readLayout, replacePiece } from '../src/experiments/maker/layout';
+import { STARTER, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, toneOf } from '../src/experiments/maker/layout';
 import { LayoutSimulation, MakerSimulation, MAX_STEPS, STEP, verifiesClear, type RecordedShot } from '../src/experiments/maker/simulation';
 import { decodeStage, encodeStage, stageUrl, sharedToken, readDraft, saveDraft, DRAFT_KEY, MAX_TOKEN } from '../src/experiments/maker/share';
 import { routeKey } from '../src/route-key';
@@ -150,4 +150,34 @@ test('overlapped proofs are rejected when the steps are impossible, and version 
   const legacy = clear().proof.map(({ id, dx, dy }) => ({ id, dx, dy }));
   assert.ok(decodeStage(token({ v: 1, l: STARTER, p: legacy })), 'old links open');
   assert.equal(decodeStage(token({ v: 2, l: STARTER, p: legacy })), null, 'a new link without steps does not');
+});
+
+test('board colours: seven choices, white is the default and unwritten, unknown ones fall back, geometry is untouched', () => {
+  assert.deepEqual(TONES.map(t => t.id), ['white', 'mint', 'sakura', 'lavender', 'lemon', 'sky', 'peach']);
+  assert.equal(readLayout(STARTER)!.tone, undefined, 'a layout without a colour is white');
+  assert.equal(readLayout({ ...STARTER, tone: 'white' })!.tone, undefined, 'white is not written');
+  assert.equal(readLayout({ ...STARTER, tone: 'sakura' })!.tone, 'sakura');
+  assert.equal(readLayout({ ...STARTER, tone: 'hot-pink' })!.tone, undefined, 'an unknown colour is white, not an error');
+  assert.equal(readLayout({ ...STARTER, tone: { x: 1 } })!.tone, undefined);
+  assert.equal(toneOf(undefined).id, 'white'); assert.equal(toneOf('mint').floor, '#c8feda');
+  assert.equal(cloneLayout({ ...STARTER, tone: 'sky' }).tone, 'sky');
+  for (const t of TONES.slice(1)) assert.match(t.floor!, /^#[0-9a-f]{6}$/);
+  // The colour does not belong to the geometry a clear certificate covers.
+  assert.equal(geometryKey({ ...STARTER, tone: 'peach' }), geometryKey(STARTER));
+});
+
+test('a shared stage carries its board colour; links made before colours existed open white', () => {
+  const layout = { ...cloneLayout(STARTER), tone: 'lavender' as const }, proof = clear().proof;
+  const url = stageUrl('https://x.test/pura/next/', layout, proof)!;
+  const decoded = decodeStage(sharedToken(new URL(url).hash)!)!;
+  assert.equal(decoded.layout.tone, 'lavender');
+  assert.ok(verifiesClear(decoded.layout, decoded.proof), 'the colour changes nothing about the clear');
+  assert.equal(encodeStage({ ...STARTER, tone: 'mint' }, proof), encodeStage({ ...STARTER, tone: 'mint' }, proof));
+  const plain = decodeStage(encodeStage(STARTER, proof)!)!;
+  assert.equal(plain.layout.tone, undefined);
+  assert.ok(encodeStage(STARTER, proof)!.length < encodeStage(layout, proof)!.length, 'white adds nothing to the link');
+  // A draft keeps its colour.
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } };
+  assert.ok(saveDraft(store, layout)); assert.equal(readDraft(store)!.tone, 'lavender');
 });

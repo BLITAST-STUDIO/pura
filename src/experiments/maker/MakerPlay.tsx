@@ -7,7 +7,7 @@ import { initialLook, initialUi } from '../look';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
-import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STARTER, geometryKey, movePiece, readLayout, replacePiece, selectedPiece, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
+import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STARTER, TONES, geometryKey, movePiece, readLayout, replacePiece, selectedPiece, toneOf, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
 import { LayoutSimulation, MakerSimulation, MAX_SHOTS, verifiesClear, type RecordedShot } from './simulation';
 import { decodeStage, readDraft, saveDraft, sharedToken, stageUrl } from './share';
 import '../droplet-lab/droplet-lab.css';
@@ -17,6 +17,11 @@ import './maker.css';
 type Mode = 'edit' | 'test' | 'challenge';
 type Tool = 'select' | 'drop' | 'stone';
 type Certificate = { key: string; proof: RecordedShot[] };
+/** The renderer's floor and room tint for a board colour; white keeps the look's own. */
+function toneColours(id: string | undefined) {
+  const t = toneOf(id);
+  return t.floor ? { floor: t.floor, background: t.background } : null;
+}
 function storage(): Storage | null { try { return window.localStorage; } catch { return null; } }
 function initial() {
   const token = sharedToken(window.location.hash), shared = token ? decodeStage(token) : null;
@@ -69,6 +74,9 @@ export default function MakerPlay() {
     apply(readDraft(storage()) ?? cloneLayout(STARTER));
     setCertificate(null); setInvalid(false); select({ kind: 'drop', index: 0 }); setMode('edit'); setAttempt(n => n + 1);
   }
+
+  // Board colour: changing it (or undoing it) repaints the floor without rebuilding the board.
+  useEffect(() => { experience.current?.setOptions({ tone: toneColours(layout.tone) }); }, [layout.tone]);
 
   useEffect(() => {
     // A second stage link can change just the fragment in an already open tab.
@@ -132,7 +140,7 @@ export default function MakerPlay() {
         onReady: () => { if (alive) setReady(true); }, onError: e => { if (alive) setError(e); },
       }, { simulation: sim, obstacles: layoutRef.current.stones, height: stageDropHeight, feedback, onUpdate: update, edit,
         showSelected: true, aimAnywhere: !edit, aim: edit ? undefined : () => (sim as MakerSimulation).aim });
-      experience.current.setOptions({ lighting: 'studio', look, walls: 'rim', ripple: initialRipple(), caustic: initialCaustic(), dyeFlow: 'bloom', fit: 'screen' });
+      experience.current.setOptions({ lighting: 'studio', look, tone: toneColours(layoutRef.current.tone), walls: 'rim', ripple: initialRipple(), caustic: initialCaustic(), dyeFlow: 'bloom', fit: 'screen' });
       update();
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simRef.current = null; };
@@ -201,6 +209,7 @@ export default function MakerPlay() {
               <div className="maker-tools" role="group" aria-label="置くものを選ぶ">{([{ id: 'select', label: '選ぶ', Icon: Move }, { id: 'drop', label: '雫', Icon: Circle }, { id: 'stone', label: '石', Icon: Hexagon }] as const).map(({ id, label, Icon }) => <button key={id} aria-pressed={tool === id} onClick={() => { setTool(id); setMessage(''); }}><Icon size={17}/>{label}</button>)}<button aria-label="一手戻す" disabled={!undoCount} onClick={undoOne}><Undo2 size={18}/></button></div>
               <p className="maker-instruction">{tool === 'drop' ? '空いている床に、雫を置く。' : tool === 'stone' ? '空いている床に、石を置く。' : '雫や石を、好きな場所へ。'}</p>
               <div className="maker-inspector"><span>{piece ? selection?.kind === 'drop' ? '雫の大きさ' : '石の大きさ' : '選んで、動かす'}</span><div role="group" aria-label="大きさ">{(selection?.kind === 'stone' ? STONE_SIZES : DROP_SIZES).map((r, i) => <button key={r} disabled={!piece} aria-pressed={piece?.r === r} aria-label={`${selection?.kind === 'stone' ? '石' : '雫'}を${['小', '中', '大'][i]}に`} onClick={() => selection && change(replacePiece(layoutRef.current, selection, { r }))}>{['小', '中', '大'][i]}</button>)}<button aria-label="選んだものを消す" disabled={!piece} onClick={remove}><Trash2 size={16}/></button></div></div>
+              <div className="maker-tones"><span>盤の色</span><div role="group" aria-label="盤の色">{TONES.map(t => <button key={t.id} className="maker-tone" style={{ background: t.swatch }} aria-label={`盤の色 ${t.label}`} title={t.label} aria-pressed={toneOf(layout.tone).id === t.id} onClick={() => { if (toneOf(layout.tone).id !== t.id) change(readLayout({ ...layout, tone: t.id })); }}/>)}</div></div>
               <details className="maker-position"><summary>位置を数値で指定</summary>{piece && selection && <div>{(['x', 'y'] as const).map(axis => <label key={axis}>{axis.toUpperCase()}<input type="number" aria-label={`${axis.toUpperCase()}の位置`} value={piece[axis]} onChange={e => change(movePiece(layoutRef.current, selection, axis === 'x' ? Number(e.target.value) : piece.x, axis === 'y' ? Number(e.target.value) : piece.y))}/></label>)}</div>}</details>
               <div className="maker-info"><span>雫 {layout.drops.length}/{MAX_DROPS} · 石 {layout.stones.length}/{MAX_STONES}</span><span>{certified ? `${certificate!.proof.length}打で確認済み` : saved ? '台はこの端末に自動保存' : 'この端末には保存できません'}</span></div>
             </> : <p className="maker-play-hint">引いて、離す。雫が止まったら、次の一打。</p>}

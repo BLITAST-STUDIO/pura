@@ -22,6 +22,8 @@ export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boole
   adaptive?: boolean;
   /** Visual direction proposal; 'studio' is the approved look. */
   look?: Look;
+  /** A tint for the floor and the room around it, replacing the look's own (the stage maker's board colours). */
+  tone?: { floor: string; background: string } | null;
   /** How the physics walls are shown: a low rim, a fine inlaid line, or not at all (the default here). */
   walls?: 'rim' | 'line' | 'none';
   /** 'screen': the board is the whole phone screen, so the camera comes in until its corners nearly touch the edges. */
@@ -707,7 +709,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = (next.lighting !== undefined && next.lighting !== options.lighting)
-        || (next.look !== undefined && next.look !== options.look);
+        || (next.look !== undefined && next.look !== options.look)
+        || (next.tone !== undefined && next.tone?.floor !== options.tone?.floor);
       const qualityChanged = (next.quality !== undefined && next.quality !== options.quality)
         || (next.adaptive !== undefined && next.adaptive !== options.adaptive);
       const fitChanged = next.fit !== undefined && next.fit !== options.fit;
@@ -716,7 +719,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       projectionGeometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
       if (options.paused) cancel();
       if (lightingChanged) {
-        const look = lookScene(options.look ?? 'studio', options.lighting === 'daylight');
+        const look = { ...lookScene(options.look ?? 'studio', options.lighting === 'daylight'), ...(options.tone ?? {}) };
         const old = env; env = studioEnvironment(renderer, look.daylight, look.room); scene.environment = env.texture; old.dispose();
         (scene.background as THREE.Color).set(look.background);
         floorMaterial.color.set(look.floor); floorMaterial.roughness = look.roughness; floorMaterial.metalness = look.metalness;

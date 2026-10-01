@@ -7,7 +7,25 @@ export const MAX_DROPS = 12;
 export const MAX_STONES = 3;
 export const MAKER_PAD = 22;
 export type Piece = { x: number; y: number; r: number };
-export type Layout = { name: string; drops: Piece[]; stones: Piece[] };
+/**
+ * Board colours (2026-10-02, RYO: pastel boards to choose from). A tint of the
+ * gallery floor; presentation only, so it is not part of the geometry a
+ * clear certificate covers, and it travels with a shared stage.
+ */
+export const TONES = [
+  { id: 'white', label: '白', floor: null, background: null, swatch: '#e4e0d8' },
+  // The floor is lit softly, so it shows about 0.4 × the colour given + 107 (measured on screen);
+  // these are chosen so the lit floor reads as the pastel in `swatch`.
+  { id: 'mint', label: 'ミント', floor: '#c8feda', background: '#c8feda', swatch: '#cfe8da' },
+  { id: 'sakura', label: 'さくら', floor: '#febfdb', background: '#febfdb', swatch: '#f2d5de' },
+  { id: 'lavender', label: 'ラベンダー', floor: '#ddc9fd', background: '#ddc9fd', swatch: '#ddd5f1' },
+  { id: 'lemon', label: 'レモン', floor: '#feed97', background: '#feed97', swatch: '#f1e9bd' },
+  { id: 'sky', label: 'そら', floor: '#b4e8fe', background: '#b4e8fe', swatch: '#cfe3f2' },
+  { id: 'peach', label: 'ピーチ', floor: '#fecd9c', background: '#fecd9c', swatch: '#f6dac7' },
+] as const;
+export type ToneId = typeof TONES[number]['id'];
+export const toneOf = (id: unknown) => TONES.find(t => t.id === id) ?? TONES[0];
+export type Layout = { name: string; drops: Piece[]; stones: Piece[]; tone?: ToneId };
 export type Selection = { kind: 'drop' | 'stone'; index: number };
 export const STARTER: Layout = {
   name: 'わたしのひとふで',
@@ -15,7 +33,7 @@ export const STARTER: Layout = {
   stones: [],
 };
 export function cloneLayout(layout: Layout): Layout {
-  return { name: layout.name, drops: layout.drops.map(p => ({ ...p })), stones: layout.stones.map(p => ({ ...p })) };
+  return { name: layout.name, drops: layout.drops.map(p => ({ ...p })), stones: layout.stones.map(p => ({ ...p })), ...(layout.tone ? { tone: layout.tone } : {}) };
 }
 export function cleanName(value: string) { return Array.from(value.trim()).slice(0, 32).join('') || 'わたしのひとふで'; }
 export function geometryKey(layout: Layout) { return JSON.stringify([layout.drops, layout.stones]); }
@@ -47,7 +65,9 @@ export function readLayout(value: unknown): Layout | null {
   for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
     if (Math.hypot(all[i].x - all[j].x, all[i].y - all[j].y) < all[i].r + all[j].r + 8) return null;
   }
-  return { name: cleanName(o.name), drops, stones };
+  // An unknown or white tone is the default and is not written.
+  const tone = toneOf(o.tone).id;
+  return { name: cleanName(o.name), drops, stones, ...(tone === 'white' ? {} : { tone }) };
 }
 export function selectedPiece(layout: Layout, selection: Selection | null) {
   return selection ? (selection.kind === 'drop' ? layout.drops : layout.stones)[selection.index] ?? null : null;
