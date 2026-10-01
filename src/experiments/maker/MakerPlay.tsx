@@ -36,7 +36,7 @@ export default function MakerPlay() {
   const [attempt, setAttempt] = useState(0);
   const [ready, setReady] = useState(false), [error, setError] = useState('');
   const [message, setMessage] = useState(''), [saved, setSaved] = useState(true);
-  const [reading, setReading] = useState({ shots: 0, remaining: layout.drops.length - 1, cleared: false, failed: false, resting: true });
+  const [reading, setReading] = useState({ shots: 0, remaining: layout.drops.length - 1, cleared: false, failed: false });
   const [undoCount, setUndoCount] = useState(0);
   const undo = useRef<Layout[]>([]), dragBefore = useRef<Layout | null>(null);
   const [shareUrl, setShareUrl] = useState('');
@@ -91,7 +91,7 @@ export default function MakerPlay() {
     const update = () => {
       if (!alive || !(sim instanceof MakerSimulation)) return;
       const result = sim.result;
-      setReading({ shots: sim.shots, remaining: sim.remaining, cleared: !!result?.cleared, failed: !!result && !result.cleared, resting: sim.atRest });
+      setReading({ shots: sim.shots, remaining: sim.remaining, cleared: !!result?.cleared, failed: !!result && !result.cleared });
       if (result?.cleared && !announced) {
         announced = true; feedback.delivered('cyan', true);
         if (mode === 'test' && verifiesClear(layoutRef.current, sim.proof)) {
@@ -194,7 +194,7 @@ export default function MakerPlay() {
             <SoundNudge feedback={feedback} sound={sensory.sound}/>
             <ClearGlow show={mode !== 'edit' && reading.cleared}/>
             {mode !== 'edit' && (reading.cleared || reading.failed) && <div className="maker-result" role="status"><strong>{reading.cleared ? (reading.shots === 1 ? 'ひとふで' : 'ひとつに') : 'もう一度、ねらおう'}</strong><span>{reading.shots}打{mode === 'test' && reading.cleared ? ' · 共有できます' : mode === 'challenge' && reading.cleared ? reading.shots < (certificate?.proof.length ?? 0) ? ' · 作者記録をこえた' : reading.shots === certificate?.proof.length ? ' · 作者と同じ' : ' · クリア' : ''}</span></div>}
-            {mode !== 'edit' && <div className="maker-reading" aria-live="polite">{reading.cleared ? 'ひとつに' : `あと ${reading.remaining}つ`}<span>{reading.shots}/{MAX_SHOTS}打{!reading.resting && !reading.cleared && !reading.failed ? ' · 雫が止まるまで待ってね' : ''}</span></div>}
+            {mode !== 'edit' && <div className="maker-reading" aria-live="polite">{reading.cleared ? 'ひとつに' : `あと ${reading.remaining}つ`}<span>{reading.shots}/{MAX_SHOTS}打</span></div>}
           </section>
           <aside className="maker-panel">
             {mode === 'edit' ? <>
