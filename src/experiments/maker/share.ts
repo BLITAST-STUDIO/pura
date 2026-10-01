@@ -1,5 +1,5 @@
 import { cloneLayout, readLayout, type Layout } from './layout';
-import { MAKER_ENGINE, readProof, verifiesClear, type RecordedShot } from './simulation';
+import { LEGACY_ENGINE, MAKER_ENGINE, readProof, verifiesClear, type RecordedShot } from './simulation';
 
 export const MAX_TOKEN = 4096;
 export type SharedStage = { layout: Layout; proof: RecordedShot[] };
@@ -18,9 +18,11 @@ export function decodeStage(token: string): SharedStage | null {
   try {
     const bytes = Uint8Array.from(atob(token.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
     const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
-    if (value.v !== MAKER_ENGINE) return null;
-    const layout = readLayout(value.l), proof = readProof(value.p);
-    return layout && proof && verifiesClear(layout, proof) ? { layout, proof } : null;
+    // Links made before shots could overlap (version 1) still open.
+    if (value.v !== MAKER_ENGINE && value.v !== LEGACY_ENGINE) return null;
+    const timed = value.v === MAKER_ENGINE;
+    const layout = readLayout(value.l), proof = readProof(value.p, timed);
+    return layout && proof && verifiesClear(layout, proof, timed) ? { layout, proof } : null;
   } catch { return null; }
 }
 export function sharedToken(hash: string) { return new URLSearchParams(hash.replace(/^#/, '')).get('stage'); }
