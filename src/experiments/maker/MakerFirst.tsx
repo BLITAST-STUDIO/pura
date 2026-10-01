@@ -24,7 +24,7 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
   const [phase, setPhase] = useState<Phase>('intro');
   const [layout, setLayout] = useState<Layout>(emptyLayout), layoutRef = useRef(layout);
   const [attempt, setAttempt] = useState(0);
-  const [reading, setReading] = useState({ remaining: 0, cleared: false, failed: false });
+  const [reading, setReading] = useState({ remaining: 0, shots: 0, cleared: false, failed: false });
   const [nudge, setNudge] = useState('');
   const [ready, setReady] = useState(false);
   const proof = useRef<RecordedShot[]>([]);
@@ -77,7 +77,7 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
     const update = () => {
       if (!alive || !(sim instanceof MakerSimulation)) return;
       const result = sim.result;
-      setReading({ remaining: sim.remaining, cleared: !!result?.cleared, failed: !!result && !result.cleared });
+      setReading({ remaining: sim.remaining, shots: sim.shots, cleared: !!result?.cleared, failed: !!result && !result.cleared });
       if (result?.cleared && !announced && verifiesClear(layoutRef.current, sim.proof)) {
         announced = true; proof.current = sim.proof.map(s => ({ ...s }));
         feedback.delivered('cyan', true);
@@ -95,7 +95,7 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
     return () => { alive = false; experience?.dispose(); };
   }, [phase === 'test' ? 'test' : phase === 'cleared' || phase === 'studio' ? 'done' : 'place', attempt]);
 
-  const test = () => { setReading({ remaining: FIRST_DROPS - 1, cleared: false, failed: false }); setPhase('test'); };
+  const test = () => { setReading({ remaining: FIRST_DROPS - 1, shots: 0, cleared: false, failed: false }); setPhase('test'); };
   const rearrange = () => { setPhase('place'); };
   const retry = () => setAttempt(n => n + 1);
   const finish = () => onDone(layoutRef.current, proof.current);
@@ -105,7 +105,8 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
       : step === 'stones' ? { main: `次に、石を${FIRST_STONES}つ。`, sub: '雫の行く手を、ふさいだり、導いたり。' }
         : { main: 'ためしてみましょう。', sub: '置いたものは、動かせます。' }
     : phase === 'test' ? { main: '全部の雫を、ひとつに。', sub: '雫を引いて、離す。' }
-      : phase === 'cleared' ? { main: 'あなただけの世界が、できました。', sub: '' }
+      // How many shots it took: the one number the first phase shows.
+      : phase === 'cleared' ? { main: 'あなただけの世界が、できました。', sub: reading.shots === 1 ? '1打で、ひとふで。' : `${reading.shots}打で、ひとつに。` }
         : { main: 'あなたのために、スタジオを用意しました。', sub: 'ここでは、もっといろいろなことができます。' };
   const count = phase === 'place' && step !== 'ready' ? { have: step === 'drops' ? layout.drops.length : layout.stones.length, of: step === 'drops' ? FIRST_DROPS : FIRST_STONES, kind: step } : null;
 
@@ -120,7 +121,7 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
     {nudge && <p className="maker-first-nudge" role="status">{nudge}</p>}
     {ready && phase === 'place' && step === 'ready' && <div className="maker-first-actions"><button className="maker-first-go" onClick={test}>ためす</button></div>}
     {phase === 'test' && <>
-      <p className="maker-first-reading" aria-live="polite">{reading.cleared ? 'ひとつに' : `あと ${reading.remaining}つ`}</p>
+      <div className="maker-first-reading" aria-live="polite"><b>{reading.shots}</b><span>打</span><small>{reading.cleared ? 'ひとつに' : `あと ${reading.remaining}つ`}</small></div>
       <div className="maker-first-actions"><button onClick={rearrange}>配置しなおす</button><button className={reading.failed ? 'maker-first-go' : ''} onClick={retry}>{reading.failed ? 'もう一度' : 'やり直す'}</button></div>
     </>}
     {phase === 'studio' && <div className="maker-first-actions"><button className="maker-first-go" onClick={finish}>スタジオへ</button></div>}

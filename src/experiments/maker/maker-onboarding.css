@@ -23,7 +23,11 @@
 
 .maker-first-nudge, .maker-first-reading { position: absolute; z-index: 3; left: 0; right: 0; text-align: center; margin: 0; pointer-events: none; font-size: 12px; letter-spacing: .12em; color: #5c686b; }
 .maker-first-nudge { bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); animation: maker-line .4s both; }
-.maker-first-reading { bottom: calc(env(safe-area-inset-bottom, 0px) + 112px); }
+/* The shot count while trying: one quiet number. */
+.maker-first-reading { bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); display: flex; align-items: baseline; justify-content: center; gap: 4px; color: #1e2629; }
+.maker-first-reading b { font-size: 34px; font-weight: 200; letter-spacing: .02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.maker-first-reading span { font-size: 12px; letter-spacing: .1em; color: #5c686b; }
+.maker-first-reading small { margin-left: 14px; font-size: 11px; letter-spacing: .12em; color: #5c686b; }
 .maker-first-actions { position: absolute; z-index: 4; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 36px); display: flex; justify-content: center; gap: 10px; padding: 0 24px; animation: maker-line .8s both; }
 .maker-first-actions button { min-height: 52px; min-width: 140px; padding: 0 24px; border-radius: 999px; background: rgba(246, 245, 241, .9); color: #1e2629; font-size: 14px; letter-spacing: .12em; box-shadow: 0 2px 14px rgba(30, 40, 44, .12); }
 .maker-first-actions .maker-first-go { background: #244f4c; color: #f1f6f2; }

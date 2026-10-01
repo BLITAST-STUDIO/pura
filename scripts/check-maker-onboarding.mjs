@@ -52,6 +52,7 @@ try {
     const [a, ...rest] = d.sort((p, q) => p.y - q.y).reverse();
     const target = rest.sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y))[0];
     await shoot(a, target, 75);
+    await b.sleep(400); (out.counts ??= []).push(await b.eval(`document.querySelector('.maker-first-reading')?.innerText.replace(/\\s+/g, ' ') ?? null`));
     for (let i = 0; i < 40; i++) { await b.sleep(250); if (await b.eval(`!!document.querySelector('.maker-first.is-cleared')`)) break; const m = await b.eval(`JSON.parse(document.querySelector('canvas')?.dataset.drops || '[]').length`); if (m <= 1) break; }
     if (await b.eval(`/もう一度/.test(document.querySelector('.maker-first-actions')?.innerText || '')`)) { await btn('もう一度'); await b.sleep(1500); }
   }
