@@ -75,6 +75,13 @@ type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: b
 type SceneAim = { x: number; y: number; r: number; dx: number; dy: number; power: number };
 const AIM_DOTS = 16;
 type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
+  /** A layout editor uses the same camera/picking, without aiming or running physics. */
+  edit?: {
+    start(x: number, y: number, hit: { kind: 'drop' | 'stone'; index: number } | null): boolean;
+    move(x: number, y: number): void;
+    end(cancelled: boolean): void;
+    selection(): { x: number; y: number; r: number } | null;
+  };
   /** Shot modes: a dotted line on the floor shows where and how hard a drop will go. */
   aim?: () => SceneAim | null;
   /** Curling: dragging on the floor (not on a drop) sweeps the sheet at that board point. */
@@ -127,7 +134,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     label.position.z = -.006; scene.add(label);
     return { ring, fill, label, texture };
   });
-  const islands = (adapter.obstacles ?? []).map(o => {
+  const islands = (adapter.edit ? Array.from({ length: 3 }, () => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ color: '#364649', roughness: .58, metalness: .12, envMapIntensity: .3 }));
     mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005);
     scene.add(mesh); return mesh;
@@ -420,6 +427,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   }
   function refresh(dt: number) {
     shapeBudget = SHAPE_UPDATES_PER_FRAME;
+    if (adapter.edit) islands.forEach((mesh, i) => {
+      const o = sim.core.obstacles[i]; mesh.visible = !!o;
+      if (o) { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005); }
+    });
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
     for (const split of sim.splits.splice(0)) {
@@ -464,8 +475,9 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     }
     if (selectRing) {
       const id = sim.selected(), d = id === null ? undefined : sim.core.drops.find(q => q.id === id);
-      selectRing.visible = !!d && sim.core.grabbedId === null && Math.hypot(d.vx, d.vy) < 30;
-      if (d) { selectRing.position.x = (d.x - sim.width / 2) * W; selectRing.position.y = (sim.height / 2 - d.y) * W; selectRing.scale.setScalar((d.r + 9) * W); }
+      const selected = adapter.edit ? adapter.edit.selection() : d;
+      selectRing.visible = !!selected && (adapter.edit ? true : sim.core.grabbedId === null && !!d && Math.hypot(d.vx, d.vy) < 30);
+      if (selected) { selectRing.position.x = (selected.x - sim.width / 2) * W; selectRing.position.y = (sim.height / 2 - selected.y) * W; selectRing.scale.setScalar((selected.r + 9) * W); }
     }
     if (sweepMarks) {
       sweepClock += dt;
@@ -504,6 +516,13 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   }
   /** `letGo` is the finger lifting; everything else interrupts a hold. */
   function cancel(letGo = false) {
+    if (adapter.edit) {
+      const id = active; active = null;
+      if (id !== null) adapter.edit.end(!letGo);
+      canvas.style.cursor = 'grab';
+      if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+      return;
+    }
     if (sweeping) {
       sweeping = false; const id = active; active = null;
       if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
@@ -559,6 +578,24 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   function down(e: PointerEvent) {
     if (active !== null || options.paused || lost || (e.pointerType === 'mouse' && e.button !== 0)) return;
     ray(e);
+    if (adapter.edit) {
+      const hits = raycaster.intersectObjects([...bodies.values()].map(b => b.mesh).concat(islands.filter(m => m.visible)));
+      const hit = hits[0];
+      let selection: { kind: 'drop' | 'stone'; index: number } | null = null;
+      let origin: { x: number; y: number } | undefined;
+      if (hit) {
+        const body = [...bodies.entries()].find(([, b]) => b.mesh === hit.object);
+        if (body) { const index = sim.core.drops.findIndex(d => d.id === body[0]); selection = { kind: 'drop', index }; origin = sim.core.drops[index]; }
+        else { const index = islands.findIndex(m => m === hit.object); selection = { kind: 'stone', index }; origin = sim.core.obstacles[index]; }
+      }
+      pointerPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -(hit?.point.z ?? 0));
+      if (!raycaster.ray.intersectPlane(pointerPlane, point)) return;
+      const x = point.x / W + sim.width / 2, y = sim.height / 2 - point.y / W;
+      offset.set(origin ? x - origin.x : 0, origin ? y - origin.y : 0);
+      if (!adapter.edit.start(origin?.x ?? x, origin?.y ?? y, selection)) return;
+      active = e.pointerId; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; e.preventDefault(); callbacks.onInteraction?.();
+      return;
+    }
     const hits = raycaster.intersectObjects([...bodies.values()].map(b => b.mesh));
     let chosen: Drop | undefined;
     let hitPoint: THREE.Vector3 | undefined;
@@ -593,6 +630,10 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
   }
   function move(e: PointerEvent) {
     if (active !== e.pointerId || options.paused) return;
+    if (adapter.edit) {
+      ray(e); if (!raycaster.ray.intersectPlane(pointerPlane, point)) return;
+      adapter.edit.move(point.x / W + sim.width / 2 - offset.x, sim.height / 2 - point.y / W - offset.y); e.preventDefault(); return;
+    }
     if (sweeping) { sweepAt(e); e.preventDefault(); return; }
     ray(e); if (!raycaster.ray.intersectPlane(pointerPlane, point)) return;
     sim.move(point.x / W + sim.width / 2 - offset.x, sim.height / 2 - point.y / W - offset.y); e.preventDefault();
