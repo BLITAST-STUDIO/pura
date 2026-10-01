@@ -64,6 +64,8 @@ async function aimAndClear() {
   assert.equal((await state()).drops.length, 1);
 }
 try {
+  // The editor checks start as a returning visitor; the onboarding has its own check (MAKER.md).
+  await b.send('Page.addScriptToEvaluateOnNewDocument', { source: 'try { localStorage.setItem("pura-flow-maker-welcome-v1", "1") } catch (e) {}' });
   await b.goto(base + '?play=maker&sound=off');
   await b.waitFor(`document.querySelector('canvas')?.dataset.drops`);
   assert.ok(await b.eval(`document.querySelector('.maker-actions button:last-child').disabled`));

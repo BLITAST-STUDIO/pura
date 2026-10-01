@@ -220,3 +220,39 @@ test('a stage with polygon stones plays, proves and shares like any other', () =
   // Shapes survive a link (a fake clearing proof is rejected, but the layout itself round-trips through the reader).
   assert.deepEqual(readLayout(JSON.parse(JSON.stringify(layout)))!.stones, layout.stones);
 });
+
+test('onboarding: three drops then two stones, the same spacing rules, shown once', async () => {
+  const { canPlace, clampPiece, emptyLayout, firstStep, makerWelcomed, markMakerWelcomed, MAKER_WELCOME_KEY, TOUR } = await import('../src/experiments/maker/onboarding');
+  const l = emptyLayout();
+  assert.equal(firstStep(l), 'drops');
+  assert.ok(canPlace(l, { x: 130, y: 470, r: 26 }));
+  l.drops.push({ x: 130, y: 470, r: 26 });
+  assert.equal(canPlace(l, { x: 170, y: 470, r: 26 }), false, 'too close to the first');
+  assert.equal(canPlace(l, { x: 10, y: 470, r: 26 }), false, 'outside the walls');
+  assert.ok(canPlace(l, { x: 132, y: 470, r: 26 }, { kind: 'drop', index: 0 }), 'a piece does not block itself while dragged');
+  l.drops.push({ x: 200, y: 360, r: 26 }, { x: 260, y: 260, r: 26 });
+  assert.equal(firstStep(l), 'stones');
+  l.stones.push({ x: 340, y: 470, r: 32 }, { x: 90, y: 160, r: 32 });
+  assert.equal(firstStep(l), 'ready');
+  assert.ok(readLayout(l), 'the finished first board is a valid stage');
+  assert.deepEqual(clampPiece({ x: 0, y: 0, r: 26 }, -50, 900), { x: 50, y: 510, r: 26 });
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } };
+  assert.equal(makerWelcomed(store), false); markMakerWelcomed(store); assert.equal(values.get(MAKER_WELCOME_KEY), '1'); assert.ok(makerWelcomed(store));
+  assert.equal(makerWelcomed({ getItem() { throw Error('blocked'); } }), true, 'no storage: do not force it every time');
+  assert.ok(TOUR.some(s => s.target === 'status' && /クリア/.test(s.sub ?? '')), 'the tour says only a board you cleared becomes a stage');
+});
+
+test('your own clear is kept with the draft, and only while it still replays on that very board', async () => {
+  const { readCertificate, saveCertificate } = await import('../src/experiments/maker/share');
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); }, removeItem: (k: string) => { values.delete(k); } };
+  const proof = clear().proof;
+  saveCertificate(store, STARTER, proof);
+  assert.deepEqual(readCertificate(store, STARTER), proof);
+  const moved = movePiece(STARTER, { kind: 'drop', index: 4 }, 300, 100)!;
+  assert.equal(readCertificate(store, moved), null, 'another board is not cleared');
+  values.set('pura-flow-maker-proof-v1', JSON.stringify({ v: 2, key: geometryKey(STARTER), p: [{ id: 1000, dx: 50, dy: 0, g: 0, r: 0 }] }));
+  assert.equal(readCertificate(store, STARTER), null, 'a forged clear does not replay');
+  saveCertificate(store, null, null); assert.equal(values.size, 0);
+});
