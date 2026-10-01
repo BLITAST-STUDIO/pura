@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Circle, Hexagon, Move, Play, RotateCcw, Send, Trash2, Undo2, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Circle, Hexagon, Move, Play, RotateCcw, RotateCw, Send, Trash2, Undo2, Volume2, VolumeX, X } from 'lucide-react';
 import { createFusionExperience } from '../fusion-lab/renderer';
 import { stageDropHeight } from '../stages/simulation';
 import { initialCaustic, initialRipple } from '../look-defaults';
@@ -7,7 +7,7 @@ import { initialLook, initialUi } from '../look';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
-import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STARTER, TONES, geometryKey, movePiece, readLayout, replacePiece, selectedPiece, toneOf, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
+import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STONE_SHAPES, STARTER, TONES, geometryKey, shapeOf, turned, type StoneShapeId, movePiece, readLayout, replacePiece, selectedPiece, toneOf, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
 import { LayoutSimulation, MakerSimulation, MAX_SHOTS, verifiesClear, type RecordedShot } from './simulation';
 import { decodeStage, readDraft, saveDraft, sharedToken, stageUrl } from './share';
 import '../droplet-lab/droplet-lab.css';
@@ -35,6 +35,8 @@ export default function MakerPlay() {
   const [mode, setMode] = useState<Mode>(boot.mode);
   const [invalid, setInvalid] = useState(boot.invalid);
   const [tool, setTool] = useState<Tool>('select'), toolRef = useRef(tool); toolRef.current = tool;
+  // The shape the next stone is placed with (the last one chosen).
+  const [shape, setShape] = useState<StoneShapeId>('circle'), shapeRef = useRef(shape); shapeRef.current = shape;
   const [selection, setSelection] = useState<Selection | null>({ kind: 'drop', index: 0 });
   const selectionRef = useRef(selection);
   const [certificate, setCertificate] = useState<Certificate | null>(boot.certificate);
@@ -115,7 +117,8 @@ export default function MakerPlay() {
         const before = layoutRef.current, next = cloneLayout(before);
         const list = kind === 'drop' ? next.drops : next.stones;
         if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setMessage(kind === 'drop' ? '雫は12個まで置けます。' : '石は3個まで置けます。'); return false; }
-        list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32 });
+        const spec = STONE_SHAPES.find(s => s.id === shapeRef.current)!;
+        list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32, ...(kind === 'stone' && spec.n ? { n: spec.n, a: spec.a } : {}) });
         const valid = readLayout(next);
         if (!valid) { setMessage('空いている床に置いてください。'); return false; }
         apply(valid); select({ kind, index: list.length - 1 }); setTool('select'); setMessage(''); feedback.grab(kind === 'drop' ? 26 : 32, x, 420); return true;
@@ -208,11 +211,12 @@ export default function MakerPlay() {
             {mode === 'edit' ? <>
               <div className="maker-tools" role="group" aria-label="置くものを選ぶ">{([{ id: 'select', label: '選ぶ', Icon: Move }, { id: 'drop', label: '雫', Icon: Circle }, { id: 'stone', label: '石', Icon: Hexagon }] as const).map(({ id, label, Icon }) => <button key={id} aria-pressed={tool === id} onClick={() => { setTool(id); setMessage(''); }}><Icon size={17}/>{label}</button>)}<button aria-label="一手戻す" disabled={!undoCount} onClick={undoOne}><Undo2 size={18}/></button></div>
               <p className="maker-instruction">{tool === 'drop' ? '空いている床に、雫を置く。' : tool === 'stone' ? '空いている床に、石を置く。' : '雫や石を、好きな場所へ。'}</p>
+              {(tool === 'stone' || selection?.kind === 'stone') && <div className="maker-shapes"><span>石の形</span><div role="group" aria-label="石の形">{STONE_SHAPES.map(spec => <button key={spec.id} aria-label={`石の形 ${spec.label}`} aria-pressed={tool !== 'stone' && selection?.kind === 'stone' && piece ? shapeOf(piece) === spec.id : shape === spec.id} onClick={() => { setShape(spec.id); /* placing: only the next stone's shape; otherwise the selected stone changes */ if (tool !== 'stone' && selection?.kind === 'stone' && piece) change(replacePiece(layoutRef.current, selection, { n: spec.n, a: spec.a })); }}><span className={`maker-shape maker-shape-${spec.id}`} aria-hidden="true"/>{spec.label}</button>)}<button aria-label="石を回す" disabled={!(selection?.kind === 'stone' && piece?.n)} onClick={() => selection && piece && change(replacePiece(layoutRef.current, selection, { a: turned(piece).a }))}><RotateCw size={16}/></button></div></div>}
               <div className="maker-inspector"><span>{piece ? selection?.kind === 'drop' ? '雫の大きさ' : '石の大きさ' : '選んで、動かす'}</span><div role="group" aria-label="大きさ">{(selection?.kind === 'stone' ? STONE_SIZES : DROP_SIZES).map((r, i) => <button key={r} disabled={!piece} aria-pressed={piece?.r === r} aria-label={`${selection?.kind === 'stone' ? '石' : '雫'}を${['小', '中', '大'][i]}に`} onClick={() => selection && change(replacePiece(layoutRef.current, selection, { r }))}>{['小', '中', '大'][i]}</button>)}<button aria-label="選んだものを消す" disabled={!piece} onClick={remove}><Trash2 size={16}/></button></div></div>
               <div className="maker-tones"><span>盤の色</span><div role="group" aria-label="盤の色">{TONES.map(t => <button key={t.id} className="maker-tone" style={{ background: t.swatch }} aria-label={`盤の色 ${t.label}`} title={t.label} aria-pressed={toneOf(layout.tone).id === t.id} onClick={() => { if (toneOf(layout.tone).id !== t.id) change(readLayout({ ...layout, tone: t.id })); }}/>)}</div></div>
               <details className="maker-position"><summary>位置を数値で指定</summary>{piece && selection && <div>{(['x', 'y'] as const).map(axis => <label key={axis}>{axis.toUpperCase()}<input type="number" aria-label={`${axis.toUpperCase()}の位置`} value={piece[axis]} onChange={e => change(movePiece(layoutRef.current, selection, axis === 'x' ? Number(e.target.value) : piece.x, axis === 'y' ? Number(e.target.value) : piece.y))}/></label>)}</div>}</details>
               <div className="maker-info"><span>雫 {layout.drops.length}/{MAX_DROPS} · 石 {layout.stones.length}/{MAX_STONES}</span><span>{certified ? `${certificate!.proof.length}打で確認済み` : saved ? '台はこの端末に自動保存' : 'この端末には保存できません'}</span></div>
-            </> : <p className="maker-play-hint">引いて、離す。雫が止まったら、次の一打。</p>}
+            </> : <p className="maker-play-hint">引いて、離す。止まっている雫なら、いつでも次の一打。</p>}
             <div className="maker-actions">{mode === 'edit' ? <button className="maker-primary" onClick={start} disabled={!ready || !!error}><Play size={17}/>遊んで確かめる</button> : <><button onClick={mode === 'test' ? back : ownBoard}><ArrowLeft size={16}/>{mode === 'test' ? '編集に戻る' : '自分の台をつくる'}</button><button onClick={retry}><RotateCcw size={16}/>やり直す</button></>}
               <button className={mode === 'edit' ? '' : 'maker-primary'} disabled={!certified || !!error} onClick={createLink}><Send size={16}/>共有リンク</button></div>
             <p className="maker-note">{mode === 'edit' ? certified ? '友だちは、リンクからそのまま遊べます。' : '自分でクリアできたら、友だちに渡せます。' : mode === 'test' ? '編集に戻ると、最初の配置が残っています。' : '何度でも挑戦できます。'}</p>

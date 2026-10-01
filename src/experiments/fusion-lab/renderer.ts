@@ -16,6 +16,7 @@ import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
 import { purityOf } from '../../game/palette';
 import type { ContactKind } from '../../game/sim';
 import type { SensoryFeedback } from '../sensory/feedback';
+import { isPolygon, type Obstacle } from '../../game/obstacle';
 
 export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape';
   /** 'high' quality lowers its pixel ratio while frames are late (default on). */
@@ -76,7 +77,7 @@ type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: b
 /** A shot being aimed: launch direction (unit, board axes) and power 0..1. */
 type SceneAim = { x: number; y: number; r: number; dx: number; dy: number; power: number };
 const AIM_DOTS = 16;
-type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
+type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<Obstacle>; onUpdate?: () => void; feedback?: SensoryFeedback;
   /** A layout editor uses the same camera/picking, without aiming or running physics. */
   edit?: {
     start(x: number, y: number, hit: { kind: 'drop' | 'stone'; index: number } | null): boolean;
@@ -136,9 +137,35 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     label.position.z = -.006; scene.add(label);
     return { ring, fill, label, texture };
   });
-  const islands = (adapter.edit ? Array.from({ length: 3 }, () => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
+  /**
+   * A stone's solid: the original dome for a circle, or a low prism with a small
+   * bevel for a polygon (corners at the physics' own corners, 2026-10-02).
+   */
+  function prismGeometry(o: Obstacle & { n: number }) {
+    const bevel = .012, R = o.r * W - bevel;
+    const shape = new THREE.Shape();
+    for (let i = 0; i < o.n; i++) {
+      const t = ((o.a ?? 0) + i * 360 / o.n) * Math.PI / 180;
+      const x = R * Math.cos(t), y = -R * Math.sin(t); // board y points down
+      if (i) shape.lineTo(x, y); else shape.moveTo(x, y);
+    }
+    shape.closePath();
+    return new THREE.ExtrudeGeometry(shape, { depth: .17, bevelEnabled: true, bevelThickness: .03, bevelSize: bevel, bevelSegments: 3 });
+  }
+  function applyIsland(mesh: THREE.Mesh, o: Obstacle) {
+    const key = isPolygon(o) ? `${o.n}:${o.a ?? 0}:${o.r}` : 'circle';
+    if (mesh.userData.key !== key) {
+      mesh.geometry.dispose();
+      mesh.geometry = isPolygon(o) ? prismGeometry(o) : new THREE.SphereGeometry(1, 40, 24);
+      mesh.userData.key = key;
+    }
+    if (isPolygon(o)) { mesh.scale.set(1, 1, 1); mesh.position.z = -.012; }
+    else { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.z = -.005; }
+    mesh.position.x = (o.x - sim.width / 2) * W; mesh.position.y = (sim.height / 2 - o.y) * W;
+  }
+  const islands = (adapter.edit ? Array.from({ length: 3 }, (): Obstacle => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ color: '#364649', roughness: .58, metalness: .12, envMapIntensity: .3 }));
-    mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005);
+    applyIsland(mesh, o);
     scene.add(mesh); return mesh;
   });
   // Only screens that aim shots get the guide; every other scene is unchanged.
@@ -431,7 +458,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     shapeBudget = SHAPE_UPDATES_PER_FRAME;
     if (adapter.edit) islands.forEach((mesh, i) => {
       const o = sim.core.obstacles[i]; mesh.visible = !!o;
-      if (o) { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005); }
+      if (o) applyIsland(mesh, o);
     });
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);

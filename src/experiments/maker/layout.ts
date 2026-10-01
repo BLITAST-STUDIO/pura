@@ -7,6 +7,24 @@ export const MAX_DROPS = 12;
 export const MAX_STONES = 3;
 export const MAKER_PAD = 22;
 export type Piece = { x: number; y: number; r: number };
+/** A stone: a circle, or a regular polygon of `n` sides turned `a` degrees (15° steps). See game/obstacle.ts. */
+export type StonePiece = Piece & { n?: 3 | 4 | 6; a?: number };
+export const ANGLE_STEP = 15;
+/** The shapes a stone can take (2026-10-02, RYO: obstacles of several shapes, at least triangles and squares). `a` is the starting angle, within one repeat (360 / n). */
+export const STONE_SHAPES = [
+  { id: 'circle', label: '丸', n: undefined, a: undefined },
+  { id: 'triangle', label: '三角', n: 3, a: 30 }, // a corner up (30° = 270° for a triangle)
+  { id: 'square', label: '四角', n: 4, a: 45 },
+  { id: 'hexagon', label: '六角', n: 6, a: 0 },
+] as const;
+export type StoneShapeId = typeof STONE_SHAPES[number]['id'];
+export function shapeOf(stone: StonePiece): StoneShapeId { return stone.n === 3 ? 'triangle' : stone.n === 4 ? 'square' : stone.n === 6 ? 'hexagon' : 'circle'; }
+/** Turning repeats after a full turn divided by the sides, so the angle is kept within one repeat. */
+export function turned(stone: StonePiece, steps = 1): StonePiece {
+  if (!stone.n) return stone;
+  const period = 360 / stone.n, next = ((((stone.a ?? 0) + steps * ANGLE_STEP) % period) + period) % period;
+  return { ...stone, a: next };
+}
 /**
  * Board colours (2026-10-02, RYO: pastel boards to choose from). A tint of the
  * gallery floor; presentation only, so it is not part of the geometry a
@@ -25,7 +43,7 @@ export const TONES = [
 ] as const;
 export type ToneId = typeof TONES[number]['id'];
 export const toneOf = (id: unknown) => TONES.find(t => t.id === id) ?? TONES[0];
-export type Layout = { name: string; drops: Piece[]; stones: Piece[]; tone?: ToneId };
+export type Layout = { name: string; drops: Piece[]; stones: StonePiece[]; tone?: ToneId };
 export type Selection = { kind: 'drop' | 'stone'; index: number };
 export const STARTER: Layout = {
   name: 'わたしのひとふで',
@@ -47,19 +65,26 @@ export function readLayout(value: unknown): Layout | null {
   const o = value as Partial<Layout>;
   if (typeof o.name !== 'string' || o.name.length > 128 || !Array.isArray(o.drops) || !Array.isArray(o.stones)) return null;
   if (o.drops.length < 2 || o.drops.length > MAX_DROPS || o.stones.length > MAX_STONES) return null;
-  const read = (list: unknown[], sizes: readonly number[]): Piece[] | null => {
-    const out: Piece[] = [];
+  const read = <T extends StonePiece>(list: unknown[], sizes: readonly number[], shaped: boolean): T[] | null => {
+    const out: T[] = [];
     for (const value of list) {
       if (!value || typeof value !== 'object') return null;
-      const p = value as Piece;
+      const p = value as StonePiece;
       if (![p.x, p.y, p.r].every(Number.isInteger) || !sizes.includes(p.r)) return null;
-      const piece = { x: p.x, y: p.y, r: p.r };
+      const piece: StonePiece = { x: p.x, y: p.y, r: p.r };
       if (!inside(piece)) return null;
-      out.push(piece);
+      // A polygon's sides and angle are strict: only 3, 4 or 6 sides, turned in whole 15° steps within one repeat.
+      if (shaped && p.n !== undefined) {
+        if (![3, 4, 6].includes(p.n)) return null;
+        const a = p.a ?? 0;
+        if (!Number.isInteger(a) || a < 0 || a % ANGLE_STEP !== 0 || a >= 360 / p.n) return null;
+        piece.n = p.n; piece.a = a;
+      } else if (shaped && p.a !== undefined) return null;
+      out.push(piece as T);
     }
     return out;
   };
-  const drops = read(o.drops, DROP_SIZES), stones = read(o.stones, STONE_SIZES);
+  const drops = read<Piece>(o.drops, DROP_SIZES, false), stones = read<StonePiece>(o.stones, STONE_SIZES, true);
   if (!drops || !stones) return null;
   const all = [...drops, ...stones];
   for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
@@ -69,10 +94,10 @@ export function readLayout(value: unknown): Layout | null {
   const tone = toneOf(o.tone).id;
   return { name: cleanName(o.name), drops, stones, ...(tone === 'white' ? {} : { tone }) };
 }
-export function selectedPiece(layout: Layout, selection: Selection | null) {
+export function selectedPiece(layout: Layout, selection: Selection | null): StonePiece | null {
   return selection ? (selection.kind === 'drop' ? layout.drops : layout.stones)[selection.index] ?? null : null;
 }
-export function replacePiece(layout: Layout, selection: Selection, patch: Partial<Piece>): Layout | null {
+export function replacePiece(layout: Layout, selection: Selection, patch: Partial<StonePiece>): Layout | null {
   const next = cloneLayout(layout), list = selection.kind === 'drop' ? next.drops : next.stones;
   if (!list[selection.index]) return null;
   list[selection.index] = { ...list[selection.index], ...patch };

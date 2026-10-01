@@ -1,4 +1,5 @@
 import { LEGACY_TUNING, PuraSim } from '../../game/sim';
+import type { Obstacle } from '../../game/obstacle';
 import { SANDBOX } from '../../game/levels';
 import { dominantHue, type HueId } from '../../game/palette';
 import { FusionSimulation } from '../fusion-lab/simulation';
@@ -29,7 +30,7 @@ export const SHOT_SPEED = 720;
 export const AIMABLE_SPEED = 30;
 const REST_SPEED = 4;
 
-export type Stone = { x: number; y: number; r: number };
+export type Stone = Obstacle;
 /**
  * A hole. `par` is the expected good score; `min` is the fewest shots the
  * search found (a hole may have a hard one-shot below its par).

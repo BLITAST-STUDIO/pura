@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STARTER, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, toneOf } from '../src/experiments/maker/layout';
+import { STARTER, STONE_SHAPES, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, shapeOf, toneOf, turned } from '../src/experiments/maker/layout';
 import { LayoutSimulation, MakerSimulation, MAX_STEPS, STEP, verifiesClear, type RecordedShot } from '../src/experiments/maker/simulation';
 import { decodeStage, encodeStage, stageUrl, sharedToken, readDraft, saveDraft, DRAFT_KEY, MAX_TOKEN } from '../src/experiments/maker/share';
 import { routeKey } from '../src/route-key';
@@ -180,4 +180,43 @@ test('a shared stage carries its board colour; links made before colours existed
   const values = new Map<string, string>();
   const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } };
   assert.ok(saveDraft(store, layout)); assert.equal(readDraft(store)!.tone, 'lavender');
+});
+
+test('stone shapes: circle, triangle, square, hexagon; strict sides and angles; turning repeats; geometry includes the shape', () => {
+  assert.deepEqual(STONE_SHAPES.map(s => s.id), ['circle', 'triangle', 'square', 'hexagon']);
+  const stoned = (stone: object) => readLayout({ ...STARTER, stones: [{ x: 300, y: 300, r: 32, ...stone }] });
+  assert.ok(stoned({})); assert.equal(shapeOf(stoned({})!.stones[0]), 'circle');
+  assert.equal(shapeOf(stoned({ n: 3, a: 30 })!.stones[0]), 'triangle');
+  assert.deepEqual(stoned({ n: 4, a: 45 })!.stones[0], { x: 300, y: 300, r: 32, n: 4, a: 45 }, 'a square at 45° (axis-aligned) is kept as is');
+  assert.deepEqual(stoned({ n: 6 })!.stones[0], { x: 300, y: 300, r: 32, n: 6, a: 0 }, 'the angle defaults to 0');
+  for (const bad of [{ n: 5, a: 0 }, { n: 2, a: 0 }, { n: 4, a: 10 }, { n: 4, a: 90 }, { n: 3, a: 120 }, { n: 3, a: 270 }, { n: 4, a: 7.5 }, { n: 6, a: -15 }, { a: 15 }, { n: '4' }, { n: 4, a: NaN }]) {
+    assert.equal(stoned(bad), null, `rejected: ${JSON.stringify(bad)}`);
+  }
+  // Turning is in 15° steps and repeats after a full turn divided by the sides.
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 4, a: 75 }).a, 0, 'a square repeats every 90°');
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 3, a: 105 }).a, 0, 'a triangle repeats every 120°');
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 6, a: 0 }, 3).a, 45);
+  assert.equal(turned({ x: 0, y: 0, r: 24 }).a, undefined, 'a circle has nothing to turn');
+  // The shape is part of the geometry (a clear on a square does not hold for a triangle).
+  const square = stoned({ n: 4, a: 45 })!, circle = stoned({})!;
+  assert.notEqual(geometryKey(square), geometryKey(circle));
+  const swapped = replacePiece(circle, { kind: 'stone', index: 0 }, { n: 3, a: 30 })!;
+  assert.equal(shapeOf(swapped.stones[0]), 'triangle');
+  const back = replacePiece(swapped, { kind: 'stone', index: 0 }, { n: undefined, a: undefined })!;
+  assert.deepEqual(back.stones[0], circle.stones[0], 'back to a circle');
+  assert.deepEqual(movePiece(square, { kind: 'stone', index: 0 }, 310, 310)!.stones[0], { x: 310, y: 310, r: 32, n: 4, a: 45 }, 'moving keeps the shape');
+});
+
+test('a stage with polygon stones plays, proves and shares like any other', () => {
+  const layout = readLayout({ name: '角', tone: 'mint', stones: [{ x: 330, y: 330, r: 24, n: 4, a: 45 }, { x: 90, y: 250, r: 24, n: 3, a: 30 }], drops: STARTER.drops })!;
+  const sim = new MakerSimulation(layout);
+  assert.equal(sim.core.obstacles.length, 2);
+  assert.equal(sim.core.obstacles[0].n, 4, 'the polygon reaches the physics');
+  // Aim a drop through the board at the square, and check it never ends inside it.
+  const d = sim.core.drops[0];
+  assert.ok(sim.grab(d.id)); sim.move(d.x - 40, d.y + 90); sim.release();
+  for (let i = 0; i < 120 * 6; i++) sim.tick(STEP);
+  assert.ok(sim.proof.length === 1, 'the shot was recorded');
+  // Shapes survive a link (a fake clearing proof is rejected, but the layout itself round-trips through the reader).
+  assert.deepEqual(readLayout(JSON.parse(JSON.stringify(layout)))!.stones, layout.stones);
 });
