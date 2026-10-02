@@ -4,6 +4,7 @@ import { createFusionExperience } from '../fusion-lab/renderer';
 import { stageDropHeight } from '../stages/simulation';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import { initialLook, initialUi } from '../look';
+import { SoundButton } from '../sound-settings';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
@@ -214,7 +215,7 @@ export default function MakerPlay() {
     <div className="maker-shell">
       <header className="maker-header"><a href="?play=hitofude" className="maker-back" aria-label="ひとふでに戻る"><ArrowLeft size={18}/></a><div><small>PURA · ひとふで</small>{mode === 'edit'
         ? <input aria-label="台の名前" maxLength={32} value={layout.name} onChange={e => { const next = { ...layoutRef.current, name: e.target.value }; apply(next); }}/>
-        : <h1>{name}</h1>}</div><button className="maker-sound" aria-label={sensory.sound ? '音を消す' : '音を出す'} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={18}/> : <VolumeX size={18}/>}</button></header>
+        : <h1>{name}</h1>}</div><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={18} className="maker-sound" side="down"/></header>
       {invalid ? <section className="maker-invalid" role="alert"><h1>この台を開けませんでした</h1><p>リンクが途中で切れているか、この版でクリアを確認できない台です。</p><button onClick={ownBoard}>自分の台をつくる</button><a href="?play=hitofude">ひとふでで遊ぶ</a></section> : <>
         <div className="maker-workspace">
           <section className="dl-stage maker-stage" aria-label={mode === 'edit' ? '台を編集する' : `ひとふで ${name}`} aria-busy={!ready}>

@@ -9,7 +9,7 @@ import { holeStrokes, relative, Round, ROUND_LABELS, roundHoles, roundsAfterHole
 import { challengeFrom, challengeOutcome, challengeText, challengeUrl } from './share';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -220,7 +220,7 @@ export default function HitofudePlay() {
       <div className="purity-actions">
         {inRound ? <button onClick={restartRound} disabled={status !== 'ready'}><RotateCcw size={15}/><span>最初から回り直す</span></button>
           : <button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>やり直す</span></button>}
-        <button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+        <button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
         <p>雫に触れて、引いて、離す。雫は反対の向きへ滑り出します。一度触った雫には薄い輪が付き、そのあとは盤面の空いているところから引いても、その雫を狙えます（画面の端の雫も思い切り引けます）。遠くまで引くほど強く、床の点線が向きと強さの目安です。短く引いただけなら、打数に数えません。</p>

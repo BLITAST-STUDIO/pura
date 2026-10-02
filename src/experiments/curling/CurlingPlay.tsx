@@ -5,7 +5,7 @@ import { CurlingSimulation, ENDS, HACK, HOG_Y, HOUSE, SHEET, STONES_PER_END, typ
 import { Planner, STRENGTH_LABELS, type Strength } from './ai';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -183,7 +183,7 @@ export default function CurlingPlay() {
       <div className="stage-modes curling-spin" role="group" aria-label="次の一投の回転"><small>回転</small>{([-1, 0, 1] as const).map(v =>
         <button key={v} aria-pressed={spin === v} onClick={() => setSpin(v)}>{SPIN_LABELS[v]}</button>)}</div>
       <div className="curling-stones">{(['cyan', 'rose'] as const).map(team => <div key={team} data-team={team}><span>{you(team)}</span>{Array.from({ length: STONES_PER_END }, (_, i) => <i key={i} className={r && i < r.left[team] ? 'is-left' : ''}/>)}</div>)}</div>
-      <div className="purity-actions"><button onClick={newGame} disabled={status !== 'ready'}><RotateCcw size={15}/><span>最初から</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+      <div className="purity-actions"><button onClick={newGame} disabled={status !== 'ready'}><RotateCcw size={15}/><span>最初から</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
         <p>下の丸から、雫を引いて離して滑らせます。盤面のどこからでも引けます。強さの目安は、点線の長さ。ホグライン（横の線）を越えずに止まった雫と、壁に触れた雫は外れます。</p>

@@ -7,7 +7,7 @@ import { MichiSimulation, type RingState } from './simulation';
 import { chapterOf, MICHI, MICHI_BOARDS, michiBoard, nextBoard } from './boards';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -155,7 +155,7 @@ export default function MichiPlay() {
         {reading.rings.map(r => <div key={r.hue} data-color={r.hue} className={r.delivered ? 'is-done' : ''}>
           <span>{HUE_NAMES[r.hue]}を輪へ</span><i><b style={{ width: `${Math.min(100, r.gathered * 100)}%` }}/></i><small>{r.delivered ? '届いた' : r.ready ? (r.inRing ? '…' : '輪へ') : `${Math.floor(Math.min(1, r.gathered) * 100)}%`}</small></div>)}
       </div>
-      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>やり直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>やり直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
         <p>{board.rings

@@ -39,7 +39,7 @@
 .maker-status[data-state="clear"] { color: #1f6a4c; }
 .maker-status[data-state="clear"] i { background: #3fb27f; box-shadow: 0 0 0 3px rgba(63, 178, 127, .25), 0 0 10px rgba(63, 178, 127, .55); }
 
-.maker-replay-intro { align-self: flex-start; padding: 4px 0; background: none; color: #6a797b; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.maker-panel .maker-replay-intro { align-self: flex-start; min-height: 0; padding: 4px 0; background: none; color: #6a797b; font-size: 10px; font-weight: 400; letter-spacing: .04em; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Phase 2: the tour. One part of the screen is ringed; the card says one thing. */
 [data-tour-focus] { position: relative; z-index: 6; border-radius: 14px; box-shadow: 0 0 0 3px #f6f5f1, 0 0 0 6px #3f8f93; animation: maker-ring 1.6s ease-in-out infinite; }

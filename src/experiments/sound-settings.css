@@ -7,3 +7,21 @@
 .droplet-lab[data-ui="light"] .volume-row input[type="range"] { accent-color: #3f8f93; }
 /* In the labs' settings panel, whose switch rows hide their checkbox. */
 .dl-setting-row.volume-row input[type="range"] { position: static; width: auto; height: 28px; opacity: 1; }
+
+/* The speaker icon's volume bars (SoundButton). */
+.sound-button { position: relative; display: inline-flex; }
+.sound-button > button { flex: 1; }
+.sound-popover { position: absolute; z-index: 20; right: 0; width: min(268px, calc(100vw - 32px)); padding: 6px 14px 8px; border-radius: 14px; background: rgba(250, 249, 245, .98); color: #263639; border: 1px solid rgba(30, 40, 44, .1); box-shadow: 0 10px 34px rgba(30, 40, 44, .18); animation: sound-pop .18s ease both; text-align: left; }
+.sound-button.is-up .sound-popover { bottom: calc(100% + 8px); }
+.sound-button.is-down .sound-popover { top: calc(100% + 8px); }
+.sound-popover .volume-row { font-size: 11px; min-height: 38px; }
+.sound-popover .volume-row span { min-width: 76px; color: #4c5a5e; }
+.sound-popover .volume-row input[type="range"] { accent-color: #3f8f93; }
+.sound-popover p { margin: 2px 0 4px; font-size: 10px; color: #6a797b; }
+/* A gap-free bridge, so moving from the icon to the bars does not close them. */
+.sound-popover::after { content: ''; position: absolute; left: 0; right: 0; height: 12px; }
+.sound-button.is-up .sound-popover::after { top: 100%; } .sound-button.is-down .sound-popover::after { bottom: 100%; }
+.droplet-lab[data-ui="dark"] .sound-popover { background: rgba(20, 32, 36, .98); color: #d8e8e8; border-color: #30494d; }
+.droplet-lab[data-ui="dark"] .sound-popover .volume-row span { color: #a4b9b9; }
+@keyframes sound-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sound-popover { animation: none; } }

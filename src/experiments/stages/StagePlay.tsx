@@ -7,7 +7,7 @@ import type { CoreStat } from '../../game/sim';
 import { clampSandboxCount, StageSimulation, stageDropHeight, STAGE_IDS, type MixRule, type StageMode, type StageScale } from './simulation';
 import type { ScoreBreakdown } from './score';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -150,7 +150,7 @@ export default function StagePlay() {
       {!def.sandbox && <div className="stage-cores">{reading.cores.map(c => <div key={c.hue} data-color={c.hue} className={c.done ? 'is-done' : ''}>
         <span>{HUE_NAMES[c.hue]}の核</span><i><b style={{ width: `${Math.min(100, c.mass / c.target * 100)}%` }}/></i><small>{c.done ? '達成' : `${Math.floor(Math.min(1, c.mass / c.target) * 100)}%`}</small>
       </div>)}</div>}
-      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>やり直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>やり直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
         <p>色ごとに、その色の{Math.round(def.targetFrac * 100)}%以上を一つの核に集めます。核の純度が{Math.round(def.purity * 100)}%以上で達成。全色そろうとクリアです。</p>

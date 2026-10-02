@@ -4,7 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { FREE_DEFAULTS, FREE_PRESETS, FreeSimulation, normalizeFree, type FreeMix, type FreeSettings } from './simulation';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -99,7 +99,7 @@ export default function FreePlay() {
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         <div className="dl-stage-bottom"><span>{count} {count === 1 ? "DROP" : "DROPS"}</span><span>NO GOAL</span></div>
       </section>
-      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>並べ直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>並べ直す</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <div className="free-settings">
         <div className="stage-compare"><div><span>雫の数</span><select value={settings.count} onChange={e => change({ count: Number(e.target.value) })}>{Array.from({ length: 10 }, (_, i) => 6 + i * 6).map(n => <option key={n} value={n}>{n}</option>)}</select><span>色</span>{([1, 2, 3] as const).map(n => <button key={n} aria-pressed={settings.colors === n} onClick={() => change({ colors: n })}>{n}色</button>)}</div>
           <div><span>混ざり方</span>{MIX_LABELS.map(([id, label]) => <button key={id} aria-pressed={settings.mix === id} onClick={() => change({ mix: id })}>{label}</button>)}</div></div>
