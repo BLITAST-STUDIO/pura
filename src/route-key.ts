@@ -8,12 +8,13 @@ export const DEFAULT_ROUTE: RouteKey = 'play=open';
 /**
  * Screens still on trial: only the trial channel (/next/, VITE_CHANNEL=next)
  * opens them. On the version shared with family a direct link to one falls
- * back to the default screen, until the user approves it (2026-10-01: the
- * stage maker is merged to main but stays on trial).
+ * back to the default screen, until the user approves it. The stage maker
+ * was on this list from 2026-10-01 and was released to everyone on
+ * 2026-10-02 (RYO: "やりましょう"); the list is empty until the next trial.
  */
-export const TRIAL_ONLY: readonly RouteKey[] = ['play=maker'];
-export function releasedRoute(key: RouteKey, channel: string | undefined): RouteKey {
-  return channel !== 'next' && TRIAL_ONLY.includes(key) ? DEFAULT_ROUTE : key;
+export const TRIAL_ONLY: readonly RouteKey[] = [];
+export function releasedRoute(key: RouteKey, channel: string | undefined, trial: readonly RouteKey[] = TRIAL_ONLY): RouteKey {
+  return channel !== 'next' && trial.includes(key) ? DEFAULT_ROUTE : key;
 }
 
 /**

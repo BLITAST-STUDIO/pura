@@ -32,9 +32,13 @@ test('the mode gallery offers the same ways to play as the mode bar, each to a r
 });
 
 test('screens on trial open only on the trial channel; the shared version falls back to the default', () => {
-  assert.deepEqual([...TRIAL_ONLY], ['play=maker']);
+  // The stage maker was released to everyone on 2026-10-02: nothing is on trial now.
+  assert.deepEqual([...TRIAL_ONLY], []);
+  assert.equal(releasedRoute('play=maker', undefined), 'play=maker', 'the family version opens the maker');
   assert.equal(releasedRoute('play=maker', 'next'), 'play=maker');
-  assert.equal(releasedRoute('play=maker', undefined), 'play=open', 'the family version');
-  assert.equal(releasedRoute('play=maker', ''), 'play=open');
+  // The gate itself still works for the next trial.
+  assert.equal(releasedRoute('play=maker', undefined, ['play=maker']), 'play=open', 'a screen on trial falls back on the family version');
+  assert.equal(releasedRoute('play=maker', 'next', ['play=maker']), 'play=maker', 'and opens on the trial channel');
+  assert.equal(releasedRoute('play=free', undefined, ['play=maker']), 'play=free', 'others are unaffected');
   for (const key of ['play=hitofude', 'play=endless', 'play=welcome', 'play=classic'] as const) assert.equal(releasedRoute(key, undefined), key, `${key} is unaffected`);
 });
