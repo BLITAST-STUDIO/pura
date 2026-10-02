@@ -134,7 +134,11 @@ export default function MakerPlay() {
         list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32, ...(kind === 'stone' && spec.n ? { n: spec.n, a: spec.a } : {}) });
         const valid = readLayout(next);
         if (!valid) { setMessage('空いている床に置いてください。'); return false; }
-        apply(valid); select({ kind, index: list.length - 1 }); setTool('select'); setMessage(''); feedback.grab(kind === 'drop' ? 26 : 32, x, 420); return true;
+        apply(valid); select({ kind, index: list.length - 1 });
+        // The tool stays on, so the next tap places the next one (2026-10-02); at the limit it goes back to 選ぶ.
+        if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setTool('select'); setMessage(kind === 'drop' ? `雫が${MAX_DROPS}個になりました。「選ぶ」に戻ります。` : `石が${MAX_STONES}個になりました。「選ぶ」に戻ります。`); }
+        else setMessage('');
+        feedback.grab(kind === 'drop' ? 26 : 32, x, 420); return true;
       },
       move(x: number, y: number) {
         const selected = selectionRef.current;
@@ -233,7 +237,7 @@ export default function MakerPlay() {
           <aside className="maker-panel">
             {mode === 'edit' ? <>
               <div className="maker-tools" data-tour="tools" role="group" aria-label="置くものを選ぶ">{([{ id: 'select', label: '選ぶ', Icon: Move }, { id: 'drop', label: '雫', Icon: Circle }, { id: 'stone', label: '石', Icon: Hexagon }] as const).map(({ id, label, Icon }) => <button key={id} aria-pressed={tool === id} onClick={() => { setTool(id); setMessage(''); }}><Icon size={17}/>{label}</button>)}<button aria-label="一手戻す" disabled={!undoCount} onClick={undoOne}><Undo2 size={18}/></button></div>
-              <p className="maker-instruction">{tool === 'drop' ? '空いている床に、雫を置く。' : tool === 'stone' ? '空いている床に、石を置く。' : '雫や石を、好きな場所へ。'}</p>
+              <p className="maker-instruction">{tool === 'drop' ? '空いている床に、雫を置く。続けて置けます。' : tool === 'stone' ? '空いている床に、石を置く。続けて置けます。' : '雫や石を、好きな場所へ。'}</p>
               {(tool === 'stone' || selection?.kind === 'stone') && <div className="maker-shapes"><span>石の形</span><div role="group" aria-label="石の形">{STONE_SHAPES.map(spec => <button key={spec.id} aria-label={`石の形 ${spec.label}`} aria-pressed={tool !== 'stone' && selection?.kind === 'stone' && piece ? shapeOf(piece) === spec.id : shape === spec.id} onClick={() => { setShape(spec.id); /* placing: only the next stone's shape; otherwise the selected stone changes */ if (tool !== 'stone' && selection?.kind === 'stone' && piece) change(replacePiece(layoutRef.current, selection, { n: spec.n, a: spec.a })); }}><span className={`maker-shape maker-shape-${spec.id}`} aria-hidden="true"/>{spec.label}</button>)}<button aria-label="石を回す" disabled={!(selection?.kind === 'stone' && piece?.n)} onClick={() => selection && piece && change(replacePiece(layoutRef.current, selection, { a: turned(piece).a }))}><RotateCw size={16}/></button></div></div>}
               <div className="maker-inspector" data-tour="inspector"><span>{piece ? selection?.kind === 'drop' ? '雫の大きさ' : '石の大きさ' : '選んで、動かす'}</span><div role="group" aria-label="大きさ">{(selection?.kind === 'stone' ? STONE_SIZES : DROP_SIZES).map((r, i) => <button key={r} disabled={!piece} aria-pressed={piece?.r === r} aria-label={`${selection?.kind === 'stone' ? '石' : '雫'}を${['小', '中', '大'][i]}に`} onClick={() => selection && change(replacePiece(layoutRef.current, selection, { r }))}>{['小', '中', '大'][i]}</button>)}<button aria-label="選んだものを消す" disabled={!piece} onClick={remove}><Trash2 size={16}/></button></div></div>
               <div className="maker-tones" data-tour="tones"><span>盤の色</span><div role="group" aria-label="盤の色">{TONES.map(t => <button key={t.id} className="maker-tone" style={{ background: t.swatch }} aria-label={`盤の色 ${t.label}`} title={t.label} aria-pressed={toneOf(layout.tone).id === t.id} onClick={() => { if (toneOf(layout.tone).id !== t.id) change(readLayout({ ...layout, tone: t.id })); }}/>)}</div></div>
