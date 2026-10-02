@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STARTER, STONE_SHAPES, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, shapeOf, toneOf, turned } from '../src/experiments/maker/layout';
+import { MAX_STONES, STARTER, STONE_SHAPES, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, shapeOf, toneOf, turned } from '../src/experiments/maker/layout';
 import { LayoutSimulation, MakerSimulation, MAX_STEPS, STEP, verifiesClear, type RecordedShot } from '../src/experiments/maker/simulation';
 import { decodeStage, encodeStage, stageUrl, sharedToken, readDraft, saveDraft, DRAFT_KEY, MAX_TOKEN } from '../src/experiments/maker/share';
 import { routeKey } from '../src/route-key';
@@ -20,7 +20,7 @@ test('maker validates a bounded, separated, single-colour layout before playing'
   assert.ok(readLayout(STARTER));
   assert.equal(readLayout({ ...STARTER, drops: [STARTER.drops[0]] }), null);
   assert.equal(readLayout({ ...STARTER, drops: Array(13).fill(STARTER.drops[0]) }), null);
-  assert.equal(readLayout({ ...STARTER, stones: Array(4).fill({ x: 60, y: 60, r: 24 }) }), null);
+  assert.equal(readLayout({ ...STARTER, stones: Array(MAX_STONES + 1).fill({ x: 60, y: 60, r: 24 }) }), null);
   assert.equal(readLayout({ ...STARTER, drops: [{ x: NaN, y: 100, r: 20 }, STARTER.drops[1]] }), null);
   assert.equal(readLayout({ ...STARTER, drops: [{ x: 0, y: 100, r: 20 }, STARTER.drops[1]] }), null);
   assert.equal(readLayout({ ...STARTER, stones: [{ ...STARTER.drops[0], r: 32 }] }), null);
@@ -255,4 +255,19 @@ test('your own clear is kept with the draft, and only while it still replays on 
   values.set('pura-flow-maker-proof-v1', JSON.stringify({ v: 2, key: geometryKey(STARTER), p: [{ id: 1000, dx: 50, dy: 0, g: 0, r: 0 }] }));
   assert.equal(readCertificate(store, STARTER), null, 'a forged clear does not replay');
   saveCertificate(store, null, null); assert.equal(values.size, 0);
+});
+
+test('eight stones: a full stage is valid, and its link fits even in the worst case', () => {
+  const stones = [[80, 120], [80, 230], [80, 330], [330, 300], [330, 400], [330, 500], [250, 470], [200, 110]].map(([x, y], i) => ({ x, y, r: 32, ...(i % 3 === 0 ? { n: 6 as const, a: 15 } : i % 3 === 1 ? { n: 3 as const, a: 90 } : {}) }));
+  const full = readLayout({ ...STARTER, stones })!;
+  assert.ok(full, 'eight stones with the five starter drops');
+  assert.equal(full.stones.length, 8);
+  assert.equal(readLayout({ ...STARTER, stones: [...stones, { x: 200, y: 520, r: 24 }] }), null, 'a ninth is refused');
+  // The longest link a stage can have: 12 drops, 8 hexagons, a 32-letter name, a colour, and a 12-shot proof with large steps.
+  const drops = [[60, 60], [150, 60], [240, 60], [330, 60], [60, 150], [330, 150], [60, 240], [330, 240], [60, 330], [330, 330], [60, 420], [330, 420]].map(([x, y]) => ({ x, y, r: 32 }));
+  const worst = { name: 'あ'.repeat(32), tone: 'lavender' as const, drops, stones: [[150, 150], [240, 150], [150, 240], [240, 240], [150, 330], [240, 330], [150, 420], [240, 420]].map(([x, y]) => ({ x, y, r: 40, n: 6 as const, a: 45 })) };
+  const proof = Array.from({ length: 12 }, (_, i) => ({ id: 1000 + i, dx: -52.5, dy: 90.1, g: 17000 + i * 10, r: 17000 + i * 10 + 5 }));
+  const json = JSON.stringify({ v: 2, l: worst, p: proof });
+  const token = Buffer.from(json).toString('base64url');
+  assert.ok(token.length < MAX_TOKEN, `the worst case is ${token.length} of ${MAX_TOKEN} characters`);
 });

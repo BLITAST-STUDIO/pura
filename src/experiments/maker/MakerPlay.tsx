@@ -122,13 +122,14 @@ export default function MakerPlay() {
       }
     };
     const edit = sim instanceof LayoutSimulation ? {
+      slots: MAX_STONES,
       start(x: number, y: number, hit: Selection | null) {
         dragBefore.current = cloneLayout(layoutRef.current);
         if (toolRef.current === 'select' || hit) { select(hit); return !!hit; }
         const kind = toolRef.current;
         const before = layoutRef.current, next = cloneLayout(before);
         const list = kind === 'drop' ? next.drops : next.stones;
-        if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setMessage(kind === 'drop' ? '雫は12個まで置けます。' : '石は3個まで置けます。'); return false; }
+        if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setMessage(kind === 'drop' ? '雫は12個まで置けます。' : `石は${MAX_STONES}個まで置けます。`); return false; }
         const spec = STONE_SHAPES.find(s => s.id === shapeRef.current)!;
         list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32, ...(kind === 'stone' && spec.n ? { n: spec.n, a: spec.a } : {}) });
         const valid = readLayout(next);

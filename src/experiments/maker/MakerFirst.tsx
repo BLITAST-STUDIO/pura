@@ -48,6 +48,7 @@ export function MakerFirst({ feedback, look, onDone, onSkip }: {
     if (sim instanceof LayoutSimulation) sim.selection = null;
     let dragging: Selection | null = null;
     const edit = sim instanceof LayoutSimulation ? {
+      slots: 3,
       start(x: number, y: number, hit: Selection | null) {
         if (hit) { dragging = hit; sim.selection = hit; return true; }
         const current = layoutRef.current, want = firstStep(current);

@@ -4,7 +4,8 @@ import type { BoardDrop } from '../boards';
 export const DROP_SIZES = [20, 26, 32] as const;
 export const STONE_SIZES = [24, 32, 40] as const;
 export const MAX_DROPS = 12;
-export const MAX_STONES = 3;
+/** Stones per stage: 3 until 2026-10-02, then 8 (RYO: more stones, for more strategic stages). */
+export const MAX_STONES = 8;
 export const MAKER_PAD = 22;
 export type Piece = { x: number; y: number; r: number };
 /** A stone: a circle, or a regular polygon of `n` sides turned `a` degrees (15° steps). See game/obstacle.ts. */

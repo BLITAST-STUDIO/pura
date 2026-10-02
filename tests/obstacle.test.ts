@@ -80,3 +80,35 @@ test('circle stones are untouched: the same contact response as before', () => {
   for (let i = 0; i < 60; i++) sim.tick(1 / 60);
   assert.ok(sim.drops[0].vy > 0 && Math.abs(sim.drops[0].vx) < 1e-6, 'a head-on hit on a round stone returns straight back');
 });
+
+test('no drop ends inside any of eight mixed stones (fuzz over layouts, speeds and sizes)', () => {
+  let seed = 4242; const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) | 0) >>> 0) / 4294967296;
+  const spots = [[80, 120], [80, 230], [80, 330], [330, 300], [330, 400], [330, 500], [250, 470], [200, 110]];
+  let worst = 0, contacts = 0, started = 0;
+  for (let n = 0; n < 600; n++) {
+    const stones: Obstacle[] = spots.map(([x, y], i) => {
+      const sides = [undefined, 3, 4, 6][Math.floor(rnd() * 4)] as number | undefined;
+      return { x, y, r: [24, 32, 40][Math.floor(rnd() * 3)], ...(sides ? { n: sides, a: Math.floor(rnd() * (360 / sides / 15)) * 15 } : {}) };
+    });
+    const sim = new PuraSim(); sim.level = SANDBOX; sim.resize(420, 560); sim.drops = []; sim.obstacles = stones;
+    sim.tuning = { ...sim.tuning, grabK: 0, grabDamp: 0, attraction: 0 };
+    const r = [20, 26, 32][Math.floor(rnd() * 3)], a = rnd() * Math.PI * 2, speed = 200 + rnd() * 520;
+    const sx = 210 + Math.cos(a) * 60, sy = 290 + Math.sin(a) * 60;
+    // Start clear of every stone (a start inside one is not a collision to test).
+    if (stones.some(o => isPolygon(o) ? !!polygonContact(o, sx, sy, r) : Math.hypot(sx - o.x, sy - o.y) < r + o.r)) continue;
+    started++;
+    drop(sim, sx, sy, r, Math.cos(a + Math.PI) * speed * (0.3 + rnd()), Math.sin(a + Math.PI) * speed * (0.3 + rnd()));
+    sim.onContact = (_i, _x, _y, kind) => { if (kind === 'obstacle') contacts++; };
+    for (let i = 0; i < 480; i++) {
+      sim.tick(1 / 120);
+      const d = sim.drops[0];
+      for (const o of stones) {
+        const depth = isPolygon(o) ? (() => { const c = polygonContact(o, d.x, d.y, d.r); return c ? Math.hypot(c.x - d.x, c.y - d.y) : 0; })() : Math.max(0, d.r + o.r - Math.hypot(d.x - o.x, d.y - o.y));
+        worst = Math.max(worst, depth);
+      }
+    }
+  }
+  assert.ok(started > 150, `enough starts (${started})`);
+  assert.ok(contacts > 150, `many hits (${contacts})`);
+  assert.ok(worst < 2, `the deepest overlap stays small (${worst.toFixed(3)})`);
+});

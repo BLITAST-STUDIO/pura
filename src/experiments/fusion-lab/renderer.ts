@@ -80,6 +80,8 @@ const AIM_DOTS = 16;
 type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<Obstacle>; onUpdate?: () => void; feedback?: SensoryFeedback;
   /** A layout editor uses the same camera/picking, without aiming or running physics. */
   edit?: {
+    /** How many stones the editor can show at once. */
+    slots: number;
     start(x: number, y: number, hit: { kind: 'drop' | 'stone'; index: number } | null): boolean;
     move(x: number, y: number): void;
     end(cancelled: boolean): void;
@@ -163,7 +165,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     else { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.z = -.005; }
     mesh.position.x = (o.x - sim.width / 2) * W; mesh.position.y = (sim.height / 2 - o.y) * W;
   }
-  const islands = (adapter.edit ? Array.from({ length: 3 }, (): Obstacle => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
+  const islands = (adapter.edit ? Array.from({ length: adapter.edit.slots }, (): Obstacle => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ color: '#364649', roughness: .58, metalness: .12, envMapIntensity: .3 }));
     applyIsland(mesh, o);
     scene.add(mesh); return mesh;
