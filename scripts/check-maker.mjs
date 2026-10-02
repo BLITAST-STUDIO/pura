@@ -15,7 +15,7 @@ const screenshot = async path => { await b.sleep(500); await b.screenshot(path);
 const state = () => b.eval(`({drops:JSON.parse(document.querySelector('canvas').dataset.drops),rect:document.querySelector('canvas').getBoundingClientRect().toJSON(),draft:JSON.parse(localStorage.getItem('${DRAFT_KEY}')),mode:document.querySelector('.maker-play').dataset.mode})`);
 async function click(label, tag = 'button') {
   const point = await b.eval(`(()=>{const e=[...document.querySelectorAll(${JSON.stringify(tag)})].find(e=>e.getAttribute('aria-label')===${JSON.stringify(label)}||e.textContent.trim()===${JSON.stringify(label)});if(!e)throw Error('missing '+${JSON.stringify(label)});e.scrollIntoView({block:'nearest'});const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]})()`);
-  await b.mouse('mousePressed', ...point); await b.mouse('mouseReleased', ...point); await b.sleep(100);
+  await b.mouse('mousePressed', ...point); await b.mouse('mouseReleased', ...point); await b.sleep(350); // a tool change needs a moment to take effect before the next tap
 }
 async function fill(label, text) {
   await b.eval(`(()=>{const e=document.querySelector('input[aria-label="${label}"]');e.focus();e.select()})()`);
