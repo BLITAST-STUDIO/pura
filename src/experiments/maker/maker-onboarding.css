@@ -1,0 +1,71 @@
+/* The stage maker's onboarding (MakerFirst, MakerTour) and the clear signal. */
+
+/* Phase 1: the board is the whole screen; nothing else but a line of text. */
+.maker-play.is-onboarding { padding: 0; }
+.maker-first { position: fixed; inset: 0; background: #e6e3dc; overflow: hidden; touch-action: none; }
+.maker-first .dl-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.maker-first-line { position: absolute; z-index: 3; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 7vh); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 24px; text-align: center; pointer-events: none; color: #1e2629; animation: maker-line 1.4s cubic-bezier(.2, .7, .2, 1) both; }
+.maker-first-line p span, .maker-tour-card p span, .maker-tour-end p span { display: inline-block; }
+.maker-first-line p { margin: 0; font-size: clamp(18px, 5.2vw, 25px); font-weight: 300; letter-spacing: .22em; text-indent: .22em; line-height: 1.6; }
+.maker-first-line small { font-size: 12px; letter-spacing: .14em; color: #5c686b; animation: maker-line 1.4s .35s cubic-bezier(.2, .7, .2, 1) both; }
+.maker-first.is-intro .maker-first-line { top: 40%; }
+.maker-first.is-intro .maker-first-line p { font-size: clamp(20px, 6vw, 30px); animation-duration: 2.2s; }
+.maker-first.is-studio .maker-first-line { top: 38%; }
+.maker-first.is-studio { background: #ecebe6; }
+.maker-first.is-studio .dl-canvas { opacity: .25; transition: opacity 1.2s; }
+@keyframes maker-line { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+
+.maker-first-count { display: flex; gap: 10px; margin-top: 6px; }
+.maker-first-count i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(30, 40, 44, .28); transition: background .3s, border-color .3s, transform .3s; }
+.maker-first-count.is-drops i.is-done { background: #5fbfcb; border-color: #5fbfcb; transform: scale(1.15); }
+.maker-first-count.is-stones i { border-radius: 3px; }
+.maker-first-count.is-stones i.is-done { background: #364649; border-color: #364649; transform: scale(1.15); }
+
+.maker-first-nudge, .maker-first-reading { position: absolute; z-index: 3; left: 0; right: 0; text-align: center; margin: 0; pointer-events: none; font-size: 12px; letter-spacing: .12em; color: #5c686b; }
+.maker-first-nudge { bottom: calc(env(safe-area-inset-bottom, 0px) + 120px); animation: maker-line .4s both; }
+/* The shot count while trying: one quiet number. */
+.maker-first-reading { bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); display: flex; align-items: baseline; justify-content: center; gap: 4px; color: #1e2629; }
+.maker-first-reading b { font-size: 34px; font-weight: 200; letter-spacing: .02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.maker-first-reading span { font-size: 12px; letter-spacing: .1em; color: #5c686b; }
+.maker-first-reading small { margin-left: 14px; font-size: 11px; letter-spacing: .12em; color: #5c686b; }
+.maker-first-actions { position: absolute; z-index: 4; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px) + 36px); display: flex; justify-content: center; gap: 10px; padding: 0 24px; animation: maker-line .8s both; }
+.maker-first-actions button { min-height: 52px; min-width: 140px; padding: 0 24px; border-radius: 999px; background: rgba(246, 245, 241, .9); color: #1e2629; font-size: 14px; letter-spacing: .12em; box-shadow: 0 2px 14px rgba(30, 40, 44, .12); }
+.maker-first-actions .maker-first-go { background: #244f4c; color: #f1f6f2; }
+.maker-first-skip { position: absolute; z-index: 4; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; padding: 8px 12px; border-radius: 999px; background: transparent; color: rgba(30, 40, 44, .45); font-size: 11px; letter-spacing: .1em; }
+
+/* The clear signal: grey until you have cleared this board yourself, green once you have. */
+.maker-status { position: absolute; z-index: 2; top: 16px; right: 16px; display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 10px; border-radius: 999px; background: rgba(246, 245, 241, .85); color: #5c686b; font-size: 11px; letter-spacing: .08em; pointer-events: none; box-shadow: 0 1px 6px rgba(30, 40, 44, .08); }
+.maker-status i { width: 9px; height: 9px; border-radius: 50%; background: #b9bfbd; box-shadow: 0 0 0 3px rgba(185, 191, 189, .25); }
+.maker-status[data-state="clear"] { color: #1f6a4c; }
+.maker-status[data-state="clear"] i { background: #3fb27f; box-shadow: 0 0 0 3px rgba(63, 178, 127, .25), 0 0 10px rgba(63, 178, 127, .55); }
+
+.maker-panel .maker-replay-intro { align-self: flex-start; min-height: 0; padding: 4px 0; background: none; color: #6a797b; font-size: 10px; font-weight: 400; letter-spacing: .04em; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Phase 2: the tour. One part of the screen is ringed; the card says one thing. */
+[data-tour-focus] { position: relative; z-index: 6; border-radius: 14px; box-shadow: 0 0 0 3px #f6f5f1, 0 0 0 6px #3f8f93; animation: maker-ring 1.6s ease-in-out infinite; }
+/* Lifting a ringed part above the veil must not change how it is laid out (the signal floats on the board). */
+.maker-status[data-tour-focus] { position: absolute; }
+@keyframes maker-ring { 50% { box-shadow: 0 0 0 3px #f6f5f1, 0 0 0 9px rgba(63, 143, 147, .45); } }
+.maker-tour { position: fixed; z-index: 5; inset: 0; pointer-events: none; background: rgba(236, 235, 230, .35); }
+.maker-tour-card { position: absolute; left: 0; right: 0; margin: 0 auto; top: calc(env(safe-area-inset-top, 0px) + 18px); width: min(92vw, 420px); box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 14px; border-radius: 18px; background: rgba(250, 249, 245, .97); color: #1e2629; box-shadow: 0 10px 40px rgba(30, 40, 44, .18); pointer-events: auto; animation: maker-line .7s cubic-bezier(.2, .7, .2, 1) both; }
+.maker-tour.is-below .maker-tour-card { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); }
+.maker-tour.is-centre { display: flex; align-items: center; justify-content: center; }
+.maker-tour.is-centre .maker-tour-card { position: relative; top: auto; }
+.maker-tour-card p { margin: 0; font-size: 17px; font-weight: 400; letter-spacing: .08em; line-height: 1.6; }
+.maker-tour-card small { font-size: 12px; line-height: 1.8; color: #56666a; }
+.maker-tour-card > div:last-child { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.maker-tour-dots { display: flex; gap: 6px; }
+.maker-tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(30, 40, 44, .15); }
+.maker-tour-dots i.is-now { background: #3f8f93; transform: scale(1.25); }
+.maker-tour-dots i.is-done { background: rgba(63, 143, 147, .45); }
+.maker-tour-next { min-height: 44px; padding: 0 22px; border-radius: 999px; background: #244f4c; color: #f1f6f2; font-size: 13px; letter-spacing: .1em; }
+.maker-tour-skip { padding: 8px 4px; background: none; color: #6a797b; font-size: 11px; }
+
+/* The end: white rises, the last words, then everything fades away to the studio. */
+.maker-tour-end { position: fixed; z-index: 7; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: #fbfaf7; color: #1e2629; text-align: center; pointer-events: none; animation: maker-white 4.6s ease both; }
+.maker-tour-end p { margin: 0; font-size: clamp(17px, 4.8vw, 22px); font-weight: 300; letter-spacing: .2em; text-indent: .2em; }
+.maker-tour-end small { font-size: 13px; letter-spacing: .16em; color: #56666a; }
+@keyframes maker-white { 0% { opacity: 0; } 18% { opacity: 1; } 72% { opacity: 1; } 100% { opacity: 0; } }
+
+.maker-play[data-ui="dark"] .maker-status { background: rgba(20, 32, 36, .8); color: #a4b9b9; }
+@media (prefers-reduced-motion: reduce) { .maker-first-line, .maker-first-line small, .maker-tour-card, .maker-first-actions { animation: none; } [data-tour-focus] { animation: none; } }

@@ -9,6 +9,7 @@ import {
   type Pigment,
 } from "./palette";
 import { getLevel, SANDBOX_COUNT, type LevelDef } from "./levels";
+import { isPolygon, polygonContact, type Obstacle } from "./obstacle";
 
 export type Drop = {
   id: number;
@@ -137,8 +138,8 @@ export class PuraSim {
   private pressPartner: number | null = null;
   private pressTime = 0;
   private pressedThisStep = false;
-  /** Optional solid circular islands, used only by the new chapter scenes. */
-  obstacles: ReadonlyArray<{ x: number; y: number; r: number }> = [];
+  /** Optional solid islands (circles, or regular polygons: see obstacle.ts), used by the shot modes and chapter scenes. */
+  obstacles: ReadonlyArray<Obstacle> = [];
   private nextId = 1;
   private acc = 0;
   private last: Drop[] = [];
@@ -479,13 +480,21 @@ export class PuraSim {
       if (this.obstacles.length) for (let pass = 0; pass < 12; pass++) {
         let corrected = false;
         for (const d of this.drops) for (const obstacle of this.obstacles) {
-        const dx = d.x - obstacle.x, dy = d.y - obstacle.y;
-        const distance = Math.hypot(dx, dy), reach = d.r + obstacle.r;
-        if (distance >= reach - 1e-8) continue;
+        let nx: number, ny: number, px: number, py: number;
+        if (isPolygon(obstacle)) {
+          const hit = polygonContact(obstacle, d.x, d.y, d.r);
+          if (!hit) continue;
+          nx = hit.nx; ny = hit.ny; px = hit.x; py = hit.y;
+        } else {
+          const dx = d.x - obstacle.x, dy = d.y - obstacle.y;
+          const distance = Math.hypot(dx, dy), reach = d.r + obstacle.r;
+          if (distance >= reach - 1e-8) continue;
+          nx = distance > 1e-8 ? dx / distance : 0;
+          ny = distance > 1e-8 ? dy / distance : 1;
+          px = obstacle.x + nx * reach; py = obstacle.y + ny * reach;
+        }
         corrected = true;
-        const nx = distance > 1e-8 ? dx / distance : 0;
-        const ny = distance > 1e-8 ? dy / distance : 1;
-        d.x = obstacle.x + nx * reach; d.y = obstacle.y + ny * reach;
+        d.x = px; d.y = py;
         const approach = d.vx * nx + d.vy * ny;
         if (approach < 0) {
           d.vx -= (1 + REST) * approach * nx; d.vy -= (1 + REST) * approach * ny;

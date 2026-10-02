@@ -4,7 +4,7 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import { OpenPlaySimulation } from './simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { PhoneBar, PhoneMenuClose, usePhonePlay } from '../phone-play';
 import { SoundNudge } from '../sensory/sound-nudge';
@@ -99,7 +99,7 @@ export default function OpenPlay() {
         {status === 'ready' && !paused && <div className={`dl-touch-hint${touched ? ' is-dismissed' : ''}`} aria-hidden="true"><span className="dl-hint-dot"/>なぞって、動かす</div>}
         <div className="dl-stage-bottom"><output className="open-reading" aria-live="polite">{held ? `${HUE_NAMES[held.hue]} · 純度 ${Math.floor(held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>NO GOAL</span></div>
       </section>
-      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>もう一度</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+      <div className="purity-actions"><button onClick={again} disabled={status !== 'ready'}><RotateCcw size={15}/><span>もう一度</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
       <details className="purity-details open-details">
         <summary>遊び方と表示</summary>
         <div id="open-help">

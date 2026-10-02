@@ -5,7 +5,7 @@ import { PuritySimulation, type SceneState } from './simulation';
 import { CHAPTERS, getChapter, HUE_NAMES } from './chapters';
 import { readProgress, writeProgress, type Progress } from './progress';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
-import { SoundSettings } from '../sound-settings';
+import { SoundSettings, SoundButton } from '../sound-settings';
 import { ModeNav } from '../mode-nav';
 import { LookPicker } from '../look-picker';
 import { useWalls } from '../walls';
@@ -130,7 +130,7 @@ export default function PurityScene() {
           {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
           <div className="dl-stage-bottom"><span>{multi ? 'CYAN + ROSE → LIGHT' : 'CYAN → LIGHT'}</span><span>NO TIME LIMIT</span></div>
         </section>
-          <div className="purity-actions"><button onClick={undo} disabled={!state.canUndo || status !== 'ready'}><Undo2 size={16}/><span>一手戻す</span></button><button onClick={reset} disabled={status !== 'ready'}><RotateCcw size={15}/><span>{state.completed ? 'もう一度遊ぶ' : '最初から'}</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><button aria-label={sensory.sound ? '音を消す' : '音を出す'} aria-pressed={sensory.sound} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={16}/> : <VolumeX size={16}/>}</button></div>
+          <div className="purity-actions"><button onClick={undo} disabled={!state.canUndo || status !== 'ready'}><Undo2 size={16}/><span>一手戻す</span></button><button onClick={reset} disabled={status !== 'ready'}><RotateCcw size={15}/><span>{state.completed ? 'もう一度遊ぶ' : '最初から'}</span></button><button aria-label={paused ? '再開する' : '一時停止'} aria-pressed={paused} onClick={() => setPaused(p => !p)} disabled={status !== 'ready'}>{paused ? <Play size={16}/> : <Pause size={16}/>}</button><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={16}/></div>
           <p className="purity-notice" role="status">{notice || (chapterId === 2 ? '石は動かせません。外側にも、回り道があります。' : '違う色に触れると混ざります。一手戻して試せます。')}</p>
         </div>
         <aside className={`purity-companion${state.completed ? ' is-complete' : ''}`}>

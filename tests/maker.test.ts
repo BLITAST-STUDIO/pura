@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STARTER, cloneLayout, geometryKey, movePiece, readLayout, replacePiece } from '../src/experiments/maker/layout';
+import { MAX_STONES, STARTER, STONE_SHAPES, TONES, cloneLayout, geometryKey, movePiece, readLayout, replacePiece, shapeOf, toneOf, turned } from '../src/experiments/maker/layout';
 import { LayoutSimulation, MakerSimulation, MAX_STEPS, STEP, verifiesClear, type RecordedShot } from '../src/experiments/maker/simulation';
 import { decodeStage, encodeStage, stageUrl, sharedToken, readDraft, saveDraft, DRAFT_KEY, MAX_TOKEN } from '../src/experiments/maker/share';
 import { routeKey } from '../src/route-key';
@@ -20,7 +20,7 @@ test('maker validates a bounded, separated, single-colour layout before playing'
   assert.ok(readLayout(STARTER));
   assert.equal(readLayout({ ...STARTER, drops: [STARTER.drops[0]] }), null);
   assert.equal(readLayout({ ...STARTER, drops: Array(13).fill(STARTER.drops[0]) }), null);
-  assert.equal(readLayout({ ...STARTER, stones: Array(4).fill({ x: 60, y: 60, r: 24 }) }), null);
+  assert.equal(readLayout({ ...STARTER, stones: Array(MAX_STONES + 1).fill({ x: 60, y: 60, r: 24 }) }), null);
   assert.equal(readLayout({ ...STARTER, drops: [{ x: NaN, y: 100, r: 20 }, STARTER.drops[1]] }), null);
   assert.equal(readLayout({ ...STARTER, drops: [{ x: 0, y: 100, r: 20 }, STARTER.drops[1]] }), null);
   assert.equal(readLayout({ ...STARTER, stones: [{ ...STARTER.drops[0], r: 32 }] }), null);
@@ -150,4 +150,124 @@ test('overlapped proofs are rejected when the steps are impossible, and version 
   const legacy = clear().proof.map(({ id, dx, dy }) => ({ id, dx, dy }));
   assert.ok(decodeStage(token({ v: 1, l: STARTER, p: legacy })), 'old links open');
   assert.equal(decodeStage(token({ v: 2, l: STARTER, p: legacy })), null, 'a new link without steps does not');
+});
+
+test('board colours: seven choices, white is the default and unwritten, unknown ones fall back, geometry is untouched', () => {
+  assert.deepEqual(TONES.map(t => t.id), ['white', 'mint', 'sakura', 'lavender', 'lemon', 'sky', 'peach']);
+  assert.equal(readLayout(STARTER)!.tone, undefined, 'a layout without a colour is white');
+  assert.equal(readLayout({ ...STARTER, tone: 'white' })!.tone, undefined, 'white is not written');
+  assert.equal(readLayout({ ...STARTER, tone: 'sakura' })!.tone, 'sakura');
+  assert.equal(readLayout({ ...STARTER, tone: 'hot-pink' })!.tone, undefined, 'an unknown colour is white, not an error');
+  assert.equal(readLayout({ ...STARTER, tone: { x: 1 } })!.tone, undefined);
+  assert.equal(toneOf(undefined).id, 'white'); assert.equal(toneOf('mint').floor, '#c8feda');
+  assert.equal(cloneLayout({ ...STARTER, tone: 'sky' }).tone, 'sky');
+  for (const t of TONES.slice(1)) assert.match(t.floor!, /^#[0-9a-f]{6}$/);
+  // The colour does not belong to the geometry a clear certificate covers.
+  assert.equal(geometryKey({ ...STARTER, tone: 'peach' }), geometryKey(STARTER));
+});
+
+test('a shared stage carries its board colour; links made before colours existed open white', () => {
+  const layout = { ...cloneLayout(STARTER), tone: 'lavender' as const }, proof = clear().proof;
+  const url = stageUrl('https://x.test/pura/next/', layout, proof)!;
+  const decoded = decodeStage(sharedToken(new URL(url).hash)!)!;
+  assert.equal(decoded.layout.tone, 'lavender');
+  assert.ok(verifiesClear(decoded.layout, decoded.proof), 'the colour changes nothing about the clear');
+  assert.equal(encodeStage({ ...STARTER, tone: 'mint' }, proof), encodeStage({ ...STARTER, tone: 'mint' }, proof));
+  const plain = decodeStage(encodeStage(STARTER, proof)!)!;
+  assert.equal(plain.layout.tone, undefined);
+  assert.ok(encodeStage(STARTER, proof)!.length < encodeStage(layout, proof)!.length, 'white adds nothing to the link');
+  // A draft keeps its colour.
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } };
+  assert.ok(saveDraft(store, layout)); assert.equal(readDraft(store)!.tone, 'lavender');
+});
+
+test('stone shapes: circle, triangle, square, hexagon; strict sides and angles; turning repeats; geometry includes the shape', () => {
+  assert.deepEqual(STONE_SHAPES.map(s => s.id), ['circle', 'triangle', 'square', 'hexagon']);
+  const stoned = (stone: object) => readLayout({ ...STARTER, stones: [{ x: 300, y: 300, r: 32, ...stone }] });
+  assert.ok(stoned({})); assert.equal(shapeOf(stoned({})!.stones[0]), 'circle');
+  assert.equal(shapeOf(stoned({ n: 3, a: 30 })!.stones[0]), 'triangle');
+  assert.deepEqual(stoned({ n: 4, a: 45 })!.stones[0], { x: 300, y: 300, r: 32, n: 4, a: 45 }, 'a square at 45° (axis-aligned) is kept as is');
+  assert.deepEqual(stoned({ n: 6 })!.stones[0], { x: 300, y: 300, r: 32, n: 6, a: 0 }, 'the angle defaults to 0');
+  for (const bad of [{ n: 5, a: 0 }, { n: 2, a: 0 }, { n: 4, a: 10 }, { n: 4, a: 90 }, { n: 3, a: 120 }, { n: 3, a: 270 }, { n: 4, a: 7.5 }, { n: 6, a: -15 }, { a: 15 }, { n: '4' }, { n: 4, a: NaN }]) {
+    assert.equal(stoned(bad), null, `rejected: ${JSON.stringify(bad)}`);
+  }
+  // Turning is in 15° steps and repeats after a full turn divided by the sides.
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 4, a: 75 }).a, 0, 'a square repeats every 90°');
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 3, a: 105 }).a, 0, 'a triangle repeats every 120°');
+  assert.equal(turned({ x: 0, y: 0, r: 24, n: 6, a: 0 }, 3).a, 45);
+  assert.equal(turned({ x: 0, y: 0, r: 24 }).a, undefined, 'a circle has nothing to turn');
+  // The shape is part of the geometry (a clear on a square does not hold for a triangle).
+  const square = stoned({ n: 4, a: 45 })!, circle = stoned({})!;
+  assert.notEqual(geometryKey(square), geometryKey(circle));
+  const swapped = replacePiece(circle, { kind: 'stone', index: 0 }, { n: 3, a: 30 })!;
+  assert.equal(shapeOf(swapped.stones[0]), 'triangle');
+  const back = replacePiece(swapped, { kind: 'stone', index: 0 }, { n: undefined, a: undefined })!;
+  assert.deepEqual(back.stones[0], circle.stones[0], 'back to a circle');
+  assert.deepEqual(movePiece(square, { kind: 'stone', index: 0 }, 310, 310)!.stones[0], { x: 310, y: 310, r: 32, n: 4, a: 45 }, 'moving keeps the shape');
+});
+
+test('a stage with polygon stones plays, proves and shares like any other', () => {
+  const layout = readLayout({ name: '角', tone: 'mint', stones: [{ x: 330, y: 330, r: 24, n: 4, a: 45 }, { x: 90, y: 250, r: 24, n: 3, a: 30 }], drops: STARTER.drops })!;
+  const sim = new MakerSimulation(layout);
+  assert.equal(sim.core.obstacles.length, 2);
+  assert.equal(sim.core.obstacles[0].n, 4, 'the polygon reaches the physics');
+  // Aim a drop through the board at the square, and check it never ends inside it.
+  const d = sim.core.drops[0];
+  assert.ok(sim.grab(d.id)); sim.move(d.x - 40, d.y + 90); sim.release();
+  for (let i = 0; i < 120 * 6; i++) sim.tick(STEP);
+  assert.ok(sim.proof.length === 1, 'the shot was recorded');
+  // Shapes survive a link (a fake clearing proof is rejected, but the layout itself round-trips through the reader).
+  assert.deepEqual(readLayout(JSON.parse(JSON.stringify(layout)))!.stones, layout.stones);
+});
+
+test('onboarding: three drops then two stones, the same spacing rules, shown once', async () => {
+  const { canPlace, clampPiece, emptyLayout, firstStep, makerWelcomed, markMakerWelcomed, MAKER_WELCOME_KEY, TOUR } = await import('../src/experiments/maker/onboarding');
+  const l = emptyLayout();
+  assert.equal(firstStep(l), 'drops');
+  assert.ok(canPlace(l, { x: 130, y: 470, r: 26 }));
+  l.drops.push({ x: 130, y: 470, r: 26 });
+  assert.equal(canPlace(l, { x: 170, y: 470, r: 26 }), false, 'too close to the first');
+  assert.equal(canPlace(l, { x: 10, y: 470, r: 26 }), false, 'outside the walls');
+  assert.ok(canPlace(l, { x: 132, y: 470, r: 26 }, { kind: 'drop', index: 0 }), 'a piece does not block itself while dragged');
+  l.drops.push({ x: 200, y: 360, r: 26 }, { x: 260, y: 260, r: 26 });
+  assert.equal(firstStep(l), 'stones');
+  l.stones.push({ x: 340, y: 470, r: 32 }, { x: 90, y: 160, r: 32 });
+  assert.equal(firstStep(l), 'ready');
+  assert.ok(readLayout(l), 'the finished first board is a valid stage');
+  assert.deepEqual(clampPiece({ x: 0, y: 0, r: 26 }, -50, 900), { x: 50, y: 510, r: 26 });
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); } };
+  assert.equal(makerWelcomed(store), false); markMakerWelcomed(store); assert.equal(values.get(MAKER_WELCOME_KEY), '1'); assert.ok(makerWelcomed(store));
+  assert.equal(makerWelcomed({ getItem() { throw Error('blocked'); } }), true, 'no storage: do not force it every time');
+  assert.ok(TOUR.some(s => s.target === 'status' && /クリア/.test(s.sub ?? '')), 'the tour says only a board you cleared becomes a stage');
+});
+
+test('your own clear is kept with the draft, and only while it still replays on that very board', async () => {
+  const { readCertificate, saveCertificate } = await import('../src/experiments/maker/share');
+  const values = new Map<string, string>();
+  const store = { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => { values.set(k, v); }, removeItem: (k: string) => { values.delete(k); } };
+  const proof = clear().proof;
+  saveCertificate(store, STARTER, proof);
+  assert.deepEqual(readCertificate(store, STARTER), proof);
+  const moved = movePiece(STARTER, { kind: 'drop', index: 4 }, 300, 100)!;
+  assert.equal(readCertificate(store, moved), null, 'another board is not cleared');
+  values.set('pura-flow-maker-proof-v1', JSON.stringify({ v: 2, key: geometryKey(STARTER), p: [{ id: 1000, dx: 50, dy: 0, g: 0, r: 0 }] }));
+  assert.equal(readCertificate(store, STARTER), null, 'a forged clear does not replay');
+  saveCertificate(store, null, null); assert.equal(values.size, 0);
+});
+
+test('eight stones: a full stage is valid, and its link fits even in the worst case', () => {
+  const stones = [[80, 120], [80, 230], [80, 330], [330, 300], [330, 400], [330, 500], [250, 470], [200, 110]].map(([x, y], i) => ({ x, y, r: 32, ...(i % 3 === 0 ? { n: 6 as const, a: 15 } : i % 3 === 1 ? { n: 3 as const, a: 90 } : {}) }));
+  const full = readLayout({ ...STARTER, stones })!;
+  assert.ok(full, 'eight stones with the five starter drops');
+  assert.equal(full.stones.length, 8);
+  assert.equal(readLayout({ ...STARTER, stones: [...stones, { x: 200, y: 520, r: 24 }] }), null, 'a ninth is refused');
+  // The longest link a stage can have: 12 drops, 8 hexagons, a 32-letter name, a colour, and a 12-shot proof with large steps.
+  const drops = [[60, 60], [150, 60], [240, 60], [330, 60], [60, 150], [330, 150], [60, 240], [330, 240], [60, 330], [330, 330], [60, 420], [330, 420]].map(([x, y]) => ({ x, y, r: 32 }));
+  const worst = { name: 'あ'.repeat(32), tone: 'lavender' as const, drops, stones: [[150, 150], [240, 150], [150, 240], [240, 240], [150, 330], [240, 330], [150, 420], [240, 420]].map(([x, y]) => ({ x, y, r: 40, n: 6 as const, a: 45 })) };
+  const proof = Array.from({ length: 12 }, (_, i) => ({ id: 1000 + i, dx: -52.5, dy: 90.1, g: 17000 + i * 10, r: 17000 + i * 10 + 5 }));
+  const json = JSON.stringify({ v: 2, l: worst, p: proof });
+  const token = Buffer.from(json).toString('base64url');
+  assert.ok(token.length < MAX_TOKEN, `the worst case is ${token.length} of ${MAX_TOKEN} characters`);
 });

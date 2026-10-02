@@ -16,12 +16,15 @@ import { DropletSurface, volumeScales } from '../droplet-lab/surface-response';
 import { purityOf } from '../../game/palette';
 import type { ContactKind } from '../../game/sim';
 import type { SensoryFeedback } from '../sensory/feedback';
+import { isPolygon, type Obstacle } from '../../game/obstacle';
 
 export type FusionOptions = { lighting: 'studio' | 'daylight'; inspection: boolean; paused: boolean; reducedMotion: boolean; quality: 'high' | 'balanced'; clay: boolean; dyeFlow: 'classic' | 'swirl' | 'bloom'; ripple?: boolean; caustic?: 'artistic' | 'shape';
   /** 'high' quality lowers its pixel ratio while frames are late (default on). */
   adaptive?: boolean;
   /** Visual direction proposal; 'studio' is the approved look. */
   look?: Look;
+  /** A tint for the floor and the room around it, replacing the look's own (the stage maker's board colours). */
+  tone?: { floor: string; background: string } | null;
   /** How the physics walls are shown: a low rim, a fine inlaid line, or not at all (the default here). */
   walls?: 'rim' | 'line' | 'none';
   /** 'screen': the board is the whole phone screen, so the camera comes in until its corners nearly touch the edges. */
@@ -74,9 +77,11 @@ type SceneGoal = { x: number; y: number; r: number; ready: boolean; completed: b
 /** A shot being aimed: launch direction (unit, board axes) and power 0..1. */
 type SceneAim = { x: number; y: number; r: number; dx: number; dy: number; power: number };
 const AIM_DOTS = 16;
-type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<{ x: number; y: number; r: number }>; onUpdate?: () => void; feedback?: SensoryFeedback;
+type SceneAdapter = { simulation?: FusionSimulation; goals?: () => SceneGoal[]; obstacles?: ReadonlyArray<Obstacle>; onUpdate?: () => void; feedback?: SensoryFeedback;
   /** A layout editor uses the same camera/picking, without aiming or running physics. */
   edit?: {
+    /** How many stones the editor can show at once. */
+    slots: number;
     start(x: number, y: number, hit: { kind: 'drop' | 'stone'; index: number } | null): boolean;
     move(x: number, y: number): void;
     end(cancelled: boolean): void;
@@ -134,9 +139,35 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     label.position.z = -.006; scene.add(label);
     return { ring, fill, label, texture };
   });
-  const islands = (adapter.edit ? Array.from({ length: 3 }, () => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
+  /**
+   * A stone's solid: the original dome for a circle, or a low prism with a small
+   * bevel for a polygon (corners at the physics' own corners, 2026-10-02).
+   */
+  function prismGeometry(o: Obstacle & { n: number }) {
+    const bevel = .012, R = o.r * W - bevel;
+    const shape = new THREE.Shape();
+    for (let i = 0; i < o.n; i++) {
+      const t = ((o.a ?? 0) + i * 360 / o.n) * Math.PI / 180;
+      const x = R * Math.cos(t), y = -R * Math.sin(t); // board y points down
+      if (i) shape.lineTo(x, y); else shape.moveTo(x, y);
+    }
+    shape.closePath();
+    return new THREE.ExtrudeGeometry(shape, { depth: .17, bevelEnabled: true, bevelThickness: .03, bevelSize: bevel, bevelSegments: 3 });
+  }
+  function applyIsland(mesh: THREE.Mesh, o: Obstacle) {
+    const key = isPolygon(o) ? `${o.n}:${o.a ?? 0}:${o.r}` : 'circle';
+    if (mesh.userData.key !== key) {
+      mesh.geometry.dispose();
+      mesh.geometry = isPolygon(o) ? prismGeometry(o) : new THREE.SphereGeometry(1, 40, 24);
+      mesh.userData.key = key;
+    }
+    if (isPolygon(o)) { mesh.scale.set(1, 1, 1); mesh.position.z = -.012; }
+    else { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.z = -.005; }
+    mesh.position.x = (o.x - sim.width / 2) * W; mesh.position.y = (sim.height / 2 - o.y) * W;
+  }
+  const islands = (adapter.edit ? Array.from({ length: adapter.edit.slots }, (): Obstacle => ({ x: 0, y: 0, r: 1 })) : adapter.obstacles ?? []).map(o => {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ color: '#364649', roughness: .58, metalness: .12, envMapIntensity: .3 }));
-    mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005);
+    applyIsland(mesh, o);
     scene.add(mesh); return mesh;
   });
   // Only screens that aim shots get the guide; every other scene is unchanged.
@@ -429,7 +460,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     shapeBudget = SHAPE_UPDATES_PER_FRAME;
     if (adapter.edit) islands.forEach((mesh, i) => {
       const o = sim.core.obstacles[i]; mesh.visible = !!o;
-      if (o) { mesh.scale.set(o.r * W, o.r * W, .28); mesh.position.set((o.x - sim.width / 2) * W, (sim.height / 2 - o.y) * W, -.005); }
+      if (o) applyIsland(mesh, o);
     });
     canvas.dataset.dyeFlow = options.dyeFlow;
     while (sim.events.length) fusion(sim.events.shift()!);
@@ -707,7 +738,8 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     reset(preset: FusionPreset = sim.preset, ratio = sim.ratio) { cancel(); sparks.clear(); appearing.clear(); for (const id of [...bodies.keys()]) removeBody(id); sim.reset(preset, ratio); refresh(0); last = 0; samples = []; },
     setOptions(next: Partial<FusionOptions>) {
       const lightingChanged = (next.lighting !== undefined && next.lighting !== options.lighting)
-        || (next.look !== undefined && next.look !== options.look);
+        || (next.look !== undefined && next.look !== options.look)
+        || (next.tone !== undefined && next.tone?.floor !== options.tone?.floor);
       const qualityChanged = (next.quality !== undefined && next.quality !== options.quality)
         || (next.adaptive !== undefined && next.adaptive !== options.adaptive);
       const fitChanged = next.fit !== undefined && next.fit !== options.fit;
@@ -716,7 +748,7 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
       projectionGeometry.setDrawRange(0, options.quality === 'high' ? CAUSTIC_SAMPLES : CAUSTIC_BALANCED_SAMPLES);
       if (options.paused) cancel();
       if (lightingChanged) {
-        const look = lookScene(options.look ?? 'studio', options.lighting === 'daylight');
+        const look = { ...lookScene(options.look ?? 'studio', options.lighting === 'daylight'), ...(options.tone ?? {}) };
         const old = env; env = studioEnvironment(renderer, look.daylight, look.room); scene.environment = env.texture; old.dispose();
         (scene.background as THREE.Color).set(look.background);
         floorMaterial.color.set(look.floor); floorMaterial.roughness = look.roughness; floorMaterial.metalness = look.metalness;

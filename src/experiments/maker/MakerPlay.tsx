@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Circle, Hexagon, Move, Play, RotateCcw, Send, Trash2, Undo2, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Circle, Hexagon, Move, Play, RotateCcw, RotateCw, Send, Trash2, Undo2, Volume2, VolumeX, X } from 'lucide-react';
 import { createFusionExperience } from '../fusion-lab/renderer';
 import { stageDropHeight } from '../stages/simulation';
 import { initialCaustic, initialRipple } from '../look-defaults';
 import { initialLook, initialUi } from '../look';
+import { SoundButton } from '../sound-settings';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { SoundNudge } from '../sensory/sound-nudge';
 import { ClearGlow } from '../clear-glow';
-import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STARTER, geometryKey, movePiece, readLayout, replacePiece, selectedPiece, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
+import { cloneLayout, cleanName, DROP_SIZES, STONE_SIZES, STONE_SHAPES, STARTER, TONES, geometryKey, shapeOf, turned, type StoneShapeId, movePiece, readLayout, replacePiece, selectedPiece, toneOf, MAX_DROPS, MAX_STONES, type Layout, type Selection } from './layout';
 import { LayoutSimulation, MakerSimulation, MAX_SHOTS, verifiesClear, type RecordedShot } from './simulation';
-import { decodeStage, readDraft, saveDraft, sharedToken, stageUrl } from './share';
+import { decodeStage, readCertificate, readDraft, saveCertificate, saveDraft, sharedToken, stageUrl } from './share';
+import { MakerFirst } from './MakerFirst';
+import { MakerTour } from './MakerTour';
+import { makerWelcomed, markMakerWelcomed } from './onboarding';
+import './maker-onboarding.css';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
 import './maker.css';
@@ -17,19 +22,31 @@ import './maker.css';
 type Mode = 'edit' | 'test' | 'challenge';
 type Tool = 'select' | 'drop' | 'stone';
 type Certificate = { key: string; proof: RecordedShot[] };
+/** The renderer's floor and room tint for a board colour; white keeps the look's own. */
+function toneColours(id: string | undefined) {
+  const t = toneOf(id);
+  return t.floor ? { floor: t.floor, background: t.background } : null;
+}
 function storage(): Storage | null { try { return window.localStorage; } catch { return null; } }
 function initial() {
   const token = sharedToken(window.location.hash), shared = token ? decodeStage(token) : null;
-  return { layout: shared?.layout ?? readDraft(storage()) ?? cloneLayout(STARTER), mode: (shared ? 'challenge' : 'edit') as Mode,
-    certificate: shared ? { key: geometryKey(shared.layout), proof: shared.proof } : null, invalid: !!token && !shared };
+  const draft = shared ? null : readDraft(storage());
+  // Your own board keeps its clear across visits (the signal stays green), if it still replays.
+  const own = draft ? readCertificate(storage(), draft) : null;
+  return { layout: shared?.layout ?? draft ?? cloneLayout(STARTER), mode: (shared ? 'challenge' : 'edit') as Mode,
+    certificate: shared ? { key: geometryKey(shared.layout), proof: shared.proof } : own && draft ? { key: geometryKey(draft), proof: own } : null, invalid: !!token && !shared };
 }
 
 export default function MakerPlay() {
   const [boot] = useState(initial);
+  // The onboarding: the first time the editor opens (never for a shared stage), or again on request.
+  const [onboarding, setOnboarding] = useState<'first' | 'tour' | 'off'>(() => boot.mode === 'edit' && (!makerWelcomed(storage()) || new URLSearchParams(window.location.search).get('intro') === '1') ? 'first' : 'off');
   const [layout, setLayout] = useState(boot.layout), layoutRef = useRef(layout);
   const [mode, setMode] = useState<Mode>(boot.mode);
   const [invalid, setInvalid] = useState(boot.invalid);
   const [tool, setTool] = useState<Tool>('select'), toolRef = useRef(tool); toolRef.current = tool;
+  // The shape the next stone is placed with (the last one chosen).
+  const [shape, setShape] = useState<StoneShapeId>('circle'), shapeRef = useRef(shape); shapeRef.current = shape;
   const [selection, setSelection] = useState<Selection | null>({ kind: 'drop', index: 0 });
   const selectionRef = useRef(selection);
   const [certificate, setCertificate] = useState<Certificate | null>(boot.certificate);
@@ -66,9 +83,13 @@ export default function MakerPlay() {
   }
   function ownBoard() {
     window.history.replaceState(null, '', '?play=maker');
-    apply(readDraft(storage()) ?? cloneLayout(STARTER));
-    setCertificate(null); setInvalid(false); select({ kind: 'drop', index: 0 }); setMode('edit'); setAttempt(n => n + 1);
+    const draft = readDraft(storage()) ?? cloneLayout(STARTER), own = readCertificate(storage(), draft);
+    apply(draft);
+    setCertificate(own ? { key: geometryKey(draft), proof: own } : null); setInvalid(false); select({ kind: 'drop', index: 0 }); setMode('edit'); setAttempt(n => n + 1);
   }
+
+  // Board colour: changing it (or undoing it) repaints the floor without rebuilding the board.
+  useEffect(() => { experience.current?.setOptions({ tone: toneColours(layout.tone) }); }, [layout.tone]);
 
   useEffect(() => {
     // A second stage link can change just the fragment in an already open tab.
@@ -82,7 +103,7 @@ export default function MakerPlay() {
   }, []);
 
   useEffect(() => {
-    if (invalid) return;
+    if (invalid || onboarding === 'first') return;
     let alive = true, announced = false;
     setReady(false); setError('');
     const sim = mode === 'edit' ? new LayoutSimulation(layoutRef.current) : new MakerSimulation(layoutRef.current);
@@ -95,19 +116,22 @@ export default function MakerPlay() {
       if (result?.cleared && !announced) {
         announced = true; feedback.delivered('cyan', true);
         if (mode === 'test' && verifiesClear(layoutRef.current, sim.proof)) {
-          setCertificate({ key: geometryKey(layoutRef.current), proof: sim.proof.map(s => ({ ...s })) });
+          const proof = sim.proof.map(s => ({ ...s }));
+          setCertificate({ key: geometryKey(layoutRef.current), proof }); saveCertificate(storage(), layoutRef.current, proof);
         }
       }
     };
     const edit = sim instanceof LayoutSimulation ? {
+      slots: MAX_STONES,
       start(x: number, y: number, hit: Selection | null) {
         dragBefore.current = cloneLayout(layoutRef.current);
         if (toolRef.current === 'select' || hit) { select(hit); return !!hit; }
         const kind = toolRef.current;
         const before = layoutRef.current, next = cloneLayout(before);
         const list = kind === 'drop' ? next.drops : next.stones;
-        if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setMessage(kind === 'drop' ? '雫は12個まで置けます。' : '石は3個まで置けます。'); return false; }
-        list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32 });
+        if (list.length >= (kind === 'drop' ? MAX_DROPS : MAX_STONES)) { setMessage(kind === 'drop' ? '雫は12個まで置けます。' : `石は${MAX_STONES}個まで置けます。`); return false; }
+        const spec = STONE_SHAPES.find(s => s.id === shapeRef.current)!;
+        list.push({ x: Math.round(x), y: Math.round(y), r: kind === 'drop' ? 26 : 32, ...(kind === 'stone' && spec.n ? { n: spec.n, a: spec.a } : {}) });
         const valid = readLayout(next);
         if (!valid) { setMessage('空いている床に置いてください。'); return false; }
         apply(valid); select({ kind, index: list.length - 1 }); setTool('select'); setMessage(''); feedback.grab(kind === 'drop' ? 26 : 32, x, 420); return true;
@@ -132,11 +156,11 @@ export default function MakerPlay() {
         onReady: () => { if (alive) setReady(true); }, onError: e => { if (alive) setError(e); },
       }, { simulation: sim, obstacles: layoutRef.current.stones, height: stageDropHeight, feedback, onUpdate: update, edit,
         showSelected: true, aimAnywhere: !edit, aim: edit ? undefined : () => (sim as MakerSimulation).aim });
-      experience.current.setOptions({ lighting: 'studio', look, walls: 'rim', ripple: initialRipple(), caustic: initialCaustic(), dyeFlow: 'bloom', fit: 'screen' });
+      experience.current.setOptions({ lighting: 'studio', look, tone: toneColours(layoutRef.current.tone), walls: 'rim', ripple: initialRipple(), caustic: initialCaustic(), dyeFlow: 'bloom', fit: 'screen' });
       update();
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     return () => { alive = false; experience.current?.dispose(); experience.current = null; simRef.current = null; };
-  }, [mode, attempt, invalid]);
+  }, [mode, attempt, invalid, onboarding === 'first']);
   useEffect(() => {
     if (shareUrl) dialog.current?.showModal(); else dialog.current?.close();
     experience.current?.setOptions({ paused: !!shareUrl });
@@ -156,6 +180,14 @@ export default function MakerPlay() {
   }, [mode, shareUrl]);
 
   const retry = () => { setAttempt(n => n + 1); setMessage(''); };
+  /** The first phase cleared: its board becomes the draft, already proven (an earlier draft stays one undo away). */
+  const firstDone = (first: Layout, proof: RecordedShot[]) => {
+    remember(layoutRef.current); apply(first);
+    setCertificate({ key: geometryKey(first), proof }); saveCertificate(storage(), first, proof);
+    select({ kind: 'drop', index: 0 }); setTool('select'); setMode('edit'); setMessage('');
+    setOnboarding('tour'); setAttempt(n => n + 1);
+  };
+  const onboarded = () => { markMakerWelcomed(storage()); setOnboarding('off'); };
   const start = () => { setMessage(''); setMode('test'); setAttempt(n => n + 1); };
   const back = () => { setMode('edit'); setAttempt(n => n + 1); };
   const undoOne = () => { const before = undo.current.pop(); if (before) { apply(before); select({ kind: 'drop', index: 0 }); setUndoCount(undo.current.length); setMessage(''); } };
@@ -179,16 +211,18 @@ export default function MakerPlay() {
     catch (e) { if (!(e instanceof DOMException && e.name === 'AbortError')) setMessage('リンクをコピーして送れます。'); }
   };
 
+  if (onboarding === 'first') return <div className="droplet-lab maker-play is-onboarding" data-ui={ui} data-look={look}><MakerFirst feedback={feedback} look={look} onDone={firstDone} onSkip={onboarded}/></div>;
   return <div className="droplet-lab maker-play" data-ui={ui} data-look={look} data-mode={mode}>
     <div className="maker-shell">
       <header className="maker-header"><a href="?play=hitofude" className="maker-back" aria-label="ひとふでに戻る"><ArrowLeft size={18}/></a><div><small>PURA · ひとふで</small>{mode === 'edit'
         ? <input aria-label="台の名前" maxLength={32} value={layout.name} onChange={e => { const next = { ...layoutRef.current, name: e.target.value }; apply(next); }}/>
-        : <h1>{name}</h1>}</div><button className="maker-sound" aria-label={sensory.sound ? '音を消す' : '音を出す'} onClick={() => changeSensory({ sound: !sensory.sound })}>{sensory.sound ? <Volume2 size={18}/> : <VolumeX size={18}/>}</button></header>
+        : <h1>{name}</h1>}</div><SoundButton sensory={sensory} change={changeSensory} feedback={feedback} size={18} className="maker-sound" side="down"/></header>
       {invalid ? <section className="maker-invalid" role="alert"><h1>この台を開けませんでした</h1><p>リンクが途中で切れているか、この版でクリアを確認できない台です。</p><button onClick={ownBoard}>自分の台をつくる</button><a href="?play=hitofude">ひとふでで遊ぶ</a></section> : <>
         <div className="maker-workspace">
           <section className="dl-stage maker-stage" aria-label={mode === 'edit' ? '台を編集する' : `ひとふで ${name}`} aria-busy={!ready}>
             <canvas ref={canvas} className="dl-canvas" tabIndex={0} aria-label={mode === 'edit' ? '雫や石を選んで動かす。矢印キーでも動かせます。' : '雫に触れて、引いて、離す。色をひとつにまとめる。'}/>
             <div className="maker-stage-label">{mode === 'edit' ? '台をつくる' : mode === 'test' ? 'テストプレイ' : `作者記録 ${certificate?.proof.length ?? 0}打`}</div>
+            {mode === 'edit' && <div className="maker-status" data-tour="status" data-state={certified ? 'clear' : 'pending'} role="status"><i aria-hidden="true"/>{certified ? 'クリア済み' : '未クリア'}</div>}
             {!ready && !error && <div className="dl-stage-overlay" role="status"><span className="dl-loading-orbit"/><span>光を整えています</span></div>}
             {error && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button onClick={retry}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
             <SoundNudge feedback={feedback} sound={sensory.sound}/>
@@ -198,20 +232,24 @@ export default function MakerPlay() {
           </section>
           <aside className="maker-panel">
             {mode === 'edit' ? <>
-              <div className="maker-tools" role="group" aria-label="置くものを選ぶ">{([{ id: 'select', label: '選ぶ', Icon: Move }, { id: 'drop', label: '雫', Icon: Circle }, { id: 'stone', label: '石', Icon: Hexagon }] as const).map(({ id, label, Icon }) => <button key={id} aria-pressed={tool === id} onClick={() => { setTool(id); setMessage(''); }}><Icon size={17}/>{label}</button>)}<button aria-label="一手戻す" disabled={!undoCount} onClick={undoOne}><Undo2 size={18}/></button></div>
+              <div className="maker-tools" data-tour="tools" role="group" aria-label="置くものを選ぶ">{([{ id: 'select', label: '選ぶ', Icon: Move }, { id: 'drop', label: '雫', Icon: Circle }, { id: 'stone', label: '石', Icon: Hexagon }] as const).map(({ id, label, Icon }) => <button key={id} aria-pressed={tool === id} onClick={() => { setTool(id); setMessage(''); }}><Icon size={17}/>{label}</button>)}<button aria-label="一手戻す" disabled={!undoCount} onClick={undoOne}><Undo2 size={18}/></button></div>
               <p className="maker-instruction">{tool === 'drop' ? '空いている床に、雫を置く。' : tool === 'stone' ? '空いている床に、石を置く。' : '雫や石を、好きな場所へ。'}</p>
-              <div className="maker-inspector"><span>{piece ? selection?.kind === 'drop' ? '雫の大きさ' : '石の大きさ' : '選んで、動かす'}</span><div role="group" aria-label="大きさ">{(selection?.kind === 'stone' ? STONE_SIZES : DROP_SIZES).map((r, i) => <button key={r} disabled={!piece} aria-pressed={piece?.r === r} aria-label={`${selection?.kind === 'stone' ? '石' : '雫'}を${['小', '中', '大'][i]}に`} onClick={() => selection && change(replacePiece(layoutRef.current, selection, { r }))}>{['小', '中', '大'][i]}</button>)}<button aria-label="選んだものを消す" disabled={!piece} onClick={remove}><Trash2 size={16}/></button></div></div>
+              {(tool === 'stone' || selection?.kind === 'stone') && <div className="maker-shapes"><span>石の形</span><div role="group" aria-label="石の形">{STONE_SHAPES.map(spec => <button key={spec.id} aria-label={`石の形 ${spec.label}`} aria-pressed={tool !== 'stone' && selection?.kind === 'stone' && piece ? shapeOf(piece) === spec.id : shape === spec.id} onClick={() => { setShape(spec.id); /* placing: only the next stone's shape; otherwise the selected stone changes */ if (tool !== 'stone' && selection?.kind === 'stone' && piece) change(replacePiece(layoutRef.current, selection, { n: spec.n, a: spec.a })); }}><span className={`maker-shape maker-shape-${spec.id}`} aria-hidden="true"/>{spec.label}</button>)}<button aria-label="石を回す" disabled={!(selection?.kind === 'stone' && piece?.n)} onClick={() => selection && piece && change(replacePiece(layoutRef.current, selection, { a: turned(piece).a }))}><RotateCw size={16}/></button></div></div>}
+              <div className="maker-inspector" data-tour="inspector"><span>{piece ? selection?.kind === 'drop' ? '雫の大きさ' : '石の大きさ' : '選んで、動かす'}</span><div role="group" aria-label="大きさ">{(selection?.kind === 'stone' ? STONE_SIZES : DROP_SIZES).map((r, i) => <button key={r} disabled={!piece} aria-pressed={piece?.r === r} aria-label={`${selection?.kind === 'stone' ? '石' : '雫'}を${['小', '中', '大'][i]}に`} onClick={() => selection && change(replacePiece(layoutRef.current, selection, { r }))}>{['小', '中', '大'][i]}</button>)}<button aria-label="選んだものを消す" disabled={!piece} onClick={remove}><Trash2 size={16}/></button></div></div>
+              <div className="maker-tones" data-tour="tones"><span>盤の色</span><div role="group" aria-label="盤の色">{TONES.map(t => <button key={t.id} className="maker-tone" style={{ background: t.swatch }} aria-label={`盤の色 ${t.label}`} title={t.label} aria-pressed={toneOf(layout.tone).id === t.id} onClick={() => { if (toneOf(layout.tone).id !== t.id) change(readLayout({ ...layout, tone: t.id })); }}/>)}</div></div>
               <details className="maker-position"><summary>位置を数値で指定</summary>{piece && selection && <div>{(['x', 'y'] as const).map(axis => <label key={axis}>{axis.toUpperCase()}<input type="number" aria-label={`${axis.toUpperCase()}の位置`} value={piece[axis]} onChange={e => change(movePiece(layoutRef.current, selection, axis === 'x' ? Number(e.target.value) : piece.x, axis === 'y' ? Number(e.target.value) : piece.y))}/></label>)}</div>}</details>
               <div className="maker-info"><span>雫 {layout.drops.length}/{MAX_DROPS} · 石 {layout.stones.length}/{MAX_STONES}</span><span>{certified ? `${certificate!.proof.length}打で確認済み` : saved ? '台はこの端末に自動保存' : 'この端末には保存できません'}</span></div>
-            </> : <p className="maker-play-hint">引いて、離す。雫が止まったら、次の一打。</p>}
-            <div className="maker-actions">{mode === 'edit' ? <button className="maker-primary" onClick={start} disabled={!ready || !!error}><Play size={17}/>遊んで確かめる</button> : <><button onClick={mode === 'test' ? back : ownBoard}><ArrowLeft size={16}/>{mode === 'test' ? '編集に戻る' : '自分の台をつくる'}</button><button onClick={retry}><RotateCcw size={16}/>やり直す</button></>}
-              <button className={mode === 'edit' ? '' : 'maker-primary'} disabled={!certified || !!error} onClick={createLink}><Send size={16}/>共有リンク</button></div>
+            </> : <p className="maker-play-hint">引いて、離す。止まっている雫なら、いつでも次の一打。</p>}
+            <div className="maker-actions">{mode === 'edit' ? <button className="maker-primary" data-tour="play" onClick={start} disabled={!ready || !!error}><Play size={17}/>遊んで確かめる</button> : <><button onClick={mode === 'test' ? back : ownBoard}><ArrowLeft size={16}/>{mode === 'test' ? '編集に戻る' : '自分の台をつくる'}</button><button onClick={retry}><RotateCcw size={16}/>やり直す</button></>}
+              <button className={mode === 'edit' ? '' : 'maker-primary'} data-tour="share" disabled={!certified || !!error} onClick={createLink}><Send size={16}/>共有リンク</button></div>
             <p className="maker-note">{mode === 'edit' ? certified ? '友だちは、リンクからそのまま遊べます。' : '自分でクリアできたら、友だちに渡せます。' : mode === 'test' ? '編集に戻ると、最初の配置が残っています。' : '何度でも挑戦できます。'}</p>
+            {mode === 'edit' && onboarding === 'off' && <button className="maker-replay-intro" onClick={() => setOnboarding('first')}>はじめての説明を、もう一度</button>}
           </aside>
         </div>
         {message && !shareUrl && <p className="maker-message" role="status">{message}</p>}
       </>}
     </div>
+    {onboarding === 'tour' && <MakerTour onDone={onboarded}/>}
     <dialog ref={dialog} className="maker-dialog" onCancel={() => setShareUrl('')} onClose={() => setShareUrl('')}><button className="maker-dialog-close" aria-label="閉じる" onClick={() => setShareUrl('')}><X size={18}/></button><small>PURA · ひとふで</small><h2>この台、いける？</h2><p>「{name}」を{certificate?.proof.length}打で。<br/>友だちは、リンクからそのまま挑戦できます。</p><textarea ref={linkField} aria-label="共有リンク" value={shareUrl} readOnly rows={3}/><div><button onClick={copy}>リンクをコピー</button>{typeof navigator.share === 'function' && <button onClick={send}>共有する</button>}</div><p role="status">{message}</p></dialog>
   </div>;
 }
