@@ -180,7 +180,7 @@ export default function CurlingPlay() {
           aimed={() => { const sim = simulation.current; return sim && sim.atRest && sim.core.grabbedId === null ? sim.selected() : null; }}/>
         <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
         {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button><button className="finale-end" onClick={() => setFinale(true)}>試合をおわる</button></div>}
-        {finale && r?.phase === 'over' && <WhiteFinale label="試合終了" line="試合、終了。" sub={`${r.totals.cyan} – ${r.totals.rose} · ${r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}`} current="curling" backLabel="もう一試合" onBack={newGame} level={3}/>}
+        {finale && r?.phase === 'over' && <WhiteFinale label="試合終了" line="試合、終了。" sub={`${r.totals.cyan} – ${r.totals.rose} · ${r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}`} current="curling" backLabel="もう一試合" onBack={newGame}/>}
         {play.phone && r?.phase === 'aim' && (players === 'two' || r.turn === 'cyan') && <button className="phone-chip" onClick={() => setSpin(s => (s === 1 ? -1 : s + 1) as Spin)}>{SPIN_LABELS[spin]}</button>}
         <div className="dl-stage-bottom"><output aria-live="polite">{turnLine || movingLine}</output><span>{r && r.phase === 'aim' && r.standing.team ? `いま ${NAMES[r.standing.team]} ${r.standing.points}点` : ''}</span></div>
       </section>
