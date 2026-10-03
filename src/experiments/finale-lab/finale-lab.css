@@ -1,0 +1,9 @@
+.finale-lab { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #ecebe6; color: #1e2629; text-align: center; }
+.finale-lab h1 { margin: 0; font-size: 20px; font-weight: 300; letter-spacing: .24em; }
+.finale-lab p { margin: 0; font-size: 12px; letter-spacing: .1em; color: #5c686b; }
+.finale-lab-levels { display: flex; flex-direction: column; gap: 8px; width: min(92vw, 360px); }
+.finale-lab-levels button { display: flex; flex-direction: column; gap: 2px; padding: 12px 16px; border-radius: 14px; background: rgba(250,249,245,.9); color: #1e2629; text-align: left; border: 1.5px solid transparent; }
+.finale-lab-levels button[aria-checked="true"] { border-color: #244f4c; }
+.finale-lab-levels small { font-size: 11px; color: #5c686b; letter-spacing: .06em; }
+.finale-lab-go { min-height: 52px; min-width: 180px; border-radius: 999px; background: #244f4c; color: #f1f6f2; font-size: 15px; letter-spacing: .14em; }
+.finale-lab .white-finale { position: fixed; }
