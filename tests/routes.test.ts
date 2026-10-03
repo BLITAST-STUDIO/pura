@@ -33,7 +33,7 @@ test('the mode gallery offers the same ways to play as the mode bar, each to a r
 
 test('screens on trial open only on the trial channel; the shared version falls back to the default', () => {
   // The stage maker was released to everyone on 2026-10-02: nothing is on trial now.
-  assert.deepEqual([...TRIAL_ONLY], []);
+  assert.deepEqual([...TRIAL_ONLY], ['lab=finale']);
   assert.equal(releasedRoute('play=maker', undefined), 'play=maker', 'the family version opens the maker');
   assert.equal(releasedRoute('play=maker', 'next'), 'play=maker');
   // The gate itself still works for the next trial.

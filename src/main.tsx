@@ -3,7 +3,7 @@ import type { ComponentType } from "react";
 import "@/styles.css";
 import { releasedRoute, routeKey, type RouteKey } from "./route-key";
 import { welcomed } from "./experiments/welcome/steps";
-import { registerOffline } from "./offline-client";
+import { registerOffline, showOfflineCheck } from "./offline-client";
 
 /**
  * Entry routing. Since 2026-09-26 the bare URL opens the new instant play
@@ -26,6 +26,7 @@ const routes: Record<RouteKey, Route> = {
   "play=first": async () => (await import("./experiments/purity-scene/PurityScene")).default,
   "play=chapters": async () => (await import("./experiments/purity-scene/PurityScene")).default,
   "lab=fusion": async () => (await import("./experiments/fusion-lab/FusionLab")).default,
+  "lab=finale": async () => (await import("./experiments/finale-lab/FinaleLab")).default,
   "lab=droplets": async () => (await import("./experiments/droplet-lab/DropletLab")).DropletLab,
 };
 
@@ -59,3 +60,4 @@ if (document.readyState === "loading") {
 }
 // Keep the game on the device for offline play, once it is up.
 registerOffline();
+showOfflineCheck();

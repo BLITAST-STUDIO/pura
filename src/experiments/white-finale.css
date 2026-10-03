@@ -1,0 +1,24 @@
+/* The white ending shared by the ways to play (WhiteFinale). */
+.white-finale { position: absolute; z-index: 8; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px 20px; overflow-y: auto; background: #fbfaf7; animation: white-flash 2.6s ease both; }
+.white-finale-body { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; animation: white-finale-in 1.4s .9s ease both; }
+.white-finale p { margin: 0; font-size: clamp(18px, 5.2vw, 24px); font-weight: 300; letter-spacing: .26em; text-indent: .26em; color: #1e2629; text-align: center; }
+.white-finale small { margin-bottom: 10px; font-size: 13px; letter-spacing: .18em; color: #5c686b; }
+.white-finale-back { margin-top: 8px; padding: 10px 18px; border-radius: 999px; background: transparent; color: #6a797b; font-size: 12px; letter-spacing: .1em; }
+/* White rises past full brightness (a flash that is almost too bright), then settles to a soft white. */
+@keyframes white-flash { 0% { opacity: 0; background: #ffffff; filter: brightness(1.6); } 35% { opacity: 1; background: #ffffff; filter: brightness(1.35); } 100% { opacity: 1; background: #fbfaf7; filter: brightness(1); } }
+@keyframes white-finale-in { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+/* Stronger levels: a harder flash, a burst of light, rings, flying drops. */
+.white-finale[data-level="2"], .white-finale[data-level="3"], .white-finale[data-level="4"] { animation-name: white-flash-strong; animation-duration: 3.2s; overflow: hidden; }
+.white-finale[data-level] .white-finale-body { position: relative; z-index: 1; }
+.white-finale[data-level="2"] .white-finale-body, .white-finale[data-level="3"] .white-finale-body, .white-finale[data-level="4"] .white-finale-body { animation-delay: 1.3s; }
+@keyframes white-flash-strong { 0% { opacity: 0; background: #ffffff; } 12% { opacity: 1; background: #ffffff; } 100% { opacity: 1; background: #fbfaf7; } }
+.wf-fx { position: absolute; inset: 0; pointer-events: none; }
+.wf-fx i { position: absolute; left: 50%; top: 42%; display: block; border-radius: 50%; }
+.wf-burst { width: 40vmax; height: 40vmax; margin: -20vmax 0 0 -20vmax; background: radial-gradient(circle, rgba(255,226,160,.95) 0%, rgba(255,214,150,.7) 22%, rgba(255,236,200,.4) 46%, rgba(255,255,255,0) 70%); animation: wf-burst 2.6s .25s ease-out both; }
+@keyframes wf-burst { 0% { transform: scale(.05); opacity: 0; } 15% { opacity: 1; } 100% { transform: scale(3.2); opacity: 0; } }
+.wf-ring { width: 36vmax; height: 36vmax; margin: -18vmax 0 0 -18vmax; border: 5px solid; opacity: 0; animation: wf-ring 2.6s .3s ease-out both; }
+@keyframes wf-ring { 0% { transform: scale(.05); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+.wf-drop { margin: 0; opacity: 0; animation: wf-drop 2.2s cubic-bezier(.15,.7,.25,1) both; }
+@keyframes wf-drop { 0% { transform: rotate(var(--a)) translateX(0) scale(.4); opacity: 0; } 12% { opacity: .95; } 100% { transform: rotate(var(--a)) translateX(var(--d)) scale(1); opacity: 0; } }
+.finale-end { background: #244f4c !important; color: #f1f6f2 !important; }
+@media (prefers-reduced-motion: reduce) { .wf-fx { display: none; } .white-finale { animation-duration: .01s !important; } .white-finale-body { animation-delay: 0s; animation-duration: .2s; } }

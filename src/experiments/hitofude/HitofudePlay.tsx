@@ -22,6 +22,7 @@ import { initialCaustic, initialRipple } from '../look-defaults';
 import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
 import '../stages/stages.css';
+import { WhiteFinale } from '../white-finale';
 import './hitofude.css';
 
 const RECORD_KEY = 'pura-flow-hitofude-v2';
@@ -142,7 +143,9 @@ export default function HitofudePlay() {
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
   const go = (id: number) => { setBoardId(id); setRetry(v => v + 1); setPaused(false); window.scrollTo(0, 0); play.played(); };
+  const [finale, setFinale] = useState(false);
   const startRound = (kind: RoundKind) => {
+    setFinale(false);
     const holes = roundHoles(kind, SHOT_BOARDS);
     round.current = { kind, ids: holes.map(b => b.id), play: new Round(holes.map(b => b.par)) };
     setRoundCard([...round.current.play.card]); go(holes[0].id);
@@ -203,7 +206,8 @@ export default function HitofudePlay() {
             : result.cleared ? (next && <button onClick={() => go(next.id)}>次へ <ArrowUpRight size={13}/></button>) : <button onClick={again}>もう一度 <RotateCcw size={12}/></button>}
         </div>}
         {shared && <p className="hitofude-shared" role="status" onAnimationEnd={() => setShared('')}>{shared}</p>}
-        {roundDone && <div className="round-summary" role="status"><small>{kind ? ROUND_LABELS[kind] : ''} 終了</small><strong>{relative(sum.diff)}</strong><span>{sum.strokes}打 · パー{sum.par}{kind && best(kind) === sum.diff ? ' · ベスト' : ''}</span><button onClick={restartRound}>もう一度回る <RotateCcw size={12}/></button></div>}
+        {roundDone && <div className="round-summary" role="status"><small>{kind ? ROUND_LABELS[kind] : ''} 終了</small><strong>{relative(sum.diff)}</strong><span>{sum.strokes}打 · パー{sum.par}{kind && best(kind) === sum.diff ? ' · ベスト' : ''}</span><button onClick={restartRound}>もう一度回る <RotateCcw size={12}/></button><button className="finale-end" onClick={() => setFinale(true)}>おわる</button></div>}
+        {finale && roundDone && <WhiteFinale label="ラウンド終了" line="ラウンド、おしまい。" sub={`${kind ? ROUND_LABELS[kind] : ''} ${relative(sum.diff)} · ${sum.strokes}打`} current="hitofude" backLabel="もう一度回る" onBack={restartRound}/>}
         <div className="dl-stage-bottom"><output aria-live="polite">{result?.cleared ? 'ひとつに' : `あと ${reading.remaining} つ`}</output><span>{reading.shots}打目{reading.shots ? 'まで' : ''}</span></div>
       </section>
       <div className="shot-meter" aria-label={`のこり ${reading.left}打`}><span>のこり</span>{Array.from({ length: shotLimit(board.par) }, (_, i) => <i key={i} className={i < reading.left ? 'is-left' : ''}/>)}<small>{board.min === 1 ? '最少1打（ひとふで）' : `最少${board.min}打`}</small></div>

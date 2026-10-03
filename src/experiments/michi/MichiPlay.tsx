@@ -4,7 +4,8 @@ import { createFusionExperience, type FusionOptions } from '../fusion-lab/render
 import { dominantHue, purityOf, type HueId } from '../../game/palette';
 import type { CoreStat } from '../../game/sim';
 import { MichiSimulation, type RingState } from './simulation';
-import { chapterOf, MICHI, MICHI_BOARDS, michiBoard, nextBoard } from './boards';
+import { chapterOf, MICHI, MICHI_BOARDS, michiBoard, michiStars, nextBoard } from './boards';
+import { WhiteFinale } from '../white-finale';
 import { stageDropHeight } from '../stages/simulation';
 import { useSensoryFeedback } from '../sensory/useSensoryFeedback';
 import { SoundSettings, SoundButton } from '../sound-settings';
@@ -44,6 +45,9 @@ export default function MichiPlay() {
     return MICHI_BOARDS.some(b => b.id === id) ? id : michiBoard(records.last).id;
   });
   const [status, setStatus] = useState('loading');
+  // The end of the path: after the last board, a button leads to a white flash and the ways to play.
+  // ?finale=1 shows it at once, to see the ending without playing to it.
+  const [finale, setFinale] = useState(() => new URLSearchParams(window.location.search).get('finale') === '1');
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -114,7 +118,7 @@ export default function MichiPlay() {
     };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
-  const choose = (id: number) => { setBoardId(id); setRetry(v => v + 1); setPaused(false); window.scrollTo(0, 0); play.played(); };
+  const choose = (id: number) => { setFinale(false); setBoardId(id); setRetry(v => v + 1); setPaused(false); window.scrollTo(0, 0); play.played(); };
   const next = nextBoard(board.id);
   const stars = (id: number) => records.best[id] ?? 0;
   const discovery = board.discovery && !reading.won && reading.separations === 0 && reading.elapsed > board.discovery.after ? board.discovery.text : null;
@@ -141,13 +145,14 @@ export default function MichiPlay() {
         {status === 'error' && <div className="dl-stage-overlay dl-error" role="alert"><p>水滴を表示できませんでした</p><button className="dl-action-button" onClick={() => setRetry(v => v + 1)}>もう一度試す</button><details><summary>詳細</summary>{error}</details></div>}
         {status === 'ready' && paused && <div className="dl-stage-overlay"><button className="dl-resume" onClick={() => setPaused(false)}>つづける</button></div>}
         <ClearGlow show={!!reading.won}/>
-        {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next && <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button>}</div>}
+        {reading.won && <div className="stage-clear" role="status"><span>{'★'.repeat(reading.won.stars)}<i>{'★'.repeat(3 - reading.won.stars)}</i></span><small>{Math.round(reading.won.time)}秒</small>{next ? <button onClick={() => choose(next.id)}>次へ <ArrowUpRight size={13}/></button> : <button className="finale-end" onClick={() => setFinale(true)}>道をおわる <ArrowUpRight size={13}/></button>}</div>}
         {discovery && <p className="stage-discovery" role="status">{discovery}</p>}
         {play.phone && <div className="phone-cores" aria-hidden="true">{[
           ...reading.cores.map(c => ({ hue: c.hue, value: Math.min(1, c.mass / c.target) })),
           ...reading.rings.map(r => ({ hue: r.hue, value: r.delivered ? 1 : Math.min(1, r.gathered) })),
         ].map(v => <i key={v.hue} data-color={v.hue}><b style={{ width: `${v.value * 100}%` }}/></i>)}</div>}
         <div className="dl-stage-bottom"><output aria-live="polite">{reading.held ? `${HUE_NAMES[reading.held.hue]} · 純度 ${Math.floor(reading.held.purity * 100 + 1e-8)}%` : `${reading.count} DROPS`}</output><span>純度 {Math.round(board.purity * 100)}% 以上</span></div>
+        {finale && <WhiteFinale label="道を歩ききりました" line="道を、歩ききりました。" sub={`星 ${michiStars(records.best).got} / ${michiStars(records.best).max}`} current="michi" backLabel="道を見返す" onBack={() => setFinale(false)}/>}
       </section>
       <div className="stage-cores">
         {reading.cores.map(c => <div key={c.hue} data-color={c.hue} className={c.done ? 'is-done' : ''}>

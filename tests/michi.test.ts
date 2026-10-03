@@ -117,3 +117,19 @@ test('separating the cloudy drops, then gathering, completes each chapter 3 boar
     assert.equal(sim.won?.stars, 3, michiBoard(id).name);
   }
 });
+
+test('the path\'s star total counts every board, at most three each', async () => {
+  const { michiStars, MICHI_BOARDS } = await import('../src/experiments/michi/boards');
+  assert.deepEqual(michiStars({}), { got: 0, max: MICHI_BOARDS.length * 3 });
+  assert.equal(michiStars(Object.fromEntries(MICHI_BOARDS.map(b => [b.id, 3]))).got, MICHI_BOARDS.length * 3);
+  assert.equal(michiStars({ [MICHI_BOARDS[0].id]: 2, [MICHI_BOARDS[1].id]: 9, [MICHI_BOARDS[2].id]: -1, 9999: 3 }).got, 5, 'capped at three, never negative, unknown boards ignored');
+  assert.equal(MICHI_BOARDS.length, 16);
+});
+
+test('only the last board has no next: its clear card ends the path instead of going on', async () => {
+  const { MICHI_BOARDS, nextBoard } = await import('../src/experiments/michi/boards');
+  const last = MICHI_BOARDS[MICHI_BOARDS.length - 1];
+  assert.equal(last.code, '4-5');
+  assert.equal(nextBoard(last.id), undefined);
+  for (const board of MICHI_BOARDS.slice(0, -1)) assert.ok(nextBoard(board.id), `${board.code} goes on`);
+});

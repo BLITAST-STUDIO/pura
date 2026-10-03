@@ -16,3 +16,4 @@
 .droplet-lab[data-ui="light"] .michi-lead { color: #56666a; }
 .droplet-lab[data-look="gallery"] .stage-discovery { background: rgba(246, 245, 241, .86); color: #1e2629; }
 @media (max-width: 430px) { .michi-chapters button { padding: 8px 1px; } .michi-chapters button b { font-size: 11px; letter-spacing: -.02em; } }
+
