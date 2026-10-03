@@ -19,6 +19,7 @@ import '../droplet-lab/droplet-lab.css';
 import '../purity-scene/purity-scene.css';
 import '../stages/stages.css';
 import '../hitofude/hitofude.css';
+import { WhiteFinale } from '../white-finale';
 import './curling.css';
 
 type Players = 'cpu' | 'two';
@@ -138,9 +139,11 @@ export default function CurlingPlay() {
   useEffect(() => {
     experience.current?.setOptions({ paused, reducedMotion: reduced, quality, lighting: 'studio', dyeFlow: 'bloom', look, walls, fit: play.phone ? 'screen' : 'card', ripple: initialRipple(), caustic: initialCaustic() });
   }, [paused, reduced, quality, players, retry, look, walls, play.phone]);
-  const newGame = () => { setRetry(v => v + 1); setPaused(false); };
+  const [finale, setFinale] = useState(false);
+  const newGame = () => { setRetry(v => v + 1); setPaused(false); setFinale(false); };
   const nextEnd = () => { simulation.current?.nextEnd(); };
   const r = reading;
+  useEffect(() => { if (r?.phase !== 'over') setFinale(false); }, [r?.phase]);
   const you = (team: Team) => players === 'cpu' ? (team === 'cyan' ? 'あなた' : 'CPU') : NAMES[team];
   const columns = Math.max(ENDS, r?.ends.length ?? 0, r && r.phase !== 'over' ? r.end : 0);
   const turnLine = !r ? '' : r.phase === 'moving' ? '' : r.phase === 'aim'
@@ -176,7 +179,8 @@ export default function CurlingPlay() {
         <FirstPull mode="curling" canvas={canvas} straight shot={!!r && (r.end > 1 || r.left.cyan < STONES_PER_END)} active={status === 'ready' && !paused && !play.menu}
           aimed={() => { const sim = simulation.current; return sim && sim.atRest && sim.core.grabbedId === null ? sim.selected() : null; }}/>
         <ClearGlow show={r?.phase === 'over' && r.winner !== 'draw'}/>
-        {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button></div>}
+        {r?.phase === 'over' && <div className="round-summary" role="status"><small>試合終了</small><strong>{r.totals.cyan} – {r.totals.rose}</strong><span>{r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}</span><button onClick={newGame}>もう一試合 <RotateCcw size={12}/></button><button className="finale-end" onClick={() => setFinale(true)}>試合をおわる</button></div>}
+        {finale && r?.phase === 'over' && <WhiteFinale label="試合終了" line="試合、終了。" sub={`${r.totals.cyan} – ${r.totals.rose} · ${r.winner === 'draw' ? '引き分け' : `${you(r.winner as Team)}の勝ち`}`} current="curling" backLabel="もう一試合" onBack={newGame}/>}
         {play.phone && r?.phase === 'aim' && (players === 'two' || r.turn === 'cyan') && <button className="phone-chip" onClick={() => setSpin(s => (s === 1 ? -1 : s + 1) as Spin)}>{SPIN_LABELS[spin]}</button>}
         <div className="dl-stage-bottom"><output aria-live="polite">{turnLine || movingLine}</output><span>{r && r.phase === 'aim' && r.standing.team ? `いま ${NAMES[r.standing.team]} ${r.standing.points}点` : ''}</span></div>
       </section>

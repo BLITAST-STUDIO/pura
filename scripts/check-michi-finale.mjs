@@ -1,4 +1,4 @@
-// Run with GPU=1 node scripts/check-michi-finale.mjs <preview base URL> [out dir]: the last board's clear shows 道をおわる; it flashes white into the ways to play.
+// Run with GPU=1 node scripts/check-white-finale.mjs <preview base URL> [out dir]: the last board's clear shows 道をおわる; it flashes white into the ways to play.
 import { mkdirSync } from 'node:fs';
 import { launch } from './cdp.mjs';
 const base = process.argv[2], out = (process.argv[3] ?? 'artifacts/michi') + '/'; mkdirSync(out, { recursive: true });
@@ -24,15 +24,15 @@ try {
   res.middleSolved = await solve(); res.middleButton = await b.eval(`[...document.querySelectorAll('.stage-clear button')].map(e => e.textContent.trim())`);
   // The last board's clear card says 道をおわる (the branch is checked in tests/michi.test.ts; solving 4-5 by simple drags is not reliable).
   // The ending itself, shown at once with ?finale=1: a white flash, then the line, the stars and the ways to play.
-  await b.goto(`${base}?play=michi&board=45&finale=1&sound=off&music=off`); await b.waitFor(`!!document.querySelector('.michi-finale')`);
+  await b.goto(`${base}?play=michi&board=45&finale=1&sound=off&music=off`); await b.waitFor(`!!document.querySelector('.white-finale')`);
   await sleep(450); await b.screenshot(out + 'flash.png');
   await sleep(3000); await b.screenshot(out + 'finale.png');
-  res.finale = await b.eval(`({ line: document.querySelector('.michi-finale p')?.textContent, stars: document.querySelector('.michi-finale small')?.textContent, modes: [...document.querySelectorAll('.michi-finale .mode-gallery b')].map(e => e.textContent), back: !!document.querySelector('.michi-finale-back') })`);
+  res.finale = await b.eval(`({ line: document.querySelector('.white-finale p')?.textContent, stars: document.querySelector('.white-finale small')?.textContent, modes: [...document.querySelectorAll('.white-finale .mode-gallery b')].map(e => e.textContent), back: !!document.querySelector('.white-finale-back') })`);
   // A way to play from the ending opens it, and 道を見返す closes the ending.
-  await b.eval(`document.querySelector('.michi-finale-back').click()`); await sleep(500);
-  res.afterBack = await b.eval(`({ finale: !!document.querySelector('.michi-finale'), canvas: !!document.querySelector('canvas') })`);
+  await b.eval(`document.querySelector('.white-finale-back').click()`); await sleep(500);
+  res.afterBack = await b.eval(`({ finale: !!document.querySelector('.white-finale'), canvas: !!document.querySelector('canvas') })`);
   await b.goto(`${base}?play=michi&board=45&finale=1&sound=off&music=off`); await sleep(3500);
-  await b.eval(`[...document.querySelectorAll('.michi-finale .mode-gallery a')].find(a => a.textContent.includes('エンドレス')).click()`); await sleep(2500);
+  await b.eval(`[...document.querySelectorAll('.white-finale .mode-gallery a')].find(a => a.textContent.includes('エンドレス')).click()`); await sleep(2500);
   res.toEndless = await b.eval(`({ url: location.search, title: document.title })`);
   res.logs = b.logs.filter(l => !/vite|DevTools/.test(l));
 } finally { b.close(); }

@@ -17,15 +17,3 @@
 .droplet-lab[data-look="gallery"] .stage-discovery { background: rgba(246, 245, 241, .86); color: #1e2629; }
 @media (max-width: 430px) { .michi-chapters button { padding: 8px 1px; } .michi-chapters button b { font-size: 11px; letter-spacing: -.02em; } }
 
-/* The end of the path: the clear card's last button, and the white flash into the ways to play. */
-.michi-end { background: #244f4c !important; color: #f1f6f2 !important; }
-.michi-finale { position: absolute; z-index: 8; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px 20px; overflow-y: auto; background: #fbfaf7; animation: michi-flash 2.6s ease both; }
-.michi-finale-body { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; animation: michi-finale-in 1.4s .9s ease both; }
-.michi-finale p { margin: 0; font-size: clamp(18px, 5.2vw, 24px); font-weight: 300; letter-spacing: .26em; text-indent: .26em; color: #1e2629; text-align: center; }
-.michi-finale small { margin-bottom: 10px; font-size: 13px; letter-spacing: .18em; color: #5c686b; }
-.michi-finale-back { margin-top: 8px; padding: 10px 18px; border-radius: 999px; background: transparent; color: #6a797b; font-size: 12px; letter-spacing: .1em; }
-/* White rises past full brightness (a flash that is almost too bright), then settles to a soft white. */
-@keyframes michi-flash { 0% { opacity: 0; background: #ffffff; filter: brightness(1.6); } 35% { opacity: 1; background: #ffffff; filter: brightness(1.35); } 100% { opacity: 1; background: #fbfaf7; filter: brightness(1); } }
-@keyframes michi-finale-in { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
-.droplet-lab[data-ui="dark"] .michi-finale { animation-name: michi-flash; }
-@media (prefers-reduced-motion: reduce) { .michi-finale { animation-duration: .01s; } .michi-finale-body { animation-delay: 0s; animation-duration: .2s; } }
