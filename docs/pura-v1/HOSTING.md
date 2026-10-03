@@ -310,3 +310,7 @@ GitHub Pages / `BLITAST-STUDIO/pura` / `gh-pages` ブランチのルートを配
 - ユーザー「身内版に出す」。ソース `43af366`（`main`、PR #24）を身内版（ルート）に配信、全115ファイルSHA-256一致、noindex、身内版のワーカー `https://blitast-studio.github.io/pura/sw.js`（保存名 `pura-stable-…`、担当は `/pura/` の中で `/next/` は除く）。試作版 `next/` は残す（`2e54ec6`）。
 - 公開の身内版（GPU、スマホ幅）で、一度開いて保存（53ファイル）→ 通信を切り → 8つの入口が起動、「試作版」表示なし、音楽ファイル（2.7MB）が取り出せる。`?nosw=1` で保存とワーカーが消え、`?nosw=0` で戻る。警告エラー0。
 - 家族に伝える逃げ道: おかしくなったら、URLの末尾に `?nosw=1` を付けて開く（例 `https://blitast-studio.github.io/pura/?nosw=1`）。戻すときは `?nosw=0`。
+
+## 実機で確かめる目印（試作版、2026-10-04）
+
+- ソース `901e720`（ブランチ `feat/offline-check`、`main` の上）を試作版 `/next/` にのみ配信。身内版は `43af366` のまま。全115ファイルSHA-256一致。公開の試作版（GPU）で、`&offline=check` を付けると「保存済み（54ファイル）」と出て、通信を切って開き直しても同じ表示で遊べる。
