@@ -47,7 +47,8 @@ function main() {
   const build = spawnSync("npx", ["vite", "build"], {
     cwd: root,
     stdio: "inherit",
-    env: process.env,
+    // The itch ZIP is not a website: no offline worker.
+    env: { ...process.env, VITE_NO_SW: "1" },
   });
   if (build.error) throw build.error;
   if (build.status !== 0) process.exit(build.status ?? 1);

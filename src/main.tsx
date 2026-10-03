@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import "@/styles.css";
 import { releasedRoute, routeKey, type RouteKey } from "./route-key";
 import { welcomed } from "./experiments/welcome/steps";
+import { registerOffline } from "./offline-client";
 
 /**
  * Entry routing. Since 2026-09-26 the bare URL opens the new instant play
@@ -56,3 +57,5 @@ if (document.readyState === "loading") {
 } else {
   boot();
 }
+// Keep the game on the device for offline play, once it is up.
+registerOffline();

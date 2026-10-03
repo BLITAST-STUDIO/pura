@@ -578,12 +578,17 @@ export function createFusionExperience(canvas: HTMLCanvasElement, callbacks: Cal
     const place = () => { camera.position.set(0, -Math.sin(tilt) * distance, Math.cos(tilt) * distance); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); };
     place();
     if (options.fit === 'screen') {
-      // Bring the board's corners to the sides (a little room above and below for the buttons and readouts).
-      const corners = [[0, 0], [sim.width, 0], [0, sim.height], [sim.width, sim.height]].map(([x, y]) => new THREE.Vector3((x - sim.width / 2) * W, (sim.height / 2 - y) * W, 0));
+      // Width: the rim meets the screen edge (it stands about 12 units outside the walls; the board's own corners
+      // left about 4% of margin on each side) — 2026-10-03, RYO: show the board larger on a phone.
+      // Height: the board's corners keep a little room above and below for the buttons and readouts, as before.
+      const edge = Math.max(0, sim.core.pad - 12);
+      const at = (inset: number) => [[inset, inset], [sim.width - inset, inset], [inset, sim.height - inset], [sim.width - inset, sim.height - inset]].map(([x, y]) => new THREE.Vector3((x - sim.width / 2) * W, (sim.height / 2 - y) * W, 0));
+      const rimCorners = at(edge), boardCorners = at(0);
       for (let i = 0; i < 6; i++) {
         let mx = 0, my = 0;
-        for (const c of corners) { const p = c.clone().project(camera); mx = Math.max(mx, Math.abs(p.x)); my = Math.max(my, Math.abs(p.y)); }
-        distance *= Math.max(mx / .98, my / .8); place();
+        for (const c of rimCorners) mx = Math.max(mx, Math.abs(c.clone().project(camera).x));
+        for (const c of boardCorners) my = Math.max(my, Math.abs(c.clone().project(camera).y));
+        distance *= Math.max(mx / .985, my / .8); place();
       }
     }
     buildWalls();
