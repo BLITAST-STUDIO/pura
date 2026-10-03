@@ -131,4 +131,8 @@ export const MICHI_BOARDS = MICHI.flatMap(c => c.boards);
 export function michiBoard(id: number) { return MICHI_BOARDS.find(b => b.id === id) ?? MICHI_BOARDS[0]; }
 export function chapterOf(id: number) { return MICHI.find(c => c.boards.some(b => b.id === id)) ?? MICHI[0]; }
 /** The board after this one, across chapters; undefined after the last. */
+/** Stars kept over all the boards, out of the most there are (3 each). */
+export function michiStars(best: Record<number, number>) {
+  return { got: MICHI_BOARDS.reduce((n, b) => n + Math.max(0, Math.min(3, Math.floor(best[b.id] ?? 0))), 0), max: MICHI_BOARDS.length * 3 };
+}
 export function nextBoard(id: number) { const i = MICHI_BOARDS.findIndex(b => b.id === id); return i >= 0 ? MICHI_BOARDS[i + 1] : undefined; }
