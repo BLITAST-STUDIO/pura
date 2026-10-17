@@ -25,6 +25,7 @@ const routes: Record<RouteKey, Route> = {
   "play=open": async () => (await import("./experiments/open-play/OpenPlay")).default,
   "play=first": async () => (await import("./experiments/purity-scene/PurityScene")).default,
   "play=chapters": async () => (await import("./experiments/purity-scene/PurityScene")).default,
+  "play=save": async () => (await import("./experiments/save-transfer/SaveTransfer")).default,
   "lab=fusion": async () => (await import("./experiments/fusion-lab/FusionLab")).default,
   "lab=finale": async () => (await import("./experiments/finale-lab/FinaleLab")).default,
   "lab=droplets": async () => (await import("./experiments/droplet-lab/DropletLab")).DropletLab,

@@ -50,3 +50,4 @@
 .phone-menu-sound label { display: flex; justify-content: space-between; align-items: center; min-height: 40px; gap: 16px; }
 .droplet-lab[data-ui="light"] .phone-menu-sound { color: #5c686b; }
 .droplet-lab.is-phone .purity-details .sound-settings { display: none; }
+.phone-menu-save { display: block; margin: 6px auto 0; padding: 8px; text-align: center; font-size: 11px; letter-spacing: .1em; color: #6a797b; text-decoration: underline; text-underline-offset: 3px; }

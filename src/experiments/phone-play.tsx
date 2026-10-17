@@ -57,6 +57,7 @@ export function PhoneMenuClose({ play, current, sound }: { play: PhonePlay; curr
       <p className="phone-menu-brand"><span className="dl-brand-symbol"/>PURA<span className="dl-brand-period">.</span></p>
       <ModeGallery current={current} onCurrent={play.close}/>
       {sound && <div className="phone-menu-sound" role="group" aria-label="音"><SoundSettings {...sound}/></div>}
+      <a className="phone-menu-save" href="?play=save">記録の引っ越し</a>
       <p className="phone-menu-here">この遊び</p>
     </section>
   </>;
