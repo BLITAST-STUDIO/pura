@@ -1,6 +1,6 @@
 /** Screens reachable by query. The bare URL is the new instant play (since 2026-09-26). */
 export const ROUTE_KEYS = [
-  'play=classic', 'play=bench', 'play=free', 'play=endless', 'play=hitofude', 'play=maker', 'play=michi', 'play=curling', 'play=welcome', 'play=stages', 'play=open', 'play=first', 'play=chapters', 'lab=fusion', 'lab=droplets', 'lab=finale',
+  'play=classic', 'play=bench', 'play=free', 'play=endless', 'play=hitofude', 'play=maker', 'play=michi', 'play=curling', 'play=welcome', 'play=stages', 'play=open', 'play=first', 'play=chapters', 'play=save', 'lab=fusion', 'lab=droplets', 'lab=finale',
 ] as const;
 export type RouteKey = typeof ROUTE_KEYS[number];
 export const DEFAULT_ROUTE: RouteKey = 'play=open';

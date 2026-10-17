@@ -1,0 +1,10 @@
+.save-transfer { min-height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: calc(env(safe-area-inset-top, 0px) + 40px) 22px 40px; background: #ecebe6; color: #1e2629; text-align: center; overflow-y: auto; }
+.save-transfer h1 { margin: 0 0 4px; font-size: 20px; font-weight: 300; letter-spacing: .24em; text-indent: .24em; }
+.save-transfer h2 { margin: 0; font-size: 14px; font-weight: 500; letter-spacing: .14em; }
+.save-transfer p { margin: 0; max-width: 340px; font-size: 12px; line-height: 1.8; letter-spacing: .06em; color: #4d5a5d; }
+.save-transfer section { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(100%, 380px); box-sizing: border-box; padding: 18px; border-radius: 16px; background: rgba(250, 249, 245, .92); }
+.save-transfer button { min-height: 48px; min-width: 200px; padding: 0 22px; border-radius: 999px; background: #244f4c; color: #f1f6f2; font-size: 13px; letter-spacing: .12em; }
+.save-transfer button.is-quiet { background: transparent; color: #5c686b; min-width: 0; }
+.save-transfer-confirm div { display: flex; gap: 8px; }
+.save-transfer-message { color: #1f6a4c !important; }
+.save-transfer a { color: #4d5a5d; font-size: 12px; letter-spacing: .1em; text-underline-offset: 3px; }
